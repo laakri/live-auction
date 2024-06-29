@@ -1,8 +1,10 @@
 import { FastifyInstance } from "fastify";
 import { Server } from "socket.io";
 
-export default function setupWebSocket(fastify: FastifyInstance) {
-  const io = new Server(fastify.server);
+let io: Server;
+
+export function setupWebSocket(fastify: FastifyInstance) {
+  io = new Server(fastify.server);
 
   io.on("connection", (socket) => {
     console.log("New WebSocket connection");
@@ -15,13 +17,13 @@ export default function setupWebSocket(fastify: FastifyInstance) {
       socket.leave(auctionId);
     });
   });
-
-  return {
-    emitBid: (auctionId: string, bidData: any) => {
-      io.to(auctionId).emit("new bid", bidData);
-    },
-    emitChatMessage: (auctionId: string, messageData: any) => {
-      io.to(auctionId).emit("new message", messageData);
-    },
-  };
 }
+
+export const socketHandler = {
+  emitBid: (auctionId: string, bidData: any) => {
+    io?.to(auctionId).emit("new bid", bidData);
+  },
+  emitChatMessage: (auctionId: string, messageData: any) => {
+    io?.to(auctionId).emit("new message", messageData);
+  },
+};

@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import ChatMessage from "../models/chatMessage.model";
+import { socketHandler } from "../websocket/socketHandler";
 
 export const sendMessage = async (
   request: FastifyRequest,
@@ -20,8 +21,8 @@ export const sendMessage = async (
 
     await message.save();
 
-    // Emit real-time update (implement with WebSocket)
-    // socketHandler.emitChatMessage(auctionId, { sender: userId, content });
+    // Emit real time websocket updates
+    socketHandler.emitChatMessage(auctionId, { sender: userId, content });
 
     reply.status(201).send(message);
   } catch (error) {
