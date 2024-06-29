@@ -1,0 +1,36 @@
+# Node modules
+**/node_modules/
+
+# Environment files
+**/.env
+
+# Build outputs
+**/dist/
+**/build/
+
+# Logs
+**/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE files
+.vscode/
+.idea/
+
+# Temporary files
+**/tmp/
+**/temp/
+
+
+
+# TypeScript compilation output
+**/*.js
+**/*.js.map
+
+# React build output
+client/build/
+
+# Fastify build output
+server/dist/
