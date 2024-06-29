@@ -1,10 +1,12 @@
 import { FastifyInstance } from "fastify";
-import {
-  getAllAuctions,
-  createAuction,
-} from "../controllers/auctionController";
+import { authenticate } from "../middleware/auth";
+import * as auctionController from "../controllers/auctionController";
 
-export async function auctionRoutes(fastify: FastifyInstance) {
-  fastify.get("/", getAllAuctions);
-  fastify.post("/", createAuction);
+export default async function auctionRoutes(fastify: FastifyInstance) {
+  fastify.post(
+    "/",
+    { preHandler: authenticate },
+    auctionController.createAuction
+  );
+  fastify.get("/:id", auctionController.getAuction);
 }

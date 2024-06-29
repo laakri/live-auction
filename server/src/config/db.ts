@@ -1,18 +1,19 @@
 import mongoose from "mongoose";
-import dotenv from "dotenv";
 
-dotenv.config();
-
-const connectDB = async () => {
+async function connectDB() {
   try {
-    await mongoose.connect(
-      process.env.MONGO_URI || "mongodb://localhost:27017/live-auction"
-    );
-    console.log("MongoDB connected");
+    const uri = process.env.MONGODB_URI;
+    if (!uri) {
+      throw new Error(
+        "MONGODB_URI is not defined in the environment variables"
+      );
+    }
+    await mongoose.connect(uri);
+    console.log("Connected to MongoDB");
   } catch (error) {
-    console.error("MongoDB connection error:", error);
+    console.error("Error connecting to MongoDB:", error);
     process.exit(1);
   }
-};
+}
 
 export default connectDB;
