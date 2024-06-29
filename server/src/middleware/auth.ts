@@ -4,7 +4,10 @@ import { IUser } from "../models/users.model";
 
 declare module "fastify" {
   interface FastifyRequest {
-    user?: IUser;
+    user?: {
+      _id: string;
+      // Add other properties you might need from the user
+    };
   }
 }
 
@@ -23,7 +26,7 @@ export const authenticate = (
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
       id: string;
     };
-    request.user = { _id: decoded.id } as IUser;
+    request.user = { _id: decoded.id };
     done();
   } catch (error) {
     reply.status(401).send({ error: "Invalid token" });
