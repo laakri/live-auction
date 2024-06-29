@@ -69,7 +69,7 @@ async function buildServer() {
 async function startServer() {
   try {
     const server = await buildServer();
-    await connectDB(server.config.MONGODB_URI);
+    await connectDB();
     const address = await server.listen({
       port: server.config.PORT,
       host: "0.0.0.0",
