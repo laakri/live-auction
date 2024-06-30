@@ -51,7 +51,6 @@ async function buildServer() {
     });
 
     server.register(websocket);
-
     // Set up WebSocket
     setupWebSocket(server);
 
