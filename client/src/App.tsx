@@ -9,7 +9,7 @@ const App: React.FC = () => {
   return (
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <Router>
-        <div className="min-h-screen dark:bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="min-h-screen ">
           <NavBar />
           <main className="container mx-auto p-4 ">
             <AppRoutes />
