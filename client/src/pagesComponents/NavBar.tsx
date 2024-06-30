@@ -28,6 +28,11 @@ const NavBar: React.FC = () => {
             <Button variant="ghost">Profile</Button>
           </Link>
         </li>
+        <li>
+          <Link to="/auction/6680746f36931d1d3dfbf3dc">
+            <Button variant="ghost">Auction Page</Button>
+          </Link>
+        </li>
       </ul>
       <ul className="flex items-center gap-2 ">
         <ModeToggle />

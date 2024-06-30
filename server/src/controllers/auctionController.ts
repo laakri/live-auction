@@ -1,7 +1,6 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import Auction, { IAuction } from "../models/auctions.model";
 import User from "../models/users.model";
-import mongoose from "mongoose";
 
 export const createAuction = async (
   request: FastifyRequest,
