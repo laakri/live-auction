@@ -1,6 +1,6 @@
 import Fastify, { FastifyInstance } from "fastify";
 import cors from "@fastify/cors";
-import websocket from "@fastify/websocket";
+import fastifyIO from "fastify-socket.io";
 import connectDB from "./src/config/db";
 import auctionRoutes from "./src/routes/auctions";
 import bidRoutes from "./src/routes/bids";
@@ -9,6 +9,7 @@ import userRoutes from "./src/routes/users";
 import fastifyEnv from "@fastify/env";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { setupWebSocket } from "./src/websocket/socketHandler";
+import { Server } from "socket.io";
 
 interface EnvConfig {
   PORT: number;
@@ -39,6 +40,12 @@ const server: FastifyInstance = Fastify({
   logger: true,
 }).withTypeProvider<TypeBoxTypeProvider>();
 
+declare module "fastify" {
+  interface FastifyInstance {
+    io: Server;
+  }
+}
+
 async function buildServer() {
   try {
     await server.register(fastifyEnv, {
@@ -47,12 +54,27 @@ async function buildServer() {
     });
 
     server.register(cors, {
-      origin: true,
+      origin: ["http://localhost:5173"],
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      credentials: true,
     });
 
-    server.register(websocket);
+    await server.register(fastifyIO, {
+      cors: {
+        origin: "http://localhost:5173",
+        methods: ["GET", "POST"],
+        credentials: true,
+      },
+    });
+
     // Set up WebSocket
-    setupWebSocket(server);
+    server.ready().then(() => {
+      if (server.io) {
+        setupWebSocket(server.io);
+      } else {
+        console.error("Socket.IO not initialized");
+      }
+    });
 
     server.register(auctionRoutes, { prefix: "/api/auctions" });
     server.register(bidRoutes, { prefix: "/api/bids" });

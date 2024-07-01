@@ -1,9 +1,9 @@
 // src/pages/AuctionHomePage.tsx
 import React from "react";
-import UserProfile from "../pagesComponents/UserProfile";
-import LiveAuctions from "../pagesComponents/LiveAuctions";
-import DailyChallenge from "../pagesComponents/DailyChallenge";
-import ChatWidget from "../pagesComponents/ChatWidget";
+import UserProfile from "./AuctionLive/AuctionLiveComponent/UserProfile";
+import LiveAuctions from "./AuctionLive/AuctionLiveComponent/LiveAuctions";
+import DailyChallenge from "./AuctionLive/AuctionLiveComponent/DailyChallenge";
+import ChatWidget from "./AuctionLive/AuctionLiveComponent/ChatWidget";
 
 const AuctionHomePage: React.FC = () => {
   return (

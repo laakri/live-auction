@@ -1,19 +1,17 @@
-import { FastifyInstance } from "fastify";
-import { Server } from "socket.io";
+import { Server, Socket } from "socket.io";
 
 let io: Server;
 
-export function setupWebSocket(fastify: FastifyInstance) {
-  io = new Server(fastify.server);
-
-  io.on("connection", (socket) => {
+export function setupWebSocket(socketIo: Server) {
+  io = socketIo;
+  io.on("connection", (socket: Socket) => {
     console.log("New WebSocket connection");
 
-    socket.on("join auction", (auctionId) => {
+    socket.on("join auction", (auctionId: string) => {
       socket.join(auctionId);
     });
 
-    socket.on("leave auction", (auctionId) => {
+    socket.on("leave auction", (auctionId: string) => {
       socket.leave(auctionId);
     });
   });
