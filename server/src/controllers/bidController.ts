@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import Bid from "../models/bid.model";
 import Auction from "../models/auctions.model";
 import User from "../models/users.model";
+import { socketHandler } from "../websocket/socketHandler";
 
 export const placeBid = async (
   request: FastifyRequest,
@@ -50,13 +51,37 @@ export const placeBid = async (
     auction.bids.push(bid._id);
     await auction.save();
 
-    // Emit real-time update (implement with WebSocket)
-    // socketHandler.emitBid(auctionId, { amount, bidder: user.username });
+    // Emit real-time update
+    socketHandler.emitBid(auctionId, {
+      amount,
+      bidder: user.username,
+      timestamp: bid.timestamp,
+    });
 
     reply.status(201).send(bid);
   } catch (error) {
     reply.status(500).send({ error: "Error placing bid" });
   }
 };
+export const getBidsByAuctionId = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const { auctionId } = request.params as { auctionId: string };
 
-// Add more controller methods as needed
+  try {
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+      return reply.status(404).send({ error: "Auction not found" });
+    }
+
+    const bids = await Bid.find({ auction: auctionId })
+      .sort({ timestamp: -1 })
+      .populate("bidder", "username");
+
+    reply.send(bids);
+  } catch (error) {
+    console.error("Error fetching bids:", error);
+    reply.status(500).send({ error: "Error fetching bids" });
+  }
+};

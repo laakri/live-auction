@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from "fastify";
 import ChatMessage from "../models/chatMessage.model";
 import { socketHandler } from "../websocket/socketHandler";
+import User from "../models/users.model";
 
 export const sendMessage = async (
   request: FastifyRequest,
@@ -13,6 +14,11 @@ export const sendMessage = async (
   const userId = request.user!._id;
 
   try {
+    const user = await User.findById(userId);
+    if (!user) {
+      return reply.status(404).send({ error: "User not found" });
+    }
+
     const message = new ChatMessage({
       auction: auctionId,
       sender: userId,
@@ -21,9 +27,13 @@ export const sendMessage = async (
 
     await message.save();
 
-    // Emit real time websocket updates
-    socketHandler.emitChatMessage(auctionId, { sender: userId, content });
-
+    // Emit real-time websocket updates
+    socketHandler.emitChatMessage(auctionId, {
+      _id: message._id,
+      sender: user.username,
+      content: message.content,
+      timestamp: message.timestamp,
+    });
     reply.status(201).send(message);
   } catch (error) {
     reply.status(500).send({ error: "Error sending message" });
