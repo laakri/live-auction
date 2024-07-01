@@ -1,23 +1,26 @@
 // src/pages/AuctionPage.tsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getAuction, Auction } from "../services/auctionService";
-import ChatWidget from "../pagesComponents/ChatWidget";
-import { Button } from "../components/ui/button";
+import { getAuction, Auction } from "../../services/auctionService";
+import ChatWidget from "./AuctionLiveComponent/ChatWidget";
+import { Button } from "../../components/ui/button";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
-} from "../components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Badge } from "../components/ui/badge";
+} from "../../components/ui/card";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../components/ui/avatar";
+import { Badge } from "../../components/ui/badge";
 import { Heart, Share2 } from "lucide-react";
-import CountdownTimer from "../components/CountdownTimer";
-import RecentBids from "../pagesComponents/RecentBids";
-import WatchersCard from "../pagesComponents/WatchersCard";
-import RelatedAuctions from "../pagesComponents/RelatedAuctions";
-import ImageGallery from "../pagesComponents/ImageGallery";
+import CountdownTimer from "../../components/CountdownTimer";
+import RecentBids from "./AuctionLiveComponent/RecentBids";
+import RelatedAuctions from "./AuctionLiveComponent/RelatedAuctions";
+import ImageGallery from "./AuctionLiveComponent/ImageGallery";
 
 const AuctionPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();

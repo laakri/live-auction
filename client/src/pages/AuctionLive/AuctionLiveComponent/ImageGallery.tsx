@@ -1,6 +1,6 @@
 // src/components/ImageGallery.tsx
 import React from "react";
-import { Card, CardContent } from "../components/ui/card";
+import { Card, CardContent } from "../../../components/ui/card";
 import {
   Carousel,
   CarouselApi,
@@ -8,8 +8,8 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "../components/ui/carousel";
-import { AspectRatio } from "../components/ui/aspect-ratio";
+} from "../../../components/ui/carousel";
+import { AspectRatio } from "../../../components/ui/aspect-ratio";
 import Autoplay from "embla-carousel-autoplay";
 
 interface ImageGalleryProps {

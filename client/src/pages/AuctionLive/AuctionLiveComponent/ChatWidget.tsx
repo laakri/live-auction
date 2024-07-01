@@ -1,16 +1,16 @@
 import React, { useState, useEffect, useRef } from "react";
 import { CornerDownLeft, Paperclip, X } from "lucide-react";
-import { Button } from "../components/ui/button";
+import { Button } from "../../../components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "../components/ui/tooltip";
+} from "../../../components/ui/tooltip";
 import { Label } from "@radix-ui/react-dropdown-menu";
-import { Textarea } from "../components/ui/textarea";
-import { ScrollArea } from "../components/ui/scroll-area";
-import { Badge } from "../components/ui/badge";
+import { Textarea } from "../../../components/ui/textarea";
+import { ScrollArea } from "../../../components/ui/scroll-area";
+import { Badge } from "../../../components/ui/badge";
 
 type ChatMessage = {
   id: string;
@@ -65,7 +65,7 @@ const BidToast: React.FC<{ bid: Bid; onClose: () => void }> = ({
     <div className="inline-flex h-12 relative shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors  focus:outline-none focus:ring-1 focus:ring-ring disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive">
       <button
         onClick={onClose}
-        className="absolute right-1 top-1 rounded-md p-1 text-foreground/50"
+        className="absolute right-1 top-1 rounded-md p-1 text-foreground/50 hover:"
       >
         <X className="h-4 w-4" />
       </button>

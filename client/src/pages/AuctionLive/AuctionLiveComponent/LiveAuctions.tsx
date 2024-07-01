@@ -1,6 +1,6 @@
 // src/components/LiveAuctions.tsx
 import React from "react";
-import { Button } from "../components/ui/button";
+import { Button } from "../../../components/ui/button";
 
 const LiveAuctions: React.FC = () => {
   return (
