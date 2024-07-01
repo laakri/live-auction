@@ -22,18 +22,20 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
+import useAuthStore from "../stores/authStore";
 
 const NavBar: React.FC = () => {
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // Replace with actual auth state
-
+  const { isAuthenticated, logout } = useAuthStore();
   return (
-    <nav className="bg-background border-b px-6 py-3">
+    <nav className="bg-background border-b px-6 py-3 ">
       <div className="max-w-7xl mx-auto flex items-center justify-between">
         <div className="flex items-center space-x-8">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
-            <Gavel className="h-8 w-8 text-primary" />
-            <span className="text-2xl font-bold text-primary">AuctionHub</span>
+            {/* <Gavel className="h-8 w-8 text-primary" /> */}
+            <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-purple-700 dark:from-gray-50 dark:to-purple-400">
+              LEXURA
+            </span>
           </Link>
 
           {/* Main Navigation */}
@@ -75,8 +77,8 @@ const NavBar: React.FC = () => {
             placeholder="Search auctions..."
             className="w-full"
           />
-          <Button variant="ghost" size="icon" className="-ml-10">
-            <Search className="h-5 w-5" />
+          <Button variant="ghost" size="icon" className="-ml-9 h-7 w-7">
+            <Search className="h-4 w-4" />
           </Button>
         </div>
 
@@ -88,15 +90,17 @@ const NavBar: React.FC = () => {
             <Bell className="h-5 w-5" />
           </Button>
 
-          {isLoggedIn ? (
+          {isAuthenticated ? (
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" size="icon">
                   <UserRound className="h-5 w-5" />
                 </Button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+              <DropdownMenuContent align="end" className="w-[12rem]">
+                <DropdownMenuLabel className="text-center">
+                  My Account
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
                   <Link to="/profile" className="flex items-center">
@@ -124,13 +128,14 @@ const NavBar: React.FC = () => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem>
-                  <button
-                    className="flex items-center text-destructive"
-                    onClick={() => setIsLoggedIn(false)}
+                  <Button
+                    variant={"ghost"}
+                    className="flex items-center  text-destructive-foreground w-full"
+                    onClick={() => logout()}
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     <span>Log out</span>
-                  </button>
+                  </Button>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

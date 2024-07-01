@@ -3,7 +3,7 @@ import create from "zustand";
 import { persist } from "zustand/middleware";
 import axios from "axios";
 
-interface User {
+export interface User {
   id: string;
   email: string;
   name: string;
@@ -33,10 +33,13 @@ const useAuthStore = create<AuthState>()(
       login: async (email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.post("/api/auth/login", {
-            email,
-            password,
-          });
+          const response = await axios.post(
+            "http://localhost:3000/api/users/login",
+            {
+              email,
+              password,
+            }
+          );
           set({
             user: response.data.user,
             token: response.data.token,
@@ -54,11 +57,14 @@ const useAuthStore = create<AuthState>()(
       signup: async (name: string, email: string, password: string) => {
         set({ isLoading: true, error: null });
         try {
-          const response = await axios.post("/api/auth/signup", {
-            name,
-            email,
-            password,
-          });
+          const response = await axios.post(
+            "http://localhost:3000/api/users/register",
+            {
+              name,
+              email,
+              password,
+            }
+          );
           set({
             user: response.data.user,
             token: response.data.token,
