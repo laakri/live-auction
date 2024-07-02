@@ -16,7 +16,15 @@ import {
   AvatarImage,
 } from "../../components/ui/avatar";
 import { Badge } from "../../components/ui/badge";
-import { Circle, Heart, Icon, MessageCircle, Share2 } from "lucide-react";
+import {
+  BadgeCheck,
+  Circle,
+  Globe,
+  Heart,
+  Icon,
+  MessageCircle,
+  Share2,
+} from "lucide-react";
 import CountdownTimer from "../../components/CountdownTimer";
 import RecentBids from "./AuctionLiveComponent/RecentBids";
 import RelatedAuctions from "./AuctionLiveComponent/RelatedAuctions";
@@ -125,7 +133,7 @@ const AuctionPage: React.FC = () => {
               <ImageGallery images={auction.images} />
               <div className="absolute bottom-0 w-full bg-gradient-to-t from-background to-transparent p-4">
                 <div className="flex items-center justify-between">
-                  <div className="flex flex-col items-center ">
+                  <div className="flex flex-col  gap-2 ">
                     <Avatar className="rounded-md min-h-16 min-w-16 ">
                       <AvatarImage
                         src="https://github.com/shadcn.png"
@@ -134,14 +142,19 @@ const AuctionPage: React.FC = () => {
                       <AvatarFallback>CN</AvatarFallback>
                     </Avatar>
                     <div>
-                      <div className="bg-[#24342b] text-[#6cbe93] flex items-center">
+                      <p className="font-semibold flex items-center gap-1">
+                        <span className="text-lg">
+                          {auction.seller.username}{" "}
+                        </span>
+                        <BadgeCheck className="h-5 text-blue-400" />
+                        <span className="text-gray-500">|</span>
+                        <Globe className="h-4" />
+                      </p>
+                      <p className="text-sm opacity-75"></p>
+                      <div className="bg-[#24342b] text-[#79fbb8] flex items-center  px-2 rounded-lg">
                         <Circle className="h-2 live-pulse" />
                         <span>Auction Live</span>
                       </div>
-                      <p className="font-semibold">{auction.seller.username}</p>
-                      <p className="text-sm opacity-75">
-                        {/* {auction.seller.rating} ★ */}★★★★★
-                      </p>
                     </div>
                   </div>
                   <Button variant="outline">Follow</Button>
@@ -151,7 +164,26 @@ const AuctionPage: React.FC = () => {
                 <WatchersCard watchers={auction.watchedBy.length} />
               </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+            <div className="flex flex-col gap-6 mb-6">
+              <div className="bg-primary/5 rounded-lg p-6 flex justify-between items-center ">
+                <div className="text-center space-y-2">
+                  <h3 className="font-semibold">Current Price</h3>
+                  <p className="text-3xl font-bold text-primary">
+                    ${auction.currentPrice}
+                  </p>
+                </div>
+                <div className="text-center space-y-2">
+                  <h3 className="font-semibold">Time Left</h3>
+                  <div className="text-xl font-medium">
+                    <CountdownTimer endTime={auction.endTime} />
+                  </div>
+                </div>
+
+                <Button className="max-w-content text-lg py-4" size="lg">
+                  Place Bid
+                </Button>
+              </div>
+
               <div className="col-span-2">
                 <h2 className="text-2xl font-bold mb-3">{auction.title}</h2>
                 <p className="text-gray-600 mb-4">{auction.description}</p>
@@ -188,24 +220,6 @@ const AuctionPage: React.FC = () => {
                     ))}
                   </div>
                 </div>
-              </div>
-
-              <div className="bg-primary/5 rounded-lg p-6 flex flex-col justify-between">
-                <div>
-                  <h3 className="font-semibold mb-2">Current Price</h3>
-                  <p className="text-3xl font-bold text-primary mb-4">
-                    ${auction.currentPrice}
-                  </p>
-
-                  <h3 className="font-semibold mb-2">Time Left</h3>
-                  <div className="text-xl font-medium mb-6">
-                    <CountdownTimer endTime={auction.endTime} />
-                  </div>
-                </div>
-
-                <Button className="w-full text-lg py-6" size="lg">
-                  Place Bid
-                </Button>
               </div>
             </div>
           </CardContent>
