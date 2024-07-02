@@ -16,22 +16,31 @@ import { Label } from "@radix-ui/react-dropdown-menu";
 import { Textarea } from "../../../components/ui/textarea";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Badge } from "../../../components/ui/badge";
+import socket from "../../../utils/socket";
+import useAuthStore from "../../../stores/authStore";
+import AnimatedBidButton from "../../../components/AnimatedBidButton";
 
-type ChatMessage = {
-  id: string;
-  username: string;
+interface IChatMessage {
+  _id: string;
+  auction: string;
+  sender: {
+    _id: string;
+    username: string;
+  };
   content: string;
   timestamp: Date;
-  color: string;
-};
+}
 
-type Bid = {
-  id: string;
-  username: string;
+interface IBid {
+  _id: string;
+  auction: string;
+  bidder: {
+    _id: string;
+    username: string;
+  };
   amount: number;
   timestamp: Date;
-  color: string;
-};
+}
 
 const getRandomColor = () => {
   const colors = [
@@ -47,14 +56,32 @@ const getRandomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-const ChatMessage: React.FC<{ message: ChatMessage }> = ({ message }) => (
-  <div className="flex items-start space-x-2 p-2 rounded-lg mb-2">
+const ChatMessage: React.FC<{ message: IChatMessage; color: string }> = ({
+  message,
+  color,
+}) => (
+  <div className=" p-2 rounded-lg mb-2">
+    {/* <span className="text-[10px] opacity-75">
+      {new Date(message.timestamp).toLocaleTimeString([], {
+        hour: "2-digit",
+        minute: "2-digit",
+      })}
+    </span> */}
+    <span className={`font-semibold ${color}`}>{message.sender.username}:</span>
+    <span className="ml-1 text-gray-700 dark:text-gray-100 text-sm">
+      {message.content}
+    </span>
+  </div>
+);
+
+const BidMessage: React.FC<{ bid: IBid; color: string }> = ({ bid, color }) => (
+  <div className="flex items-start space-x-2 p-2 rounded-lg mb-2 bg-secondary/30">
     <div className="flex-1">
-      <p className={`font-semibold ${message.color}`}>{message.username}</p>
-      <p className="text-sm">{message.content}</p>
+      <p className={`font-semibold ${color}`}>{bid.bidder.username}</p>
+      <p className="text-sm">Placed a bid of ${bid.amount.toFixed(2)}</p>
     </div>
     <span className="text-xs opacity-75">
-      {message.timestamp.toLocaleTimeString([], {
+      {new Date(bid.timestamp).toLocaleTimeString([], {
         hour: "2-digit",
         minute: "2-digit",
       })}
@@ -62,89 +89,143 @@ const ChatMessage: React.FC<{ message: ChatMessage }> = ({ message }) => (
   </div>
 );
 
-const TopBids: React.FC<{ bids: Bid[] }> = ({ bids }) => (
+const TopBids: React.FC<{ bids: IBid[] }> = ({ bids }) => (
   <div className="bg-secondary p-4 rounded-lg mb-4">
     <h3 className="font-semibold mb-2">Top Bids</h3>
     <div className="flex flex-wrap gap-2">
       {bids.map((bid) => (
         <Badge
-          key={bid.id}
+          key={bid._id}
           variant="outline"
-          className={`text-xs ${bid.color}`}
+          className={`text-xs ${getRandomColor()}`}
         >
-          {bid.username}: ${bid.amount.toFixed(2)}
+          {bid.bidder.username}: ${bid.amount.toFixed(2)}
         </Badge>
       ))}
     </div>
   </div>
 );
 
-const ChatWidget: React.FC<{ isOpen: boolean; onToggle: () => void }> = ({
+interface ChatWidgetProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  auctionId: string;
+  currentPrice: number;
+}
+
+const ChatWidget: React.FC<ChatWidgetProps> = ({
   isOpen,
   onToggle,
+  auctionId,
+  currentPrice,
 }) => {
+  const { isAuthenticated, token } = useAuthStore();
+
   const [message, setMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
-  const [bids, setBids] = useState<Bid[]>([]);
-  const [latestBid, setLatestBid] = useState<Bid | null>(null);
+  const [chatMessages, setChatMessages] = useState<IChatMessage[]>([]);
+  const [bids, setBids] = useState<IBid[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const [isPlaceBidOpen, setIsPlaceBidOpen] = useState(false);
 
-  const scrollToBottom = () => {
-    if (scrollAreaRef.current) {
-      const scrollElement = scrollAreaRef.current.querySelector(
-        "[data-radix-scroll-area-viewport]"
-      );
-      if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
-      }
-    }
-  };
-  useEffect(scrollToBottom, [chatMessages]);
-
-  // Simulating incoming messages and bids
   useEffect(() => {
-    const timer = setInterval(() => {
-      const isChat = Math.random() > 0.3;
-      if (isChat) {
-        const newMessage: ChatMessage = {
-          id: Date.now().toString(),
-          username: `User${Math.floor(Math.random() * 100)}`,
-          content: `Random message ${Math.floor(Math.random() * 1000)}`,
-          timestamp: new Date(),
-          color: getRandomColor(),
-        };
-        setChatMessages((prev) => [...prev, newMessage]);
-      } else {
-        const newBid: Bid = {
-          id: Date.now().toString(),
-          username: `User${Math.floor(Math.random() * 100)}`,
-          amount: Math.floor(Math.random() * 1000) + 100,
-          timestamp: new Date(),
-          color: getRandomColor(),
-        };
-        setBids((prev) =>
-          [...prev, newBid].sort((a, b) => b.amount - a.amount).slice(0, 5)
-        );
-        setLatestBid(newBid);
+    const fetchBidsAndChat = async () => {
+      if (!isAuthenticated || !token) {
+        console.error("User is not authenticated");
+        return;
       }
-    }, 5000);
 
-    return () => clearInterval(timer);
-  }, []);
+      try {
+        const headers = {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        };
 
-  const handleSend = () => {
+        const [bidsResponse, chatResponse] = await Promise.all([
+          fetch(`http://localhost:3000/api/bids/${auctionId}`, { headers }),
+          fetch(`http://localhost:3000/api/chat/${auctionId}`, { headers }),
+        ]);
+
+        if (bidsResponse.ok && chatResponse.ok) {
+          const bidsData = await bidsResponse.json();
+          const chatData = await chatResponse.json();
+
+          setBids(bidsData);
+          setChatMessages(chatData);
+        } else {
+          console.error("Failed to fetch bids or chat data");
+        }
+      } catch (error) {
+        console.error("Error fetching bids and chat data:", error);
+      }
+    };
+
+    fetchBidsAndChat();
+
+    socket.on("new message", (msg: IChatMessage) => {
+      setChatMessages((prev) => [...prev, msg]);
+    });
+
+    socket.on("new bid", (bid: IBid) => {
+      setBids((prev) => {
+        const newBids = [...prev, bid];
+        return newBids.sort((a, b) => b.amount - a.amount).slice(0, 5);
+      });
+      setChatMessages((prev) => [
+        ...prev,
+        {
+          _id: bid._id,
+          auction: bid.auction,
+          sender: bid.bidder,
+          content: `Placed a bid of $${bid.amount.toFixed(2)}`,
+          timestamp: bid.timestamp,
+        },
+      ]);
+    });
+
+    return () => {
+      socket.off("new message");
+      socket.off("new bid");
+    };
+  }, [auctionId]);
+
+  useEffect(() => {
+    if (scrollAreaRef.current) {
+      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
+
+  const handleSend = async () => {
     if (message.trim()) {
-      const newMessage: ChatMessage = {
-        id: Date.now().toString(),
-        username: "You",
-        content: message.trim(),
-        timestamp: new Date(),
-        color: getRandomColor(),
-      };
-      setChatMessages((prev) => [...prev, newMessage]);
-      setMessage("");
+      try {
+        const response = await fetch(`http://localhost:3000/api/chat/`, {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            auctionId: auctionId,
+            content: message.trim(),
+          }),
+        });
+
+        if (response.ok) {
+          const newMessage = await response.json();
+          setChatMessages((prev) => [...prev, newMessage]);
+          setMessage("");
+        } else {
+          console.error("Failed to send message");
+        }
+      } catch (error) {
+        console.error("Error sending message:", error);
+      }
     }
   };
+
+  const handlePlaceBid = () => {
+    setIsPlaceBidOpen(true);
+  };
+
   return (
     <TooltipProvider>
       <div
@@ -152,7 +233,6 @@ const ChatWidget: React.FC<{ isOpen: boolean; onToggle: () => void }> = ({
           isOpen ? "translate-x-0" : "translate-x-full"
         } flex flex-col`}
       >
-        {/* Fixed header */}
         <div className="p-4 border-b">
           <div className="flex justify-between items-center mb-4">
             <button
@@ -170,18 +250,26 @@ const ChatWidget: React.FC<{ isOpen: boolean; onToggle: () => void }> = ({
           <div className="flex items-center justify-between bg-secondary/30 rounded-lg py-2 px-4 ">
             <div>
               <p className="text-sm text-gray">Current Bid</p>
-              <p className="text-2xl font-bold text-primary">$120</p>
+              <p className="text-2xl font-bold text-primary">${currentPrice}</p>
             </div>
-            <Button className="px-8">Place Bid</Button>
+            <AnimatedBidButton onClick={() => setIsPlaceBidOpen(true)} />
           </div>
         </div>
 
         {/* Scrollable message area */}
         <ScrollArea ref={scrollAreaRef} className="flex-grow p-4">
           <div className="space-y-2">
-            {chatMessages.map((msg) => (
-              <ChatMessage key={msg.id} message={msg} />
-            ))}
+            {chatMessages.map((msg) =>
+              msg.content.startsWith("Placed a bid of $") ? (
+                <BidMessage
+                  key={msg._id}
+                  bid={msg as unknown as IBid}
+                  color={getRandomColor()}
+                />
+              ) : (
+                <ChatMessage key={msg._id} message={msg} color={"white"} />
+              )
+            )}
           </div>
         </ScrollArea>
 

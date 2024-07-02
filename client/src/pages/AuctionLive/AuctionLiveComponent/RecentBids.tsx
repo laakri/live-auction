@@ -30,7 +30,9 @@ const RecentBids: React.FC<RecentBidsProps> = ({ bids }) => {
             <li key={bid.id} className="flex justify-between items-center">
               <span>{bid.bidder}</span>
               <span className="font-semibold">${bid.amount.toFixed(2)}</span>
-              <span className="text-sm text-gray-500">{bid.time}</span>
+              <span className="text-sm text-gray-600 dark:text-gray-400">
+                {bid.time}
+              </span>
             </li>
           ))}
         </ul>

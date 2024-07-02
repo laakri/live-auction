@@ -4,6 +4,8 @@ import { motion } from "framer-motion";
 
 interface CountdownTimerProps {
   endTime: string;
+  size?: "sm" | "md" | "lg" | "xl";
+  shortLabels?: boolean;
 }
 
 interface TimeLeft {
@@ -13,8 +15,12 @@ interface TimeLeft {
   seconds: number;
 }
 
-const CountdownTimer: React.FC<CountdownTimerProps> = ({ endTime }) => {
-  const [timeLeft, setTimeLeft] = useState<TimeLeft>(calculateTimeLeft());
+const CountdownTimer: React.FC<CountdownTimerProps> = ({
+  endTime,
+  size = "md",
+  shortLabels = false,
+}) => {
+  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
 
   function calculateTimeLeft(): TimeLeft {
     const difference = +new Date(endTime) - +new Date();
@@ -45,31 +51,61 @@ const CountdownTimer: React.FC<CountdownTimerProps> = ({ endTime }) => {
     return () => clearTimeout(timer);
   });
 
+  const getFontSize = () => {
+    switch (size) {
+      case "sm":
+        return "text-sm";
+      case "md":
+        return "text-base";
+      case "lg":
+        return "text-lg";
+      case "xl":
+        return "text-xl";
+      default:
+        return "text-base";
+    }
+  };
+
+  const getLabel = (interval: string) => {
+    if (!shortLabels) return interval;
+    switch (interval) {
+      case "days":
+        return "D";
+      case "hours":
+        return "H";
+      case "minutes":
+        return "M";
+      case "seconds":
+        return "S";
+      default:
+        return interval;
+    }
+  };
+
   const timerComponents = Object.entries(timeLeft).map(([interval, value]) => (
     <motion.div
       key={interval}
-      className="flex flex-col items-center mx-2"
-      initial={{ scale: 0.8, opacity: 0 }}
-      animate={{ scale: 1, opacity: 1 }}
+      className={`flex flex-col items-center ${getFontSize()} ${
+        shortLabels ? "mx-1" : "mx-2"
+      }`}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
     >
-      <motion.span
-        className="text-3xl font-bold"
-        key={value}
-        initial={{ y: -20, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        exit={{ y: 20, opacity: 0 }}
-        transition={{ type: "spring", stiffness: 200, damping: 10 }}
-      >
-        {value}
-      </motion.span>
-      <span className="text-sm text-gray-500">{interval}</span>
+      <span className="text-gray-600 dark:text-gray-400">
+        {getLabel(interval)}
+      </span>
+      <span className="font-bold ">{value}</span>
     </motion.div>
   ));
 
   return (
-    <div className="flex justify-center items-center rounded-lg p-4 shadow-md">
-      {timerComponents.length ? timerComponents : <span>Time's up!</span>}
+    <div className="flex">
+      {timerComponents.length ? (
+        timerComponents
+      ) : (
+        <span className={getFontSize()}>Time's up!</span>
+      )}
     </div>
   );
 };
