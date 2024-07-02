@@ -35,13 +35,13 @@ const LuxuryAuthPage: React.FC = () => {
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ duration: 0.8 }}
-        className="w-full relative z-10  mt-8"
+        className="w-full relative z-10  mt-14"
       >
         <div>
-          <h1 className="text-[4rem]  text-center font-light font-mono">
+          <h1 className="text-[4rem]  text-center font-light ">
             Explore Premium
           </h1>
-          <h1 className="text-[4rem]  text-center  font-light font-mono">
+          <h1 className="text-[4rem]  text-center  font-light ">
             With{" "}
             <span className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-purple-700 dark:from-gray-50 dark:to-purple-400">
               LEXURA

@@ -1,5 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import { CornerDownLeft, Paperclip, X } from "lucide-react";
+import {
+  CornerDownLeft,
+  Paperclip,
+  ArrowRightFromLine,
+  Users,
+} from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import {
   Tooltip,
@@ -57,31 +62,6 @@ const ChatMessage: React.FC<{ message: ChatMessage }> = ({ message }) => (
   </div>
 );
 
-const BidToast: React.FC<{ bid: Bid; onClose: () => void }> = ({
-  bid,
-  onClose,
-}) => (
-  <div className="fixed top-0 z-[100] flex max-h-screen w-full flex-col-reverse p-4 sm:bottom-0 sm:right-0 sm:top-auto sm:flex-col md:max-w-[420px]">
-    <div className="inline-flex h-12 relative shrink-0 items-center justify-center rounded-md border bg-transparent px-3 text-sm font-medium transition-colors  focus:outline-none focus:ring-1 focus:ring-ring disabled:pointer-events-none disabled:opacity-50 group-[.destructive]:border-muted/40 group-[.destructive]:hover:border-destructive/30 group-[.destructive]:hover:bg-destructive group-[.destructive]:hover:text-destructive-foreground group-[.destructive]:focus:ring-destructive">
-      <button
-        onClick={onClose}
-        className="absolute right-1 top-1 rounded-md p-1 text-foreground/50 hover:"
-      >
-        <X className="h-4 w-4" />
-      </button>
-      <div
-        className="flex
-       items-center"
-      >
-        <p className={`font-bold text-lg ${bid.color} mr-2`}>
-          {bid.username} placed a bid!
-        </p>
-        <p className="text-lg">${bid.amount.toFixed(2)}</p>
-      </div>
-    </div>
-  </div>
-);
-
 const TopBids: React.FC<{ bids: Bid[] }> = ({ bids }) => (
   <div className="bg-secondary p-4 rounded-lg mb-4">
     <h3 className="font-semibold mb-2">Top Bids</h3>
@@ -99,7 +79,10 @@ const TopBids: React.FC<{ bids: Bid[] }> = ({ bids }) => (
   </div>
 );
 
-const ChatWidget: React.FC = () => {
+const ChatWidget: React.FC<{ isOpen: boolean; onToggle: () => void }> = ({
+  isOpen,
+  onToggle,
+}) => {
   const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
   const [bids, setBids] = useState<Bid[]>([]);
@@ -164,15 +147,37 @@ const ChatWidget: React.FC = () => {
   };
   return (
     <TooltipProvider>
-      <div className="p-4 rounded-lg shadow-md border top-8 sticky max-w-md mx-auto">
-        <h2 className="text-xl font-semibold mb-4">Live Auction Chat</h2>
+      <div
+        className={`fixed right-0 top-16 bottom-0 w-96 bg-background shadow-lg transition-transform duration-300 ease-in-out ${
+          isOpen ? "translate-x-0" : "translate-x-full"
+        } flex flex-col`}
+      >
+        {/* Fixed header */}
+        <div className="p-4 border-b">
+          <div className="flex justify-between items-center mb-4">
+            <button
+              onClick={onToggle}
+              className="p-2 rounded-full hover:bg-secondary"
+            >
+              <ArrowRightFromLine className="h-5 w-5" />
+            </button>
+            <h2 className="text-lg font-semibold">Live Auction Chat</h2>
+            <button className="p-2 rounded-full hover:bg-secondary">
+              <Users className="h-5 w-5" />
+            </button>
+          </div>
+          <TopBids bids={bids} />
+          <div className="flex items-center justify-between bg-secondary/30 rounded-lg py-2 px-4 ">
+            <div>
+              <p className="text-sm text-gray">Current Bid</p>
+              <p className="text-2xl font-bold text-primary">$120</p>
+            </div>
+            <Button className="px-8">Place Bid</Button>
+          </div>
+        </div>
 
-        <TopBids bids={bids} />
-
-        <ScrollArea
-          ref={scrollAreaRef}
-          className="h-64 mb-4 p-2 rounded border"
-        >
+        {/* Scrollable message area */}
+        <ScrollArea ref={scrollAreaRef} className="flex-grow p-4">
           <div className="space-y-2">
             {chatMessages.map((msg) => (
               <ChatMessage key={msg.id} message={msg} />
@@ -180,43 +185,42 @@ const ChatWidget: React.FC = () => {
           </div>
         </ScrollArea>
 
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            handleSend();
-          }}
-          className="relative overflow-hidden rounded-lg border focus-within:ring-1 focus-within:ring-primary"
-        >
-          <Label className="sr-only">Message</Label>
-          <Textarea
-            id="message"
-            placeholder="Type your message here..."
-            className="min-h-12 resize-none border-0 p-3 shadow-none focus-visible:ring-0"
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-          />
-          <div className="flex items-center p-3 pt-0">
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Button type="button" variant="ghost" size="icon">
-                  <Paperclip className="size-4" />
-                  <span className="sr-only">Attach file</span>
-                </Button>
-              </TooltipTrigger>
-              <TooltipContent side="top">Attach File</TooltipContent>
-            </Tooltip>
+        {/* Fixed form at the bottom */}
+        <div className="p-4 border-t">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSend();
+            }}
+            className="relative overflow-hidden rounded-lg border focus-within:ring-1 focus-within:ring-primary"
+          >
+            <Label className="sr-only">Message</Label>
+            <Textarea
+              id="message"
+              placeholder="Type your message here..."
+              className="min-h-12 max-h-32 resize-none border-0 p-3 shadow-none focus-visible:ring-0"
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+            />
+            <div className="flex items-center p-3 pt-0">
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <Button type="button" variant="ghost" size="icon">
+                    <Paperclip className="size-4" />
+                    <span className="sr-only">Attach file</span>
+                  </Button>
+                </TooltipTrigger>
+                <TooltipContent side="top">Attach File</TooltipContent>
+              </Tooltip>
 
-            <Button type="submit" size="sm" className="ml-auto gap-1.5">
-              Send
-              <CornerDownLeft className="size-3.5" />
-            </Button>
-          </div>
-        </form>
+              <Button type="submit" size="sm" className="ml-auto gap-1.5">
+                Send
+                <CornerDownLeft className="size-3.5" />
+              </Button>
+            </div>
+          </form>
+        </div>
       </div>
-
-      {latestBid && (
-        <BidToast bid={latestBid} onClose={() => setLatestBid(null)} />
-      )}
     </TooltipProvider>
   );
 };

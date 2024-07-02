@@ -26,7 +26,21 @@
     transform: rotate(360deg);
   }
 }
+@keyframes gradient-x {
+  0%, 100% {
+    background-size: 200% 200%;
+    background-position: left center;
+  }
+  50% {
+    background-size: 200% 200%;
+    background-position: right center;
+  }
+}
 
+
+.animate-gradient-x {
+  animation: gradient-x 15s ease infinite;
+}
 @media (prefers-reduced-motion: no-preference) {
   a:nth-of-type(2) .logo {
     animation: logo-spin infinite 20s linear;

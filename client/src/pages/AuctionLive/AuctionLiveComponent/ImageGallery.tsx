@@ -20,6 +20,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
   const [api, setApi] = React.useState<CarouselApi>();
   const [current, setCurrent] = React.useState(0);
   const [count, setCount] = React.useState(0);
+
   React.useEffect(() => {
     if (!api) {
       return;
@@ -32,6 +33,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
       setCurrent(api.selectedScrollSnap() + 1);
     });
   }, [api]);
+
   return (
     <Carousel
       setApi={setApi}
@@ -40,18 +42,18 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
           delay: 5000,
         }),
       ]}
-      className="w-full mx-auto relative"
+      className="w-full mx-auto relative max-h-[33rem]"
     >
-      <CarouselContent>
+      <CarouselContent className="max-h-[33rem]">
         {images.map((image, index) => (
-          <CarouselItem key={index}>
-            <Card>
-              <CardContent className="p-0">
-                <AspectRatio ratio={16 / 9}>
+          <CarouselItem key={index} className="max-h-[33rem]">
+            <Card className="max-h-[33rem]">
+              <CardContent className="p-0 max-h-[33rem]">
+                <AspectRatio ratio={16 / 9} className="max-h-[33rem]">
                   <img
                     src={image}
                     alt={`Image ${index + 1}`}
-                    className="object-cover w-full h-full rounded-md"
+                    className="object-cover w-full h-full rounded-md max-h-[33rem]"
                   />
                 </AspectRatio>
               </CardContent>
@@ -59,9 +61,9 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
           </CarouselItem>
         ))}
       </CarouselContent>
-      <div className="absolute inset-0 flex items-center justify-between p-4">
-        <CarouselPrevious className="relative left-0 translate-x-0" />
-        <CarouselNext className="relative right-0 translate-x-0" />
+      <div className="absolute inset-0 flex items-center justify-between p-4 max-h-[33rem]">
+        <CarouselPrevious className="relative left-0 top-0 translate-x-0" />
+        <CarouselNext className="relative right-0 top-0 translate-x-0" />
       </div>
     </Carousel>
   );

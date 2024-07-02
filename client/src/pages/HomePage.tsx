@@ -1,0 +1,317 @@
+import { motion } from "framer-motion";
+import {
+  Search,
+  Gavel,
+  Clock,
+  Star,
+  ArrowRight,
+  ChevronDown,
+  Diamond,
+  Watch,
+  Car,
+} from "lucide-react";
+import { Input } from "../components/ui/input";
+import { Card, CardContent } from "../components/ui/card";
+import { Badge } from "../components/ui/badge";
+import { Button } from "../components/ui/button";
+import AuctionItemPlaceholder from "../pagesComponents/AuctionItemPlaceholder";
+
+const Homepage = () => {
+  return (
+    <div className="min-h-screen ">
+      <main>
+        <section className="relative overflow-hidden  text-white">
+          <div className="container mx-auto px-4 py-32">
+            <div className="flex flex-col lg:flex-row items-center">
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+                className="lg:w-1/2 mb-10 lg:mb-0"
+              >
+                <h1 className="text-6xl font-extrabold mb-6">
+                  <motion.span
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.2 }}
+                    className="block"
+                  >
+                    Unlock
+                  </motion.span>
+                  <motion.span
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.4 }}
+                    className="block"
+                  >
+                    Exclusive
+                  </motion.span>
+                  <motion.span
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                    className="block mt-2 text-transparent bg-clip-text animate-gradient-x bg-gradient-to-r from-yellow-400 via-pink-300 to-purple-400"
+                  >
+                    Luxury Auctions
+                  </motion.span>
+                </h1>
+
+                <p className="text-xl mb-8 text-gray-200">
+                  Dive into a world of rare treasures and luxury items. Bid,
+                  win, and elevate your collection.
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg">
+                    Start Bidding <ArrowRight className="ml-2" />
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="px-8 py-6 text-lg border-white text-white hover:bg-white hover:text-purple-600 bg-transparent"
+                  >
+                    How It Works
+                  </Button>
+                </div>
+              </motion.div>
+              <div className="lg:w-1/2 relative">
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  transition={{ duration: 0.8 }}
+                  className="relative z-10"
+                >
+                  <div className="grid grid-cols-2 gap-4">
+                    {[
+                      { icon: Diamond, label: "Rare Gems" },
+                      { icon: Watch, label: "Luxury Watches" },
+                      { icon: Car, label: "Classic Cars" },
+                      { icon: Diamond, label: "Fine Jewelry" },
+                    ].map((item, index) => (
+                      <motion.div
+                        key={index}
+                        whileHover={{ scale: 1.05 }}
+                        className="bg-white/10 backdrop-blur-lg p-6 rounded-lg text-center"
+                      >
+                        <item.icon size={48} className="mx-auto mb-4" />
+                        <p className="font-semibold">{item.label}</p>
+                      </motion.div>
+                    ))}
+                  </div>
+                </motion.div>
+                <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[120%] h-[120%] bg-purple-500 rounded-full filter blur-3xl opacity-20"></div>
+              </div>
+            </div>
+          </div>
+          <motion.div
+            initial={{ opacity: 0, y: 50 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.5, duration: 0.8 }}
+            className="absolute bottom-0 left-0 right-0 text-center pb-8"
+          >
+            <ChevronDown className="mx-auto animate-bounce" size={32} />
+          </motion.div>
+        </section>
+
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <h2 className="text-4xl font-bold mb-12 text-center">
+              Featured Auctions
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              {[1, 2, 3].map((item, index) => (
+                <Card key={item} className="overflow-hidden">
+                  <motion.div
+                    whileHover={{ scale: 1.05 }}
+                    transition={{ duration: 0.3 }}
+                  >
+                    <AuctionItemPlaceholder index={index} />
+                    <CardContent className="p-6">
+                      <Badge className="mb-2">Ending Soon</Badge>
+                      <h3 className="text-xl font-semibold mb-2">
+                        {index === 0 && "Vintage Rolex Submariner"}
+                        {index === 1 && "Rare Blue Diamond"}
+                        {index === 2 && "Classic Ferrari 250 GTO"}
+                      </h3>
+                      <p className="text-gray mb-4">
+                        {index === 0 &&
+                          "1960s collector's timepiece in excellent condition"}
+                        {index === 1 &&
+                          "Flawless 3.5 carat blue diamond, certified"}
+                        {index === 2 &&
+                          "One of only 36 ever made, fully restored"}
+                      </p>
+                      <div className="flex justify-between items-center">
+                        <span className="text-purple-600 font-bold text-lg">
+                          {index === 0 && "$45,000"}
+                          {index === 1 && "$3,500,000"}
+                          {index === 2 && "$48,000,000"}
+                        </span>
+                        <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                          Bid Now
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </motion.div>
+                </Card>
+              ))}
+            </div>
+          </div>
+        </section>
+        <section className="py-20">
+          <div className="container mx-auto px-4">
+            <h2 className="text-4xl  font-bold mb-12 text-center">
+              How It Works
+            </h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {[
+                {
+                  icon: <Search size={32} />,
+                  title: "Discover",
+                  description:
+                    "Explore our curated collection of exclusive items",
+                },
+                {
+                  icon: <Gavel size={32} />,
+                  title: "Bid",
+                  description:
+                    "Place competitive bids on your desired treasures",
+                },
+                {
+                  icon: <Clock size={32} />,
+                  title: "Monitor",
+                  description: "Track auctions in real-time with live updates",
+                },
+                {
+                  icon: <Star size={32} />,
+                  title: "Win",
+                  description:
+                    "Secure your prized possessions and grow your collection",
+                },
+              ].map((step, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.2 }}
+                  className="text-center p-6 border rounded-lg shadow-lg"
+                >
+                  <div className="bg-purple-500 text-white rounded-full p-4 inline-block mb-4">
+                    {step.icon}
+                  </div>
+                  <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
+                  <p className="text-gray">{step.description}</p>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="py-20 ">
+          <div className="container mx-auto px-4 text-center">
+            <h2 className="text-4xl font-bold mb-6">
+              Join Our Exclusive Network
+            </h2>
+            <p className="text-xl mb-10">
+              Get early access to upcoming auctions and receive personalized
+              recommendations
+            </p>
+            <form className="max-w-md mx-auto">
+              <div className="flex">
+                <Input
+                  type="email"
+                  placeholder="Enter your email"
+                  className="rounded-l-full flex-grow"
+                />
+                <Button
+                  type="submit"
+                  className="bg-white text-purple-600 rounded-r-full hover:bg-gray-100"
+                >
+                  Subscribe
+                </Button>
+              </div>
+            </form>
+          </div>
+        </section>
+      </main>
+
+      <footer className=" py-12">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+            <div>
+              <h3 className="text-2xl font-bold mb-4">Lexura</h3>
+              <p className="text-gray-400">
+                Elevating the art of luxury auctions
+              </p>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Quick Links</h4>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="hover:text-purple-400 transition">
+                    About Us
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-purple-400 transition">
+                    How It Works
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-purple-400 transition">
+                    FAQs
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-purple-400 transition">
+                    Contact
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Legal</h4>
+              <ul className="space-y-2">
+                <li>
+                  <a href="#" className="hover:text-purple-400 transition">
+                    Terms of Service
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-purple-400 transition">
+                    Privacy Policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:text-purple-400 transition">
+                    Cookie Policy
+                  </a>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="text-lg font-semibold mb-4">Connect</h4>
+              <div className="flex space-x-4">
+                <a href="#" className="hover:text-purple-400 transition">
+                  <i className="fab fa-facebook-f"></i>
+                </a>
+                <a href="#" className="hover:text-purple-400 transition">
+                  <i className="fab fa-twitter"></i>
+                </a>
+                <a href="#" className="hover:text-purple-400 transition">
+                  <i className="fab fa-instagram"></i>
+                </a>
+                <a href="#" className="hover:text-purple-400 transition">
+                  <i className="fab fa-linkedin-in"></i>
+                </a>
+              </div>
+            </div>
+          </div>
+          <div className="mt-8 pt-8 border-t border-gray-700 text-center">
+            <p>&copy; 2024 Lexura. All rights reserved.</p>
+          </div>
+        </div>
+      </footer>
+    </div>
+  );
+};
+
+export default Homepage;

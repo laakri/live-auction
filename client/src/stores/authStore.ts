@@ -1,6 +1,6 @@
 // src/stores/authStore.ts
-import create from "zustand";
-import { persist } from "zustand/middleware";
+import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 import axios from "axios";
 
 export interface User {
@@ -88,7 +88,7 @@ const useAuthStore = create<AuthState>()(
     }),
     {
       name: "auth-storage",
-      getStorage: () => localStorage,
+      storage: createJSONStorage(() => localStorage),
     }
   )
 );

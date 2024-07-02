@@ -2,6 +2,7 @@ import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import AuctionDetail from "./pages/AuctionLive/test/AuctionDetail";
 import ProtectedRoute from "./pagesComponents/ProtectedRoute";
+import HomePage from "./pages/HomePage";
 
 const LuxuryAuthPage = lazy(() => import("./pages/Auth/LuxuryAuthPage"));
 const AuctionHomePage = lazy(() => import("./pages/AuctionHomePage"));
@@ -13,7 +14,8 @@ const AppRoutes: React.FC = () => {
   return (
     <Suspense fallback={<div>Loading...</div>}>
       <Routes>
-        <Route path="/" element={<AuctionHomePage />} />
+        <Route path="/" element={<HomePage />} />
+        <Route path="/AuctionHomePage" element={<AuctionHomePage />} />
         <Route path="/AuthPage" element={<LuxuryAuthPage />} />
         <Route path="/create-auction" element={<CreateAuctionPage />} />
         <Route path="/auction/:id" element={<AuctionPage />} />
