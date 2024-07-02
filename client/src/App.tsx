@@ -11,7 +11,7 @@ const App: React.FC = () => {
       <Router>
         <div className="min-h-screen ">
           <NavBar />
-          <main className=" mx-auto p-4  ">
+          <main className=" mx-auto   ">
             <AppRoutes />
           </main>
         </div>

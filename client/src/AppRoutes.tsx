@@ -3,6 +3,7 @@ import { Routes, Route } from "react-router-dom";
 import AuctionDetail from "./pages/AuctionLive/test/AuctionDetail";
 import ProtectedRoute from "./pagesComponents/ProtectedRoute";
 import HomePage from "./pages/HomePage";
+import AuctionDiscoveryPage from "./pages/AuctionDiscoveryPage";
 
 const LuxuryAuthPage = lazy(() => import("./pages/Auth/LuxuryAuthPage"));
 const AuctionHomePage = lazy(() => import("./pages/AuctionHomePage"));
@@ -17,6 +18,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/" element={<HomePage />} />
         <Route path="/AuctionHomePage" element={<AuctionHomePage />} />
         <Route path="/AuthPage" element={<LuxuryAuthPage />} />
+        <Route path="/AuctionDiscovery" element={<AuctionDiscoveryPage />} />
         <Route path="/create-auction" element={<CreateAuctionPage />} />
         <Route path="/auction/:id" element={<AuctionPage />} />
         <Route path="/AuctionRoom/:id" element={<AuctionDetail />} />

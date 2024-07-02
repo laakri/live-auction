@@ -49,10 +49,10 @@ const NavBar: React.FC = () => {
   return (
     <>
       <nav
-        className={`fixed  top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
             ? "bg-background/95 backdrop-blur-sm shadow-md"
-            : "bg-background"
+            : "bg-transparent "
         }`}
       >
         <div className=" mx-auto px-4 sm:px-6 lg:px-8">
@@ -67,6 +67,7 @@ const NavBar: React.FC = () => {
                 <ExploreDropdown />
                 <NavLink to="/how-it-works" label="How It Works" />
                 <NavLink to="/about" label="About Us" />
+                <NavLink to="/AuctionDiscovery" label="Discovery" />
               </div>
             </div>
 
