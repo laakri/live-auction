@@ -13,7 +13,8 @@ async function optimizeAndSaveImage(file: MultipartFile): Promise<string> {
   const filename = `${uuidv4()}.webp`;
   const filepath = path.join(UPLOAD_DIR, filename);
 
-  await sharp(await file.toBuffer())
+  const buffer = await file.toBuffer();
+  await sharp(buffer)
     .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
     .webp({ quality: 80 })
     .toFile(filepath);
@@ -46,13 +47,13 @@ export const createAuction = async (
       user.balance -= 1;
     }
 
-    const parts = await request.parts();
+    const parts = request.parts();
     const auctionData: any = {};
     const images: string[] = [];
 
     for await (const part of parts) {
       if (part.type === "file") {
-        const filename = await optimizeAndSaveImage(part.file);
+        const filename = await optimizeAndSaveImage(part);
         images.push(filename);
       } else {
         auctionData[part.fieldname] = part.value;
@@ -102,17 +103,17 @@ export const updateAuction = async (
         .send({ error: "Cannot update an active or ended auction" });
     }
 
-    const parts = await request.parts();
+    const parts = request.parts();
     const updates: any = {};
     const newImages: string[] = [];
     const imagesToDelete: string[] = [];
 
     for await (const part of parts) {
       if (part.type === "file") {
-        const filename = await optimizeAndSaveImage(part.file);
+        const filename = await optimizeAndSaveImage(part);
         newImages.push(filename);
       } else if (part.fieldname === "deleteImages") {
-        imagesToDelete.push(...part.value.split(","));
+        imagesToDelete.push(...(part.value as string).split(","));
       } else {
         updates[part.fieldname] = part.value;
       }
@@ -136,6 +137,7 @@ export const updateAuction = async (
   }
 };
 
+// ... (keep other existing functions)
 export const deleteAuction = async (
   request: FastifyRequest,
   reply: FastifyReply

@@ -1,11 +1,10 @@
-// components/ui/image-upload.tsx
 import React, { useState } from "react";
-import { Upload, X, Image as ImageIcon } from "lucide-react";
+import { Upload, X } from "lucide-react";
 import { Button } from "./ui/button";
 import { cn } from "../lib/utils";
 
 interface ImageUploadProps {
-  onChange: (urls: string[]) => void;
+  onChange: (files: File[]) => void;
   maxImages: number;
   className?: string;
 }
@@ -15,14 +14,12 @@ export function ImageUpload({
   maxImages,
   className,
 }: ImageUploadProps) {
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<File[]>([]);
 
   const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (files) {
-      const newImages = Array.from(files).map((file) =>
-        URL.createObjectURL(file)
-      );
+      const newImages = Array.from(files);
       const updatedImages = [...images, ...newImages].slice(0, maxImages);
       setImages(updatedImages);
       onChange(updatedImages);
@@ -41,7 +38,7 @@ export function ImageUpload({
         {images.map((image, index) => (
           <div key={index} className="relative group">
             <img
-              src={image}
+              src={URL.createObjectURL(image)}
               alt={`Uploaded ${index + 1}`}
               className="w-full h-40 object-cover rounded-lg shadow-md transition-all duration-300 group-hover:opacity-75"
             />

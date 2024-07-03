@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useForm, Controller } from "react-hook-form";
-import { Calendar, Clock, DollarSign, Tag, Users } from "lucide-react";
+import { DollarSign, Tag } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -23,6 +23,8 @@ import { Switch } from "../components/ui/switch";
 import { Slider } from "../components/ui/slider";
 import { ImageUpload } from "../components/image-upload";
 import { DatePicker } from "../components/ui/date-picker";
+import axios from "axios";
+import useAuthStore from "../stores/authStore";
 
 interface AuctionFormData {
   title: string;
@@ -34,7 +36,6 @@ interface AuctionFormData {
   endTime: Date;
   category: string;
   tags: string;
-  images: string[];
   isPrivate: boolean;
   charity?: {
     organization: string;
@@ -55,18 +56,61 @@ export default function CreateAuctionPage() {
       },
     },
   });
-  const [images, setImages] = useState<string[]>([]);
+  const [images, setImages] = useState<File[]>([]);
   const charityPercentage = watch("charity.percentage");
+  const { token } = useAuthStore();
 
-  const onSubmit = (data: AuctionFormData) => {
-    const formData = {
-      ...data,
-      images,
-      tags: data.tags.split(",").map((tag) => tag.trim()),
-    };
-    console.log("Form Data:", formData);
+  const onSubmit = async (data: AuctionFormData) => {
+    try {
+      const formData = new FormData();
+
+      // Append auction data
+      Object.entries(data).forEach(([key, value]) => {
+        if (key === "charity") {
+          formData.append(key, JSON.stringify(value));
+        } else if (key === "tags") {
+          formData.append(
+            key,
+            JSON.stringify(value.split(",").map((tag: string) => tag.trim()))
+          );
+        } else if (value instanceof Date) {
+          formData.append(key, value.toISOString());
+        } else {
+          formData.append(key, value.toString());
+        }
+      });
+
+      // Append images
+      images.forEach((image) => {
+        formData.append(`images`, image);
+      });
+
+      const response = await axios.post(
+        "http://localhost:3000/api/auctions/",
+        formData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+
+      console.log("Auction created:", response.data);
+      console.log("Mriguel");
+      // router.push(`/auctions/${response.data._id}`);
+    } catch (error) {
+      if (axios.isAxiosError(error)) {
+        console.error(
+          "Error creating auction:",
+          error.response?.data || error.message
+        );
+      } else {
+        console.error("Error creating auction:", error);
+      }
+    }
   };
-
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 mt-4">
       <div className="max-w-4xl mx-auto">
@@ -334,7 +378,7 @@ export default function CreateAuctionPage() {
             </CardHeader>
             <CardContent>
               <ImageUpload
-                onChange={(urls) => setImages(urls)}
+                onChange={(files) => setImages(files)}
                 maxImages={5}
                 className="border-2 border-dashed rounded-lg p-4"
               />
