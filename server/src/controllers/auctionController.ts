@@ -1,15 +1,35 @@
 import { FastifyRequest, FastifyReply } from "fastify";
+import { MultipartFile } from "@fastify/multipart";
 import Auction, { IAuction } from "../models/auctions.model";
 import User from "../models/users.model";
+import sharp from "sharp";
+import { v4 as uuidv4 } from "uuid";
+import fs from "fs/promises";
+import path from "path";
+
+const UPLOAD_DIR = path.join(__dirname, "../uploads");
+
+async function optimizeAndSaveImage(file: MultipartFile): Promise<string> {
+  const filename = `${uuidv4()}.webp`;
+  const filepath = path.join(UPLOAD_DIR, filename);
+
+  await sharp(await file.toBuffer())
+    .resize(1024, 1024, { fit: "inside", withoutEnlargement: true })
+    .webp({ quality: 80 })
+    .toFile(filepath);
+
+  return filename;
+}
+
+async function deleteImage(filename: string): Promise<void> {
+  const filepath = path.join(UPLOAD_DIR, filename);
+  await fs.unlink(filepath);
+}
 
 export const createAuction = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
-  const auctionData = request.body as Omit<
-    IAuction,
-    "_id" | "seller" | "status" | "currentPrice"
-  >;
   const userId = request.user!._id;
 
   try {
@@ -26,11 +46,25 @@ export const createAuction = async (
       user.balance -= 1;
     }
 
+    const parts = await request.parts();
+    const auctionData: any = {};
+    const images: string[] = [];
+
+    for await (const part of parts) {
+      if (part.type === "file") {
+        const filename = await optimizeAndSaveImage(part.file);
+        images.push(filename);
+      } else {
+        auctionData[part.fieldname] = part.value;
+      }
+    }
+
     const auction = new Auction({
       ...auctionData,
       seller: userId,
       status: "upcoming",
       currentPrice: auctionData.startingPrice,
+      images,
     });
 
     await auction.save();
@@ -43,29 +77,11 @@ export const createAuction = async (
   }
 };
 
-export const getAuction = async (
-  request: FastifyRequest,
-  reply: FastifyReply
-) => {
-  const { id } = request.params as { id: string };
-
-  try {
-    const auction = await Auction.findById(id).populate("seller", "username");
-    if (!auction) {
-      return reply.status(404).send({ error: "Auction not found" });
-    }
-    reply.send(auction);
-  } catch (error) {
-    reply.status(500).send({ error: "Error fetching auction" });
-  }
-};
-
 export const updateAuction = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
   const { id } = request.params as { id: string };
-  const updates = request.body as Partial<IAuction>;
   const userId = request.user!._id;
 
   try {
@@ -85,6 +101,31 @@ export const updateAuction = async (
         .status(400)
         .send({ error: "Cannot update an active or ended auction" });
     }
+
+    const parts = await request.parts();
+    const updates: any = {};
+    const newImages: string[] = [];
+    const imagesToDelete: string[] = [];
+
+    for await (const part of parts) {
+      if (part.type === "file") {
+        const filename = await optimizeAndSaveImage(part.file);
+        newImages.push(filename);
+      } else if (part.fieldname === "deleteImages") {
+        imagesToDelete.push(...part.value.split(","));
+      } else {
+        updates[part.fieldname] = part.value;
+      }
+    }
+
+    // Delete old images
+    for (const filename of imagesToDelete) {
+      await deleteImage(filename);
+      auction.images = auction.images.filter((img) => img !== filename);
+    }
+
+    // Add new images
+    auction.images.push(...newImages);
 
     Object.assign(auction, updates);
     await auction.save();
@@ -120,6 +161,11 @@ export const deleteAuction = async (
         .send({ error: "Cannot delete an active or ended auction" });
     }
 
+    // Delete associated images
+    for (const filename of auction.images) {
+      await deleteImage(filename);
+    }
+
     await auction.deleteOne();
     await User.findByIdAndUpdate(userId, { $pull: { createdAuctions: id } });
 
@@ -129,41 +175,20 @@ export const deleteAuction = async (
   }
 };
 
-export const listAuctions = async (
+export const getAuction = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
-  const {
-    category,
-    status,
-    limit = 10,
-    page = 1,
-  } = request.query as {
-    category?: string;
-    status?: string;
-    limit?: number;
-    page?: number;
-  };
+  const { id } = request.params as { id: string };
 
   try {
-    const query: any = {};
-    if (category) query.category = category;
-    if (status) query.status = status;
-
-    const total = await Auction.countDocuments(query);
-    const auctions = await Auction.find(query)
-      .populate("seller", "username")
-      .sort({ createdAt: -1 })
-      .limit(limit)
-      .skip((page - 1) * limit);
-
-    reply.send({
-      auctions,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-    });
+    const auction = await Auction.findById(id).populate("seller", "username");
+    if (!auction) {
+      return reply.status(404).send({ error: "Auction not found" });
+    }
+    reply.send(auction);
   } catch (error) {
-    reply.status(500).send({ error: "Error fetching auctions" });
+    reply.status(500).send({ error: "Error fetching auction" });
   }
 };
 

@@ -10,6 +10,7 @@ import fastifyEnv from "@fastify/env";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { setupWebSocket } from "./src/websocket/socketHandler";
 import { Server } from "socket.io";
+import multipart from "@fastify/multipart";
 
 interface EnvConfig {
   PORT: number;
@@ -80,6 +81,11 @@ async function buildServer() {
     server.register(bidRoutes, { prefix: "/api/bids" });
     server.register(chatRoutes, { prefix: "/api/chat" });
     server.register(userRoutes, { prefix: "/api/users" });
+    server.register(multipart, {
+      limits: {
+        fileSize: 5 * 1024 * 1024, // 5MB
+      },
+    });
 
     server.setErrorHandler((error, request, reply) => {
       server.log.error(error);

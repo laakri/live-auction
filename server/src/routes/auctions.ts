@@ -8,5 +8,16 @@ export default async function auctionRoutes(fastify: FastifyInstance) {
     { preHandler: authenticate },
     auctionController.createAuction
   );
+  fastify.put(
+    "/:id",
+    { preHandler: authenticate },
+    auctionController.updateAuction
+  );
+
+  fastify.delete(
+    "/:id",
+    { preHandler: authenticate },
+    auctionController.deleteAuction
+  );
   fastify.get("/:id", auctionController.getAuction);
 }
