@@ -228,7 +228,7 @@ const AuctionDiscoveryPage: React.FC = () => {
             }}
           />
         </AnimatePresence>
-        <div className="absolute inset-0 bg-gradient-to-b from-white/10 via-white/10 to-white/10 dark:from-black/80 dark:via-black/70 dark:to-black/80" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/80 " />
 
         {/* Content */}
         <div className="relative z-10 container mx-auto px-4 py-24">
@@ -311,8 +311,8 @@ const AuctionDiscoveryPage: React.FC = () => {
                               ${auction.startingPrice.toLocaleString()}
                             </p>
                           </div>
-                          <div className="bg-pink-500/20 rounded-2xl p-4 text-center">
-                            <p className="text-pink-300 mb-1 text-sm">
+                          <div className="dark:bg-pink-500/20 bg-white/80 rounded-2xl p-4 text-center flex flex-col items-center ">
+                            <p className="dark:text-pink-300 text-black mb-1 text-sm">
                               Auction Starts In
                             </p>
                             <CountdownTimer

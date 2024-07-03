@@ -18,9 +18,9 @@ import AuctionItemPlaceholder from "../pagesComponents/AuctionItemPlaceholder";
 
 const Homepage = () => {
   return (
-    <div className="min-h-screen ">
+    <div className="min-h-screen  ">
       <main>
-        <section className="relative overflow-hidden  text-white">
+        <section className="relative overflow-hidden  text-black dark:text-white">
           <div className="container mx-auto px-4 py-32">
             <div className="flex flex-col lg:flex-row items-center">
               <motion.div
@@ -56,7 +56,7 @@ const Homepage = () => {
                   </motion.span>
                 </h1>
 
-                <p className="text-xl mb-8 text-gray-200">
+                <p className="text-xl mb-8  text-gray-600 dark:text-gray-200">
                   Dive into a world of rare treasures and luxury items. Bid,
                   win, and elevate your collection.
                 </p>
@@ -66,7 +66,7 @@ const Homepage = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    className="px-8 py-6 text-lg border-white text-white hover:bg-white hover:text-purple-600 bg-transparent"
+                    className="px-8 py-6 text-lg border-white text-black dark:text-white hover:bg-white hover:text-purple-600 bg-transparent"
                   >
                     How It Works
                   </Button>
@@ -145,7 +145,7 @@ const Homepage = () => {
                           {index === 1 && "$3,500,000"}
                           {index === 2 && "$48,000,000"}
                         </span>
-                        <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+                        <Button className="bg-purple-600 hover:bg-purple-700 text-black dark:text-white">
                           Bid Now
                         </Button>
                       </div>
@@ -194,7 +194,7 @@ const Homepage = () => {
                   transition={{ delay: index * 0.2 }}
                   className="text-center p-6 border rounded-lg shadow-lg"
                 >
-                  <div className="bg-purple-500 text-white rounded-full p-4 inline-block mb-4">
+                  <div className="bg-purple-500 text-black dark:text-white rounded-full p-4 inline-block mb-4">
                     {step.icon}
                   </div>
                   <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
