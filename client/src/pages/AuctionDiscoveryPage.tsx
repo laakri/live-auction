@@ -35,7 +35,9 @@ const AuctionDiscoveryPage: React.FC = () => {
         "A stunning collection of rare vintage watches from the 1960s.",
       startingPrice: 5000,
       startTime: new Date(Date.now() + 86400000).toISOString(),
-      images: ["https://i.gyazo.com/6e75db48bd9146e531514a8699e9b626.jpg"],
+      images: [
+        "https://images.joseartgallery.com/100736/conversions/what-kind-of-art-is-popular-right-now-thumb800.jpg",
+      ],
       watchCount: 1289,
     },
     {
@@ -232,7 +234,7 @@ const AuctionDiscoveryPage: React.FC = () => {
 
         {/* Content */}
         <div className="relative z-10 container mx-auto px-4 py-24">
-          <motion.h2
+          {/* <motion.h2
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
@@ -242,7 +244,7 @@ const AuctionDiscoveryPage: React.FC = () => {
             <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-300 to-purple-400">
               Auctions
             </span>
-          </motion.h2>
+          </motion.h2> */}
           <div ref={sliderRef} className="keen-slider">
             {upcomingAuctions.map((auction, index) => (
               <div key={auction._id} className="keen-slider__slide">
@@ -323,15 +325,15 @@ const AuctionDiscoveryPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex gap-4">
-                          <button className="flex-1 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold py-4 px-6 rounded-xl hover:from-purple-700 hover:to-pink-700 transition-all duration-300 transform hover:scale-105 focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-opacity-50 flex items-center justify-center">
+                          <button className="flex-1  bg-white/10 text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all duration-300 flex justify-center items-center">
                             <Bell className="mr-2 h-5 w-5" />
                             Set Reminder
                           </button>
-                          <button className="bg-white/10 text-white p-4 rounded-xl hover:bg-white/20 transition-all duration-300">
-                            <Heart className="h-6 w-6" />
+                          <button className="bg-white/10 text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all duration-300">
+                            <Heart className="h-5 w-5" />
                           </button>
-                          <button className="bg-white/10 text-white p-4 rounded-xl hover:bg-white/20 transition-all duration-300">
-                            <Share2 className="h-6 w-6" />
+                          <button className="bg-white/10 text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all duration-300">
+                            <Share2 className="h-5 w-5" />
                           </button>
                         </div>
                       </CardContent>
