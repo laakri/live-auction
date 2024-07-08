@@ -24,7 +24,6 @@ import RecentBids from "./AuctionLiveComponent/RecentBids";
 import RelatedAuctions from "./AuctionLiveComponent/RelatedAuctions";
 import ImageGallery from "./AuctionLiveComponent/ImageGallery";
 import WatchersCard from "./AuctionLiveComponent/WatchersCard";
-import socket from "../../utils/socket";
 import PlaceBidDialog from "./AuctionLiveComponent/PlaceBidDialog";
 import { socketService } from "./socketService";
 import AnimatedBidButton from "../../components/AnimatedBidButton";

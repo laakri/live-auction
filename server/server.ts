@@ -115,16 +115,16 @@ async function startServer() {
       port: server.config.PORT,
       host: "0.0.0.0",
     });
-    console.log(`Server listening on ${address}`);
+    // console.log(`Server listening on ${address}`);
 
     const signals = ["SIGINT", "SIGTERM"];
     for (const signal of signals) {
       process.on(signal, () => {
-        console.log(`Received ${signal}, closing server...`);
+        // console.log(`Received ${signal}, closing server...`);
         server
           .close()
           .then(() => {
-            console.log("Server closed successfully");
+            // console.log("Server closed successfully");
             process.exit(0);
           })
           .catch((err) => {

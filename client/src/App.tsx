@@ -4,6 +4,7 @@ import { BrowserRouter as Router } from "react-router-dom";
 import { ThemeProvider } from "./components/theme-provider";
 import AppRoutes from "./AppRoutes";
 import NavBar from "./pagesComponents/NavBar";
+import { Toaster } from "./components/ui/toaster";
 
 const App: React.FC = () => {
   return (
@@ -15,6 +16,7 @@ const App: React.FC = () => {
             <AppRoutes />
           </main>
         </div>
+        <Toaster />
       </Router>
     </ThemeProvider>
   );

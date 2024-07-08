@@ -32,7 +32,7 @@ export const createAuction = async (
   reply: FastifyReply
 ) => {
   const userId = request.user!._id;
-
+  console.log(request.user);
   try {
     const user = await User.findById(userId);
     if (!user) {

@@ -1,6 +1,5 @@
 import { FastifyRequest, FastifyReply, HookHandlerDoneFunction } from "fastify";
 import jwt from "jsonwebtoken";
-import { IUser } from "../models/users.model";
 
 declare module "fastify" {
   interface FastifyRequest {
@@ -24,9 +23,9 @@ export const authenticate = (
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      id: string;
+      userId: string; // Ensure this key is 'userId'
     };
-    request.user = { _id: decoded.id };
+    request.user = { _id: decoded.userId }; // Use 'userId' here
     done();
   } catch (error) {
     reply.status(401).send({ error: "Invalid token" });

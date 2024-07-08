@@ -25,6 +25,7 @@ import { ImageUpload } from "../components/image-upload";
 import { DatePicker } from "../components/ui/date-picker";
 import axios from "axios";
 import useAuthStore from "../stores/authStore";
+import { useToast } from "../components/ui/use-toast";
 
 interface AuctionFormData {
   title: string;
@@ -47,7 +48,6 @@ export default function CreateAuctionPage() {
   const { control, handleSubmit, watch } = useForm<AuctionFormData>({
     defaultValues: {
       startingPrice: 0,
-      currentPrice: 0,
       incrementAmount: 0,
       isPrivate: false,
       charity: {
@@ -59,11 +59,12 @@ export default function CreateAuctionPage() {
   const [images, setImages] = useState<File[]>([]);
   const charityPercentage = watch("charity.percentage");
   const { token } = useAuthStore();
+  const { toast } = useToast();
 
   const onSubmit = async (data: AuctionFormData) => {
     try {
       const formData = new FormData();
-
+      const currentPrice = data.startingPrice;
       // Append auction data
       Object.entries(data).forEach(([key, value]) => {
         if (key === "charity") {
@@ -96,12 +97,21 @@ export default function CreateAuctionPage() {
           },
         }
       );
-
+      formData.append("currentPrice", currentPrice.toString());
       console.log("Auction created:", response.data);
-      console.log("Mriguel");
+      toast({
+        title: "Success",
+        description: "Auction created:",
+      });
       // router.push(`/auctions/${response.data._id}`);
     } catch (error) {
       if (axios.isAxiosError(error)) {
+        toast({
+          variant: "destructive",
+          title: "Uh oh! Something went wrong.",
+          description: "Error creating auction",
+        });
+        console.log(token);
         console.error(
           "Error creating auction:",
           error.response?.data || error.message
@@ -205,33 +215,7 @@ export default function CreateAuctionPage() {
                     />
                   </div>
                 </div>
-                <div className="space-y-2">
-                  <Label htmlFor="currentPrice">Current Price</Label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <Controller
-                      name="currentPrice"
-                      control={control}
-                      rules={{ required: "Current price is required" }}
-                      render={({ field, fieldState: { error } }) => (
-                        <>
-                          <Input
-                            id="currentPrice"
-                            type="number"
-                            placeholder="0.00"
-                            className="pl-10"
-                            {...field}
-                          />
-                          {error && (
-                            <p className="text-red-500 text-sm">
-                              {error.message}
-                            </p>
-                          )}
-                        </>
-                      )}
-                    />
-                  </div>
-                </div>
+
                 <div className="space-y-2">
                   <Label htmlFor="incrementAmount">Bid Increment</Label>
                   <div className="relative">
