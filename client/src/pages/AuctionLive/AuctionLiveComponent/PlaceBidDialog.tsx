@@ -1,4 +1,3 @@
-// src/pages/AuctionLiveComponent/PlaceBidDialog.tsx
 import React, { useState } from "react";
 import {
   Dialog,
@@ -9,6 +8,7 @@ import {
 } from "../../../components/ui/dialog";
 import { Button } from "../../../components/ui/button";
 import { Input } from "../../../components/ui/input";
+import { useToast } from "../../../components/ui/use-toast";
 import useAuthStore from "../../../stores/authStore";
 
 interface PlaceBidDialogProps {
@@ -30,6 +30,7 @@ const PlaceBidDialog: React.FC<PlaceBidDialogProps> = ({
 }) => {
   const [bidAmount, setBidAmount] = useState(currentPrice + incrementAmount);
   const { token } = useAuthStore();
+  const { toast } = useToast();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,14 +51,35 @@ const PlaceBidDialog: React.FC<PlaceBidDialogProps> = ({
         if (response.ok) {
           onPlaceBid(bidAmount);
           onClose();
+          toast({
+            title: "Bid Placed Successfully",
+            description: `Your bid of $${bidAmount} has been placed.`,
+            variant: "default",
+          });
         } else {
-          console.error("Failed to submit bid");
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Failed to submit bid");
         }
       } catch (error) {
         console.error("Error submitting bid:", error);
+        toast({
+          title: "Error Placing Bid",
+          description:
+            error instanceof Error
+              ? error.message
+              : "An unknown error occurred",
+          variant: "destructive",
+        });
       }
+    } else {
+      toast({
+        title: "Invalid Bid Amount",
+        description: "Your bid must be higher than the current price.",
+        variant: "destructive",
+      });
     }
   };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>

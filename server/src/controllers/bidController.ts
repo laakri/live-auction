@@ -13,7 +13,6 @@ export const placeBid = async (
     amount: number;
   };
   const userId = request.user!._id;
-
   try {
     const auction = await Auction.findById(auctionId);
     if (!auction) {

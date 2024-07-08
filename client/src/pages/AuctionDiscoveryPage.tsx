@@ -244,7 +244,12 @@ const AuctionDiscoveryPage: React.FC = () => {
             transition={{ duration: 0.5 }}
             className="absolute inset-0 bg-cover bg-center filter blur-xl scale-110"
             style={{
-              backgroundImage: `url(${upcomingAuctions[currentSlide]?.images[0]})`,
+              backgroundImage: `url(${
+                upcomingAuctions[currentSlide]
+                  ? "http://localhost:3000/uploads/" +
+                    upcomingAuctions[currentSlide].images[0]
+                  : ""
+              })`,
             }}
           />
         </AnimatePresence>

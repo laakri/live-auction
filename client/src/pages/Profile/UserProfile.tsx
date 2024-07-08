@@ -39,7 +39,7 @@ const UserProfile: React.FC = () => {
   };
 
   return (
-    <div className="container mx-auto p-4">
+    <div className="container mx-auto p-4 mt-14">
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="flex items-center gap-4">
@@ -83,7 +83,7 @@ const UserProfile: React.FC = () => {
       </Card>
 
       <Tabs defaultValue="profile">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-5 ">
           <TabsTrigger value="profile">
             <User className="mr-2" /> Profile
           </TabsTrigger>

@@ -16,9 +16,9 @@ import { Label } from "@radix-ui/react-dropdown-menu";
 import { Textarea } from "../../../components/ui/textarea";
 import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Badge } from "../../../components/ui/badge";
-import socket from "../../../utils/socket";
 import useAuthStore from "../../../stores/authStore";
 import AnimatedBidButton from "../../../components/AnimatedBidButton";
+import { socketService } from "../socketService";
 
 interface IChatMessage {
   _id: string;
@@ -29,6 +29,7 @@ interface IChatMessage {
   };
   content: string;
   timestamp: Date;
+  isCurrentUser?: boolean;
 }
 
 interface IBid {
@@ -56,21 +57,23 @@ const getRandomColor = () => {
   return colors[Math.floor(Math.random() * colors.length)];
 };
 
-const ChatMessage: React.FC<{ message: IChatMessage; color: string }> = ({
-  message,
-  color,
-}) => (
-  <div className=" p-2 rounded-lg mb-2">
-    {/* <span className="text-[10px] opacity-75">
-      {new Date(message.timestamp).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}
-    </span> */}
-    <span className={`font-semibold ${color}`}>{message.sender.username}:</span>
-    <span className="ml-1 text-gray-700 dark:text-gray-100 text-sm">
-      {message.content}
-    </span>
+const ChatMessage: React.FC<{
+  message: IChatMessage;
+  isCurrentUser: boolean;
+}> = ({ message, isCurrentUser }) => (
+  <div
+    className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} mb-4`}
+  >
+    <div
+      className={`max-w-[70%] p-2 rounded-lg ${
+        isCurrentUser
+          ? "bg-purple-500 text-white"
+          : "bg-gray-200 dark:bg-gray-700"
+      }`}
+    >
+      <p className="text-sm font-semibold mb-1">{message.sender.username}</p>
+      <p className="text-sm">{message.content}</p>
+    </div>
   </div>
 );
 
@@ -112,24 +115,22 @@ interface ChatWidgetProps {
   auctionId: string;
   currentPrice: number;
 }
-
 const ChatWidget: React.FC<ChatWidgetProps> = ({
   isOpen,
   onToggle,
   auctionId,
   currentPrice,
 }) => {
-  const { isAuthenticated, token } = useAuthStore();
+  const { isAuthenticated, token, user } = useAuthStore();
 
   const [message, setMessage] = useState("");
   const [chatMessages, setChatMessages] = useState<IChatMessage[]>([]);
   const [bids, setBids] = useState<IBid[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isPlaceBidOpen, setIsPlaceBidOpen] = useState(false);
-
   useEffect(() => {
     const fetchBidsAndChat = async () => {
-      if (!isAuthenticated || !token) {
+      if (!isAuthenticated || !token || !user) {
         console.error("User is not authenticated");
         return;
       }
@@ -147,10 +148,16 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
         if (bidsResponse.ok && chatResponse.ok) {
           const bidsData = await bidsResponse.json();
-          const chatData = await chatResponse.json();
+          const chatData: IChatMessage[] = await chatResponse.json();
 
           setBids(bidsData);
-          setChatMessages(chatData);
+          // Mark messages as current user's messages
+          setChatMessages(
+            chatData.map((msg) => ({
+              ...msg,
+              isCurrentUser: msg.sender._id === user.id,
+            }))
+          );
         } else {
           console.error("Failed to fetch bids or chat data");
         }
@@ -161,11 +168,17 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
     fetchBidsAndChat();
 
-    socket.on("new message", (msg: IChatMessage) => {
-      setChatMessages((prev) => [...prev, msg]);
+    socketService.connect("http://localhost:3000");
+    socketService.joinAuction(auctionId);
+
+    socketService.on("new message", (msg: IChatMessage) => {
+      setChatMessages((prev) => [
+        ...prev,
+        { ...msg, isCurrentUser: msg.sender._id === user?.id },
+      ]);
     });
 
-    socket.on("new bid", (bid: IBid) => {
+    socketService.on("new bid", (bid: IBid) => {
       setBids((prev) => {
         const newBids = [...prev, bid];
         return newBids.sort((a, b) => b.amount - a.amount).slice(0, 5);
@@ -178,24 +191,29 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           sender: bid.bidder,
           content: `Placed a bid of $${bid.amount.toFixed(2)}`,
           timestamp: bid.timestamp,
+          isCurrentUser: bid.bidder._id === user?.id,
         },
       ]);
     });
 
     return () => {
-      socket.off("new message");
-      socket.off("new bid");
+      socketService.leaveAuction(auctionId);
+      socketService.off("new message");
+      socketService.off("new bid");
     };
-  }, [auctionId]);
+  }, [auctionId, isAuthenticated, token, user]);
 
   useEffect(() => {
     if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTop = scrollAreaRef.current.scrollHeight;
+      scrollAreaRef.current.scrollTo({
+        top: scrollAreaRef.current.scrollHeight,
+        behavior: "smooth",
+      });
     }
-  }, [chatMessages]);
+  }, []);
 
   const handleSend = async () => {
-    if (message.trim()) {
+    if (message.trim() && user) {
       try {
         const response = await fetch(`http://localhost:3000/api/chat/`, {
           method: "POST",
@@ -210,8 +228,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         });
 
         if (response.ok) {
-          const newMessage = await response.json();
-          setChatMessages((prev) => [...prev, newMessage]);
           setMessage("");
         } else {
           console.error("Failed to send message");
@@ -256,7 +272,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           </div>
         </div>
 
-        {/* Scrollable message area */}
         <ScrollArea ref={scrollAreaRef} className="flex-grow p-4">
           <div className="space-y-2">
             {chatMessages.map((msg) =>
@@ -267,7 +282,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                   color={getRandomColor()}
                 />
               ) : (
-                <ChatMessage key={msg._id} message={msg} color={"white"} />
+                <ChatMessage
+                  key={msg._id}
+                  message={msg}
+                  isCurrentUser={msg.isCurrentUser || false}
+                />
               )
             )}
           </div>
