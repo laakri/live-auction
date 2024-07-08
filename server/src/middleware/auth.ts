@@ -23,9 +23,9 @@ export const authenticate = (
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET!) as {
-      userId: string; // Ensure this key is 'userId'
+      userId: string;
     };
-    request.user = { _id: decoded.userId }; // Use 'userId' here
+    request.user = { _id: decoded.userId };
     done();
   } catch (error) {
     reply.status(401).send({ error: "Invalid token" });

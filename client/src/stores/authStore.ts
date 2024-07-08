@@ -4,8 +4,34 @@ import axios from "axios";
 
 export interface User {
   id: string;
-  email: string;
   username: string;
+  email: string;
+  password: string;
+  profilePicture?: string;
+  bio?: string;
+  balance: number;
+  reputation: number;
+  rank: string;
+  isVerified: boolean;
+  freeAuctionsRemaining: number;
+  createdAuctions: string[];
+  wonAuctions: string[];
+  preferences: {
+    notifications: boolean;
+    privateProfile: boolean;
+  };
+  xp: number;
+  level: number;
+  achievements: string[];
+  virtualCurrencyBalance: number;
+  alliance?: string;
+  customizations: {
+    theme: string;
+    avatar: string;
+  };
+  loyaltyTier: string;
+  referralCode: string;
+  referredBy?: string;
 }
 
 interface AuthState {

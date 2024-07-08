@@ -71,7 +71,7 @@ const NavBar: React.FC = () => {
                 <NavLink to="/about" label="About Us" /> */}
                 <NavLink to="/AuctionDiscovery" label="Discovery" />
                 <NavLink
-                  to="/auction/668bc2e0ed045424a771aa12"
+                  to="/auction/668be00bd59683fb936bf011"
                   label="AuctionPage"
                 />
                 <NavLink to="/create-auction" label="CreateAuction" />
