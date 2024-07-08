@@ -24,6 +24,7 @@ import RecentBids from "./AuctionLiveComponent/RecentBids";
 import RelatedAuctions from "./AuctionLiveComponent/RelatedAuctions";
 import ImageGallery from "./AuctionLiveComponent/ImageGallery";
 import WatchersCard from "./AuctionLiveComponent/WatchersCard";
+import socket from "../../utils/socket";
 import PlaceBidDialog from "./AuctionLiveComponent/PlaceBidDialog";
 import { socketService } from "./socketService";
 import AnimatedBidButton from "../../components/AnimatedBidButton";
@@ -49,6 +50,7 @@ const AuctionPage: React.FC = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
+        console.log(data);
         setAuction(data);
         setLoading(false);
       } catch (error) {
@@ -182,7 +184,7 @@ const AuctionPage: React.FC = () => {
                   <div className="flex flex-col  gap-2 ">
                     <Avatar className="rounded-md min-h-16 min-w-16 ">
                       <AvatarImage
-                        src="https://github.com/shadcn.png"
+                        src={auction.seller.customizations.avatar}
                         alt="@shadcn"
                       />
                       <AvatarFallback>CN</AvatarFallback>

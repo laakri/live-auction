@@ -265,7 +265,10 @@ export const getAuction = async (
   const { id } = request.params as { id: string };
 
   try {
-    const auction = await Auction.findById(id).populate("seller", "username");
+    const auction = await Auction.findById(id).populate(
+      "seller",
+      "username customizations"
+    );
     if (!auction) {
       return reply.status(404).send({ error: "Auction not found" });
     }

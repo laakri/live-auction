@@ -12,10 +12,7 @@ export interface Auction {
   incrementAmount: number;
   startTime: string;
   endTime: string;
-  seller: {
-    _id: string;
-    username: string;
-  };
+  seller: any;
   category: string;
   tags: string[];
   images: string[];
