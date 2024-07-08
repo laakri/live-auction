@@ -24,6 +24,7 @@ import {
   DropdownMenuTrigger,
 } from "../components/ui/dropdown-menu";
 import useAuthStore from "../stores/authStore";
+import logo from "../assets/logo.png";
 
 const NavBar: React.FC = () => {
   const { isAuthenticated, logout } = useAuthStore();
@@ -58,16 +59,22 @@ const NavBar: React.FC = () => {
         <div className=" mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
-              <Link to="/" className="flex-shrink-0">
-                <span className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-gray-800 to-purple-700 dark:from-gray-50 dark:to-purple-400">
+              <Link to="/" className="flex-shrink-0 flex items-center gap-2">
+                <img src={logo} alt="" className="h-8" />
+                <span className="text-2xl font-bold  bg-clip-text ">
                   Luxury
                 </span>
               </Link>
               <div className="hidden lg:flex ml-10 items-center space-x-4">
-                <ExploreDropdown />
-                <NavLink to="/how-it-works" label="How It Works" />
-                <NavLink to="/about" label="About Us" />
+                {/*<ExploreDropdown />
+                 <NavLink to="/how-it-works" label="How It Works" />
+                <NavLink to="/about" label="About Us" /> */}
                 <NavLink to="/AuctionDiscovery" label="Discovery" />
+                <NavLink
+                  to="/auction/6680746f36931d1d3dfbf3dc"
+                  label="AuctionPage"
+                />
+                <NavLink to="/create-auction" label="CreateAuction" />
               </div>
             </div>
 
