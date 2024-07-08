@@ -1,191 +1,211 @@
-// src/pages/AuctionDiscoveryPage.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import axios from "axios";
 import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
 import { Card, CardContent } from "../components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
 import { Badge } from "../components/ui/badge";
 import { Button } from "../components/ui/button";
+import { Input } from "../components/ui/input";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "../components/ui/select";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../components/ui/pagination";
 import CountdownTimer from "../components/CountdownTimer";
-import { Star, BookOpen, Clock, Tag, Bell, Heart, Share2 } from "lucide-react";
+import {
+  Star,
+  BookOpen,
+  Clock,
+  Tag,
+  Bell,
+  Heart,
+  Share2,
+  Search,
+} from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
+import Footer from "../pagesComponents/Footer";
 
 const AuctionDiscoveryPage: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [loaded, setLoaded] = useState(false);
-  const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>({
-    initial: 0,
-    slideChanged(slider) {
-      setCurrentSlide(slider.track.details.rel);
-    },
-    created() {
-      setLoaded(true);
-    },
-    loop: true,
-    mode: "snap",
-    slides: { perView: 1 },
-  });
-  // Dummy data
-  const upcomingAuctions = [
+  const [sliderRef, instanceRef] = useKeenSlider<HTMLDivElement>(
     {
-      _id: "1",
-      title: "Vintage Watch Collection",
-      seller: "JohnDoe",
-      description:
-        "A stunning collection of rare vintage watches from the 1960s.",
-      startingPrice: 5000,
-      startTime: new Date(Date.now() + 86400000).toISOString(),
-      images: [
-        "https://images.joseartgallery.com/100736/conversions/what-kind-of-art-is-popular-right-now-thumb800.jpg",
-      ],
-      watchCount: 1289,
+      initial: 0,
+      slideChanged(slider) {
+        if (slider.track.details) {
+          setCurrentSlide(slider.track.details.rel);
+        }
+      },
+      created(slider) {
+        setLoaded(true);
+      },
+      loop: true,
+      mode: "snap",
+      slides: { perView: 1 },
     },
-    {
-      _id: "2",
-      title: "Modern Art Masterpiece",
-      seller: "ArtLover",
-      description: "An original painting by a renowned contemporary artist.",
-      startingPrice: 10000,
-      startTime: new Date(Date.now() + 172800000).toISOString(),
-      images: ["https://i.gyazo.com/e1af01c3d363876a5babe76a33a2ecb5.png"],
-      watchCount: 1289,
-    },
-    {
-      _id: "3",
-      title: "Classic Car Auction",
-      seller: "CarEnthusiast",
-      description: "A beautifully restored 1957 Chevrolet Bel Air.",
-      startingPrice: 50000,
-      startTime: new Date(Date.now() + 259200000).toISOString(),
-      images: ["https://i.gyazo.com/6e75db48bd9146e531514a8699e9b626.jpg"],
-      watchCount: 1289,
-    },
-  ];
+    [
+      (slider) => {
+        let timeout: ReturnType<typeof setTimeout>;
+        let mouseOver = false;
+        function clearNextTimeout() {
+          clearTimeout(timeout);
+        }
+        function nextTimeout() {
+          clearTimeout(timeout);
+          if (mouseOver) return;
+          timeout = setTimeout(() => {
+            slider.next();
+          }, 2000);
+        }
+        slider.on("created", () => {
+          if (slider.container) {
+            slider.container.addEventListener("mouseover", () => {
+              mouseOver = true;
+              clearNextTimeout();
+            });
+            slider.container.addEventListener("mouseout", () => {
+              mouseOver = false;
+              nextTimeout();
+            });
+          }
+          nextTimeout();
+        });
+        slider.on("dragStarted", clearNextTimeout);
+        slider.on("animationEnded", nextTimeout);
+        slider.on("updated", nextTimeout);
+      },
+    ]
+  );
 
-  const liveAuctions = [
-    {
-      _id: "4",
-      title: "Rare Comic Book Collection",
-      currentPrice: 2000,
-      endTime: new Date(Date.now() + 3600000).toISOString(),
-      watchedBy: new Array(156),
-      images: ["https://i.gyazo.com/e1af01c3d363876a5babe76a33a2ecb5.png"],
-    },
-    {
-      _id: "5",
-      title: "Antique Furniture Set",
-      currentPrice: 3500,
-      endTime: new Date(Date.now() + 7200000).toISOString(),
-      watchedBy: new Array(98),
-      images: ["https://i.gyazo.com/e1af01c3d363876a5babe76a33a2ecb5.png"],
-    },
-    {
-      _id: "6",
-      title: "Limited Edition Sneakers",
-      currentPrice: 500,
-      endTime: new Date(Date.now() + 5400000).toISOString(),
-      watchedBy: new Array(243),
-      images: ["https://i.gyazo.com/e1af01c3d363876a5babe76a33a2ecb5.png"],
-    },
-    {
-      _id: "7",
-      title: "Signed Sports Memorabilia",
-      currentPrice: 1500,
-      endTime: new Date(Date.now() + 3600000).toISOString(),
-      watchedBy: new Array(178),
-      images: ["https://i.gyazo.com/e1af01c3d363876a5babe76a33a2ecb5.png"],
-    },
-    {
-      _id: "8",
-      title: "Luxury Handbag",
-      currentPrice: 4000,
-      endTime: new Date(Date.now() + 7200000).toISOString(),
-      watchedBy: new Array(112),
-      images: ["https://i.gyazo.com/e1af01c3d363876a5babe76a33a2ecb5.png"],
-    },
-    {
-      _id: "9",
-      title: "Rare Wine Collection",
-      currentPrice: 7500,
-      endTime: new Date(Date.now() + 5400000).toISOString(),
-      watchedBy: new Array(89),
-      images: ["https://i.gyazo.com/e1af01c3d363876a5babe76a33a2ecb5.png"],
-    },
-  ];
+  const [auctions, setAuctions] = useState<any[]>([]);
+  const [trendingAuctions, setTrendingAuctions] = useState<any[]>([]);
+  const [upcomingAuctions, setUpcomingAuctions] = useState<any[]>([]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [category, setCategory] = useState("");
 
+  useEffect(() => {
+    fetchAuctions();
+  }, [currentPage, searchTerm, category]);
+
+  const fetchAuctions = async () => {
+    try {
+      const response = await axios.get(
+        "http://localhost:3000/api/auctions/discovery",
+        {
+          params: {
+            page: currentPage,
+            search: searchTerm,
+            category: category,
+          },
+        }
+      );
+      setAuctions(response.data.auctions);
+      setTrendingAuctions(response.data.trendingAuctions);
+      setUpcomingAuctions(response.data.upcomingAuctions);
+      setTotalPages(response.data.pagination.totalPages);
+    } catch (error) {
+      console.error("Error fetching auctions:", error);
+    }
+  };
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+  const generatePaginationItems = () => {
+    let items = [];
+    const totalPaginationItems = 1; // Adjust this number to show more or fewer page numbers
+
+    if (totalPages <= totalPaginationItems) {
+      // If total pages are less than or equal to totalPaginationItems, show all pages
+      for (let i = 1; i <= totalPages; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+    } else {
+      // Always show first page
+      items.push(
+        <PaginationItem key={1}>
+          <PaginationLink
+            onClick={() => handlePageChange(1)}
+            isActive={currentPage === 1}
+          >
+            1
+          </PaginationLink>
+        </PaginationItem>
+      );
+
+      // Show ellipsis if current page is far from the first page
+      if (currentPage > 3) {
+        items.push(<PaginationEllipsis key="ellipsis-1" />);
+      }
+
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+      for (let i = start; i <= end; i++) {
+        items.push(
+          <PaginationItem key={i}>
+            <PaginationLink
+              onClick={() => handlePageChange(i)}
+              isActive={currentPage === i}
+            >
+              {i}
+            </PaginationLink>
+          </PaginationItem>
+        );
+      }
+
+      // Show ellipsis if current page is far from the last page
+      if (currentPage < totalPages - 2) {
+        items.push(<PaginationEllipsis key="ellipsis-2" />);
+      }
+
+      // Always show last page
+      items.push(
+        <PaginationItem key={totalPages}>
+          <PaginationLink
+            onClick={() => handlePageChange(totalPages)}
+            isActive={currentPage === totalPages}
+          >
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+
+    return items;
+  };
   const categories = [
-    { name: "Art", icon: "🎨", count: 1250 },
-    { name: "Collectibles", icon: "🏺", count: 980 },
-    { name: "Electronics", icon: "📱", count: 1500 },
-    { name: "Fashion", icon: "👗", count: 2200 },
-    { name: "Home & Garden", icon: "🏡", count: 1100 },
-    { name: "Jewelry", icon: "💍", count: 750 },
-    { name: "Sports", icon: "⚽", count: 600 },
-    { name: "Vehicles", icon: "🚗", count: 400 },
+    { name: "Art", icon: "🎨" },
+    { name: "Collectibles", icon: "🏺" },
+    { name: "Electronics", icon: "📱" },
+    { name: "Fashion", icon: "👗" },
+    { name: "Home & Garden", icon: "🏡" },
+    { name: "Jewelry", icon: "💍" },
+    { name: "Sports", icon: "⚽" },
+    { name: "Vehicles", icon: "🚗" },
   ];
-
-  const featuredSellers = [
-    {
-      id: "1",
-      name: "VintageVault",
-      rating: 4.9,
-      totalSales: 1250,
-      avatar: "https://example.com/seller1.jpg",
-    },
-    {
-      id: "2",
-      name: "TechTreasures",
-      rating: 4.8,
-      totalSales: 980,
-      avatar: "https://example.com/seller2.jpg",
-    },
-    {
-      id: "3",
-      name: "LuxuryLane",
-      rating: 4.7,
-      totalSales: 1500,
-      avatar: "https://example.com/seller3.jpg",
-    },
-    {
-      id: "4",
-      name: "CollectorsCorner",
-      rating: 4.9,
-      totalSales: 2200,
-      avatar: "https://example.com/seller4.jpg",
-    },
-  ];
-
-  const recentlyEndedAuctions = [
-    {
-      id: "10",
-      title: "Antique Pocket Watch",
-      finalPrice: 1200,
-      winner: "TimelessCollector",
-      endedAt: "2 hours ago",
-    },
-    {
-      id: "11",
-      title: "Signed First Edition Book",
-      finalPrice: 5000,
-      winner: "RareBookLover",
-      endedAt: "5 hours ago",
-    },
-    {
-      id: "12",
-      title: "Vintage Movie Poster",
-      finalPrice: 800,
-      winner: "CinemaEnthusiast",
-      endedAt: "1 day ago",
-    },
-    {
-      id: "13",
-      title: "Rare Coin Collection",
-      finalPrice: 3500,
-      winner: "NumismaticsNerd",
-      endedAt: "1 day ago",
-    },
-  ];
-
   const auctionTips = [
     {
       id: "1",
@@ -212,11 +232,9 @@ const AuctionDiscoveryPage: React.FC = () => {
       readTime: 6,
     },
   ];
-
   return (
-    <div className=" w-full mx-auto  ">
-      <section className="relative  overflow-hidden bg-gray-900 mb-6">
-        {/* Dynamic background */}
+    <div className="w-full mx-auto">
+      <section className="relative overflow-hidden bg-gray-900 mb-6">
         <AnimatePresence>
           <motion.div
             key={currentSlide}
@@ -230,21 +248,9 @@ const AuctionDiscoveryPage: React.FC = () => {
             }}
           />
         </AnimatePresence>
-        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/80 " />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/80 via-black/70 to-black/80" />
 
-        {/* Content */}
         <div className="relative z-10 container mx-auto px-4 py-24">
-          {/* <motion.h2
-            initial={{ opacity: 0, y: -50 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="text-6xl font-bold mb-16 text-white text-center tracking-tight"
-          >
-            Upcoming{" "}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-pink-300 to-purple-400">
-              Auctions
-            </span>
-          </motion.h2> */}
           <div ref={sliderRef} className="keen-slider">
             {upcomingAuctions.map((auction, index) => (
               <div key={auction._id} className="keen-slider__slide">
@@ -256,7 +262,7 @@ const AuctionDiscoveryPage: React.FC = () => {
                     className="lg:w-3/5 w-full relative group"
                   >
                     <img
-                      src={auction.images[0]}
+                      src={"http://localhost:3000/uploads/" + auction.images[0]}
                       alt={auction.title}
                       className="rounded-3xl shadow-2xl w-full h-96 object-cover transition-all duration-500 group-hover:scale-105 group-hover:rotate-1"
                     />
@@ -269,15 +275,15 @@ const AuctionDiscoveryPage: React.FC = () => {
                         <div className="flex items-center">
                           <Avatar className="h-12 w-12 mr-4 ring-2 ring-purple-500">
                             <AvatarImage
-                              src={`https://api.dicebear.com/6.x/initials/svg?seed=${auction.seller}`}
+                              src={`https://api.dicebear.com/6.x/initials/svg?seed=${auction.seller.username}`}
                             />
                             <AvatarFallback>
-                              {auction.seller.substring(0, 2)}
+                              {auction.seller.username.substring(0, 2)}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <p className="text-xl text-white font-medium">
-                              by {auction.seller}
+                              by {auction.seller.username}
                             </p>
                             <p className="text-sm text-gray-300">
                               Top Rated Seller
@@ -288,7 +294,7 @@ const AuctionDiscoveryPage: React.FC = () => {
                           variant="secondary"
                           className="bg-purple-500/20 text-purple-300 px-3 py-1"
                         >
-                          {auction.watchCount} Watchers
+                          {auction.watchedBy?.length || 0} Watchers
                         </Badge>
                       </div>
                     </div>
@@ -313,7 +319,7 @@ const AuctionDiscoveryPage: React.FC = () => {
                               ${auction.startingPrice.toLocaleString()}
                             </p>
                           </div>
-                          <div className="dark:bg-pink-500/20 bg-white/80 rounded-2xl p-4 text-center flex flex-col items-center ">
+                          <div className="dark:bg-pink-500/20 bg-white/80 rounded-2xl p-4 text-center flex flex-col items-center">
                             <p className="dark:text-pink-300 text-black mb-1 text-sm">
                               Auction Starts In
                             </p>
@@ -325,16 +331,16 @@ const AuctionDiscoveryPage: React.FC = () => {
                           </div>
                         </div>
                         <div className="flex gap-4">
-                          <button className="flex-1  bg-white/10 text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all duration-300 flex justify-center items-center">
+                          <Button variant="secondary" className="flex-1">
                             <Bell className="mr-2 h-5 w-5" />
                             Set Reminder
-                          </button>
-                          <button className="bg-white/10 text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all duration-300">
+                          </Button>
+                          <Button variant="secondary" size="icon">
                             <Heart className="h-5 w-5" />
-                          </button>
-                          <button className="bg-white/10 text-white px-4 py-2 rounded-xl hover:bg-white/20 transition-all duration-300">
+                          </Button>
+                          <Button variant="secondary" size="icon">
                             <Share2 className="h-5 w-5" />
-                          </button>
+                          </Button>
                         </div>
                       </CardContent>
                     </Card>
@@ -345,8 +351,7 @@ const AuctionDiscoveryPage: React.FC = () => {
           </div>
         </div>
 
-        {/* Navigation dots */}
-        {loaded && instanceRef.current && (
+        {loaded && instanceRef.current && instanceRef.current.track.details && (
           <div className="absolute bottom-8 left-1/2 transform -translate-x-1/2 flex justify-center">
             {[
               ...Array(instanceRef.current.track.details.slides.length).keys(),
@@ -365,28 +370,112 @@ const AuctionDiscoveryPage: React.FC = () => {
         )}
       </section>
 
-      <div className="container">
-        {/* Second Section: Live Auctions with High Watchers */}
+      <div className="container mx-auto px-4">
         <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-6">Trending Live Auctions</h2>
+          <div className="flex flex-col md:flex-row justify-between items-center mb-6">
+            <h2 className="text-3xl font-bold">Discover Auctions</h2>
+            <div className="flex items-center space-x-4 mt-4 md:mt-0">
+              <div className="relative">
+                <Input
+                  type="text"
+                  placeholder="Search auctions..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              </div>
+              <Select value={category} onValueChange={setCategory}>
+                <SelectTrigger className="w-[180px]">
+                  <SelectValue placeholder="Category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat.name} value={cat.name.toLowerCase()}>
+                      {cat.icon} {cat.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {liveAuctions.map((auction) => (
+            {auctions.map((auction) => (
               <Card key={auction._id}>
                 <CardContent className="p-4">
                   <img
-                    src={auction.images[0]}
+                    src={"http://localhost:3000/uploads/" + auction.images[0]}
                     alt={auction.title}
                     className="w-full h-48 object-cover mb-4 rounded"
                   />
                   <h3 className="text-lg font-semibold mb-2">
                     {auction.title}
                   </h3>
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-300  mb-2">
                     Current bid: ${auction.currentPrice}
                   </p>
                   <div className="flex justify-between items-center">
                     <Badge variant="outline">
-                      {auction.watchedBy.length} watchers
+                      {auction.watchedBy?.length || 0} watchers
+                    </Badge>
+                    <CountdownTimer
+                      endTime={auction.endTime}
+                      size="sm"
+                      shortLabels
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+          <div className="mt-8 flex justify-center">
+            <Pagination className="mt-8">
+              <PaginationContent>
+                <PaginationItem>
+                  <PaginationPrevious
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    className={
+                      currentPage === 1 ? "pointer-events-none opacity-50" : ""
+                    }
+                  />
+                </PaginationItem>
+                {generatePaginationItems()}
+                <PaginationItem>
+                  <PaginationNext
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    className={
+                      currentPage === totalPages
+                        ? "pointer-events-none opacity-50"
+                        : ""
+                    }
+                  />
+                </PaginationItem>
+              </PaginationContent>
+            </Pagination>
+          </div>
+        </section>
+
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold mb-6">Upcoming Auctions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {upcomingAuctions.map((auction) => (
+              <Card key={auction._id}>
+                <CardContent className="p-4">
+                  <img
+                    src={"http://localhost:3000/uploads/" + auction.images[0]}
+                    alt={auction.title}
+                    className="w-full h-48 object-cover mb-4 rounded"
+                  />
+                  <h3 className="text-lg font-semibold mb-2">
+                    {auction.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300  mb-2">
+                    Current bid: ${auction.currentPrice}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <Badge variant="outline">
+                      {auction.watchedBy?.length || 0} watchers
                     </Badge>
                     <CountdownTimer
                       endTime={auction.endTime}
@@ -399,82 +488,55 @@ const AuctionDiscoveryPage: React.FC = () => {
             ))}
           </div>
         </section>
-
-        {/* Third Section: Categories */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold mb-6">Trending Live Auctions</h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {trendingAuctions.map((auction) => (
+              <Card key={auction._id}>
+                <CardContent className="p-4">
+                  <img
+                    src={"http://localhost:3000/uploads/" + auction.images[0]}
+                    alt={auction.title}
+                    className="w-full h-48 object-cover mb-4 rounded"
+                  />
+                  <h3 className="text-lg font-semibold mb-2">
+                    {auction.title}
+                  </h3>
+                  <p className="text-sm text-gray-600 dark:text-gray-300  mb-2">
+                    Current bid: ${auction.currentPrice}
+                  </p>
+                  <div className="flex justify-between items-center">
+                    <Badge variant="outline">
+                      {auction.watchedBy?.length || 0} watchers
+                    </Badge>
+                    <CountdownTimer
+                      endTime={auction.endTime}
+                      size="sm"
+                      shortLabels
+                    />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </section>
         <section className="mb-16">
           <h2 className="text-3xl font-bold mb-6">Explore Categories</h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {categories.map((category) => (
               <Card
                 key={category.name}
-                className="hover:shadow-lg transition-shadow"
+                className="hover:shadow-lg transition-shadow cursor-pointer"
+                onClick={() => setCategory(category.name.toLowerCase())}
               >
                 <CardContent className="p-4 text-center">
                   <div className="text-4xl mb-2">{category.icon}</div>
-                  <h3 className="font-semibold mb-1">{category.name}</h3>
-                  <p className="text-sm text-gray-500 dark:text-gray-300">
-                    {category.count} items
-                  </p>
+                  <h3 className="font-semibold">{category.name}</h3>
                 </CardContent>
               </Card>
             ))}
           </div>
         </section>
-
-        {/* Fourth Section: Featured Sellers */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-6">Featured Sellers</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredSellers.map((seller) => (
-              <Card key={seller.id}>
-                <CardContent className="p-4 text-center">
-                  <Avatar className="h-20 w-20 mx-auto mb-4">
-                    <AvatarImage src={seller.avatar} />
-                    <AvatarFallback>
-                      {seller.name.substring(0, 2)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <h3 className="font-semibold mb-1">{seller.name}</h3>
-                  <div className="flex items-center justify-center mb-2">
-                    <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                    <span>{seller.rating}</span>
-                  </div>
-                  <p className="text-sm text-gray-500 dark:text-gray-300">
-                    {seller.totalSales} sales
-                  </p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </section>
-
-        {/* Fifth Section: Recently Ended Auctions */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold mb-6">Recently Ended</h2>
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left p-2">Item</th>
-                  <th className="text-left p-2">Final Price</th>
-                  <th className="text-left p-2">Winner</th>
-                  <th className="text-left p-2">Ended</th>
-                </tr>
-              </thead>
-              <tbody>
-                {recentlyEndedAuctions.map((auction) => (
-                  <tr key={auction.id} className="border-b">
-                    <td className="p-2">{auction.title}</td>
-                    <td className="p-2">${auction.finalPrice}</td>
-                    <td className="p-2">{auction.winner}</td>
-                    <td className="p-2">{auction.endedAt}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
-
         {/* Sixth Section: Auction Tips & Guides */}
         <section className="mb-16">
           <h2 className="text-3xl font-bold mb-6">Auction Tips & Guides</h2>
@@ -483,9 +545,11 @@ const AuctionDiscoveryPage: React.FC = () => {
               <Card key={tip.id}>
                 <CardContent className="p-4">
                   <h3 className="font-semibold mb-2">{tip.title}</h3>
-                  <p className="text-sm text-gray-600 mb-4">{tip.excerpt}</p>
+                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+                    {tip.excerpt}
+                  </p>
                   <div className="flex justify-between items-center">
-                    <div className="flex items-center text-sm text-gray-500 dark:text-gray-300">
+                    <div className="flex items-center text-sm text-gray-600 dark:text-gray-300 ">
                       <Clock className="h-4 w-4 mr-1" />
                       <span>{tip.readTime} min read</span>
                     </div>
@@ -498,6 +562,7 @@ const AuctionDiscoveryPage: React.FC = () => {
             ))}
           </div>
         </section>
+        <Footer />
       </div>
     </div>
   );

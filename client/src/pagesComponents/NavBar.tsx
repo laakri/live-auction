@@ -62,7 +62,7 @@ const NavBar: React.FC = () => {
               <Link to="/" className="flex-shrink-0 flex items-center gap-2">
                 <img src={logo} alt="" className="h-8" />
                 <span className="text-2xl font-bold  bg-clip-text ">
-                  Luxury
+                  Lexura
                 </span>
               </Link>
               <div className="hidden lg:flex ml-10 items-center space-x-4">
@@ -71,7 +71,7 @@ const NavBar: React.FC = () => {
                 <NavLink to="/about" label="About Us" /> */}
                 <NavLink to="/AuctionDiscovery" label="Discovery" />
                 <NavLink
-                  to="/auction/6680746f36931d1d3dfbf3dc"
+                  to="/auction/668bc2e0ed045424a771aa12"
                   label="AuctionPage"
                 />
                 <NavLink to="/create-auction" label="CreateAuction" />

@@ -17,6 +17,18 @@ export interface IUser extends Document {
     notifications: boolean;
     privateProfile: boolean;
   };
+  xp: number;
+  level: number;
+  achievements: string[];
+  virtualCurrencyBalance: number;
+  alliance?: Schema.Types.ObjectId;
+  customizations: {
+    theme: string;
+    avatar: string;
+  };
+  loyaltyTier: "bronze" | "silver" | "gold" | "platinum";
+  referralCode: string;
+  referredBy?: Schema.Types.ObjectId;
 }
 
 const UserSchema: Schema = new Schema(
@@ -37,6 +49,22 @@ const UserSchema: Schema = new Schema(
       notifications: { type: Boolean, default: true },
       privateProfile: { type: Boolean, default: false },
     },
+    xp: { type: Number, default: 0 },
+    level: { type: Number, default: 1 },
+    achievements: [String],
+    virtualCurrencyBalance: { type: Number, default: 0 },
+    alliance: { type: Schema.Types.ObjectId, ref: "Alliance" },
+    customizations: {
+      theme: { type: String, default: "default" },
+      avatar: String,
+    },
+    loyaltyTier: {
+      type: String,
+      enum: ["bronze", "silver", "gold", "platinum"],
+      default: "bronze",
+    },
+    referralCode: { type: String, unique: true },
+    referredBy: { type: Schema.Types.ObjectId, ref: "User" },
   },
   {
     timestamps: true,

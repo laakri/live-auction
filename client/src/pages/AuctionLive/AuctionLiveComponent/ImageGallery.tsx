@@ -51,7 +51,7 @@ const ImageGallery: React.FC<ImageGalleryProps> = ({ images }) => {
               <CardContent className="p-0 max-h-[33rem]">
                 <AspectRatio ratio={16 / 9} className="max-h-[33rem]">
                   <img
-                    src={image}
+                    src={"http://localhost:3000/uploads/" + image}
                     alt={`Image ${index + 1}`}
                     className="object-cover w-full h-full rounded-md max-h-[33rem]"
                   />

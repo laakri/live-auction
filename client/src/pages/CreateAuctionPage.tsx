@@ -111,6 +111,16 @@ export default function CreateAuctionPage() {
       }
     }
   };
+  const categories = [
+    { name: "Art", icon: "🎨" },
+    { name: "Collectibles", icon: "🏺" },
+    { name: "Electronics", icon: "📱" },
+    { name: "Fashion", icon: "👗" },
+    { name: "Home & Garden", icon: "🏡" },
+    { name: "Jewelry", icon: "💍" },
+    { name: "Sports", icon: "⚽" },
+    { name: "Vehicles", icon: "🚗" },
+  ];
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 mt-4">
       <div className="max-w-4xl mx-auto">
@@ -332,13 +342,15 @@ export default function CreateAuctionPage() {
                           <SelectValue placeholder="Select a category" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="art">Fine Art</SelectItem>
-                          <SelectItem value="jewelry">
-                            Luxury Jewelry
-                          </SelectItem>
-                          <SelectItem value="watches">Timepieces</SelectItem>
-                          <SelectItem value="cars">Classic Cars</SelectItem>
-                          <SelectItem value="wine">Fine Wine</SelectItem>
+                          <SelectItem value="all">All Categories</SelectItem>
+                          {categories.map((cat) => (
+                            <SelectItem
+                              key={cat.name}
+                              value={cat.name.toLowerCase()}
+                            >
+                              {cat.icon} {cat.name}
+                            </SelectItem>
+                          ))}
                         </SelectContent>
                       </Select>
                       {error && (

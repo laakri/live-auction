@@ -77,7 +77,88 @@ export const createAuction = async (
     reply.status(500).send({ error: "Error creating auction" });
   }
 };
+export const getDiscoveryAuctions = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  try {
+    const {
+      search,
+      category,
+      sort,
+      page = 1,
+      limit = 12,
+    } = request.query as {
+      search?: string;
+      category?: string;
+      sort?: string;
+      page?: number;
+      limit?: number;
+    };
 
+    const query: any = {};
+
+    // Search functionality
+    if (search) {
+      query.$or = [
+        { title: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    // Category filter
+    if (category) {
+      query.category = category;
+    }
+
+    // Sorting
+    let sortOption: any = { createdAt: -1 }; // Default sort by newest
+    if (sort === "price_asc") sortOption = { currentPrice: 1 };
+    if (sort === "price_desc") sortOption = { currentPrice: -1 };
+    if (sort === "ending_soon") sortOption = { endTime: 1 };
+
+    const totalAuctions = await Auction.countDocuments(query);
+    const totalPages = Math.ceil(totalAuctions / limit);
+
+    const auctions = await Auction.find(query)
+      .sort(sortOption)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .populate("seller", "username avatar rating")
+      .lean();
+
+    // Get trending auctions (most watched)
+    const trendingAuctions = await Auction.find({ status: "active" })
+      .sort({ "watchedBy.length": -1 })
+      .limit(6)
+      .populate("seller", "username avatar rating")
+      .lean();
+
+    // Get upcoming auctions
+    const upcomingAuctions = await Auction.find({
+      status: "upcoming",
+      startTime: { $gt: new Date() },
+    })
+      .sort({ startTime: 1 })
+      .limit(3)
+      .populate("seller", "username avatar rating")
+      .lean();
+
+    reply.send({
+      auctions,
+      trendingAuctions,
+      upcomingAuctions,
+      pagination: {
+        currentPage: page,
+        totalPages,
+        totalAuctions,
+      },
+    });
+  } catch (error) {
+    console.error("Error fetching discovery auctions:", error);
+    reply.status(500).send({ error: "Error fetching auctions" });
+  }
+};
 export const updateAuction = async (
   request: FastifyRequest,
   reply: FastifyReply
