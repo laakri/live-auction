@@ -171,7 +171,8 @@ const AuctionPage: React.FC = () => {
                   <Share2 className="mr-2 h-4 w-4" /> Share
                 </Button>
                 <Button variant="outline" size="sm">
-                  <Heart className="mr-2 h-4 w-4" /> Watch
+                  <Heart className="mr-2 h-4 w-4" />
+                   Watch
                 </Button>
               </div>
             </div>
