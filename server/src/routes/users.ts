@@ -16,9 +16,9 @@ export default function userRoutes(
     userController.getProfile
   );
   fastify.put(
-    "/profile",
+    "/VerifyProfile",
     { preHandler: [authenticate] },
-    userController.updateProfile
+    userController.VerifyProfile
   );
   fastify.put(
     "/customization",

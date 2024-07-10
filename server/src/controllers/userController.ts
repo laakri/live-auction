@@ -143,15 +143,13 @@ export const getProfile = async (
     reply.status(500).send({ error: "Error fetching user profile" });
   }
 };
-
-export const updateProfile = async (
+export const VerifyProfile = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
   const userId = request.user!._id;
   const updates = request.body as Partial<IUser>;
 
-  // Fields that are not allowed to be updated directly
   const restrictedFields: (keyof Partial<IUser>)[] = [
     "password",
     "email",
@@ -163,19 +161,28 @@ export const updateProfile = async (
     "referralCode",
   ];
 
-  // Remove restricted fields from updates
   restrictedFields.forEach((field) => delete updates[field]);
 
+  // Set isVerified to true
+  updates.isVerified = true;
+
   try {
-    const user = await User.findByIdAndUpdate(userId, updates, {
-      new: true,
-    }).select("-password");
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { ...updates, isVerified: true },
+      {
+        new: true,
+        runValidators: true,
+      }
+    ).select("-password");
+
     if (!user) {
       return reply.status(404).send({ error: "User not found" });
     }
 
     reply.send(user);
   } catch (error) {
+    console.error("Error updating user profile:", error);
     reply.status(500).send({ error: "Error updating user profile" });
   }
 };
@@ -253,7 +260,7 @@ export default {
   register,
   login,
   getProfile,
-  updateProfile,
+  VerifyProfile,
   updateCustomization,
   getAchievements,
   getReferralInfo,

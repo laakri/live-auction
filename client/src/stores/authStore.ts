@@ -5,6 +5,9 @@ import axios from "axios";
 export interface User {
   id: string;
   username: string;
+  phoneNumber: String;
+  idNumber: String;
+  address: String;
   email: string;
   password: string;
   profilePicture?: string;
@@ -40,6 +43,7 @@ interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
   error: string | null;
+  showVerificationPrompt: boolean;
   login: (email: string, password: string, toast: any) => Promise<void>;
   signup: (
     username: string,
@@ -49,6 +53,7 @@ interface AuthState {
   ) => Promise<void>;
   logout: () => void;
   clearError: () => void;
+  updateUser: (userData: Partial<User>, toast: any) => Promise<void>;
 }
 
 const useAuthStore = create<AuthState>()(
@@ -58,6 +63,7 @@ const useAuthStore = create<AuthState>()(
       token: null,
       isAuthenticated: false,
       isLoading: false,
+      showVerificationPrompt: false,
       error: null,
 
       login: async (email: string, password: string, toast: any) => {
@@ -65,17 +71,13 @@ const useAuthStore = create<AuthState>()(
         try {
           const response = await axios.post(
             "http://localhost:3000/api/users/login",
-            {
-              email,
-              password,
-            }
+            { email, password }
           );
-          console.log(response.data.user);
-
           set({
             user: response.data.user,
             token: response.data.token,
             isAuthenticated: true,
+            showVerificationPrompt: !response.data.user.isVerified,
             isLoading: false,
           });
           axios.defaults.headers.common[
@@ -105,16 +107,13 @@ const useAuthStore = create<AuthState>()(
         try {
           const response = await axios.post(
             "http://localhost:3000/api/users/register",
-            {
-              username,
-              email,
-              password,
-            }
+            { username, email, password }
           );
           set({
             user: response.data.user,
             token: response.data.token,
             isAuthenticated: true,
+            showVerificationPrompt: !response.data.user.isVerified,
             isLoading: false,
           });
           axios.defaults.headers.common[
@@ -140,7 +139,39 @@ const useAuthStore = create<AuthState>()(
       },
 
       clearError: () => set({ error: null }),
+      updateUser: async (userData: Partial<User>, toast: any) => {
+        set({ isLoading: true, error: null });
+        try {
+          const response = await axios.put(
+            "http://localhost:3000/api/users/VerifyProfile",
+            userData,
+            {
+              headers: {
+                Authorization: `Bearer ${get().token}`,
+              },
+            }
+          );
+
+          set((state) => ({
+            user: { ...state.user, ...response.data } as User,
+            isLoading: false,
+          }));
+
+          toast({
+            title: "Success",
+            description: "Profile updated successfully",
+          });
+        } catch (error) {
+          toast({
+            variant: "destructive",
+            title: "Uh oh! Something went wrong.",
+            description: "Failed to update profile",
+          });
+          set({ error: "Failed to update profile", isLoading: false });
+        }
+      },
     }),
+
     {
       name: "auth-storage",
       storage: createJSONStorage(() => localStorage),

@@ -6,6 +6,7 @@ import HomePage from "./pages/HomePage";
 import AuctionDiscoveryPage from "./pages/AuctionDiscoveryPage";
 import OpenSeaClone from "./pages/OpenSeaClone";
 import UserProfile from "./pages/Profile/UserProfile";
+import UserVerificationPage from "./pages/UserVerificationPage";
 
 const LuxuryAuthPage = lazy(() => import("./pages/Auth/LuxuryAuthPage"));
 const AuctionHomePage = lazy(() => import("./pages/AuctionHomePage"));
@@ -23,6 +24,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/AuthPage" element={<LuxuryAuthPage />} />
         <Route path="/AuctionDiscovery" element={<AuctionDiscoveryPage />} />
         <Route path="/UserProfile" element={<UserProfile />} />
+        <Route path="/UserVerification" element={<UserVerificationPage />} />
         <Route path="/create-auction" element={<CreateAuctionPage />} />
         <Route path="/auction/:id" element={<AuctionPage />} />
         <Route path="/AuctionRoom/:id" element={<AuctionDetail />} />
