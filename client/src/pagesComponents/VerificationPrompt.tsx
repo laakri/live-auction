@@ -6,7 +6,6 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
-  DialogTrigger,
 } from "../components/ui/dialog";
 import { Button } from "../components/ui/button";
 
@@ -21,6 +20,18 @@ const VerificationPrompt: React.FC<VerificationPromptProps> = ({
 }) => {
   const navigate = useNavigate();
 
+  console.log("VerificationPrompt rendered with isOpen:", isOpen);
+
+  const handleVerificationClick = () => {
+    onClose();
+    navigate("/UserVerification");
+  };
+
+  const handleNextTimeClick = () => {
+    onClose();
+    navigate("/");
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent>
@@ -32,10 +43,10 @@ const VerificationPrompt: React.FC<VerificationPromptProps> = ({
           </DialogDescription>
         </DialogHeader>
         <div className="flex flex-col space-y-4">
-          <Button onClick={() => navigate("/UserVerification")}>
+          <Button onClick={handleVerificationClick}>
             Go to Verification Page
           </Button>
-          <Button variant="secondary" onClick={onClose}>
+          <Button variant="secondary" onClick={handleNextTimeClick}>
             Next Time
           </Button>
         </div>

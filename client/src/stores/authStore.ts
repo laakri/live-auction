@@ -5,9 +5,9 @@ import axios from "axios";
 export interface User {
   id: string;
   username: string;
-  phoneNumber: String;
-  idNumber: String;
-  address: String;
+  phoneNumber: string;
+  idNumber: string;
+  address: string;
   email: string;
   password: string;
   profilePicture?: string;
@@ -35,6 +35,7 @@ export interface User {
   loyaltyTier: string;
   referralCode: string;
   referredBy?: string;
+  lastVerificationPrompt: number | null;
 }
 
 interface AuthState {
@@ -54,6 +55,7 @@ interface AuthState {
   logout: () => void;
   clearError: () => void;
   updateUser: (userData: Partial<User>, toast: any) => Promise<void>;
+  shouldShowVerificationPrompt: () => boolean;
 }
 
 const useAuthStore = create<AuthState>()(
@@ -73,13 +75,19 @@ const useAuthStore = create<AuthState>()(
             "http://localhost:3000/api/users/login",
             { email, password }
           );
-          set({
-            user: response.data.user,
-            token: response.data.token,
-            isAuthenticated: true,
-            showVerificationPrompt: !response.data.user.isVerified,
-            isLoading: false,
-          });
+          if (response.data.user && !response.data.user.isVerified) {
+            const newUser =
+              response.data.user.isVerified === false
+                ? { ...response.data.user, lastVerificationPrompt: Date.now() }
+                : response.data.user;
+            set({
+              user: newUser,
+              token: response.data.token,
+              isAuthenticated: true,
+              showVerificationPrompt: !newUser.isVerified,
+              isLoading: false,
+            });
+          }
           axios.defaults.headers.common[
             "Authorization"
           ] = `Bearer ${response.data.token}`;
@@ -109,11 +117,16 @@ const useAuthStore = create<AuthState>()(
             "http://localhost:3000/api/users/register",
             { username, email, password }
           );
+          const newUser = {
+            ...response.data.user,
+            isVerified: false,
+            lastVerificationPrompt: null,
+          };
+          console.log("New user after signup:", newUser);
           set({
-            user: response.data.user,
+            user: newUser,
             token: response.data.token,
             isAuthenticated: true,
-            showVerificationPrompt: !response.data.user.isVerified,
             isLoading: false,
           });
           axios.defaults.headers.common[
@@ -139,6 +152,7 @@ const useAuthStore = create<AuthState>()(
       },
 
       clearError: () => set({ error: null }),
+
       updateUser: async (userData: Partial<User>, toast: any) => {
         set({ isLoading: true, error: null });
         try {
@@ -169,6 +183,27 @@ const useAuthStore = create<AuthState>()(
           });
           set({ error: "Failed to update profile", isLoading: false });
         }
+      },
+      shouldShowVerificationPrompt: () => {
+        const { user } = get();
+        if (!user) return false;
+
+        console.log("User in shouldShowVerificationPrompt:", user);
+        console.log("Is user verified:", user.isVerified);
+
+        if (user.isVerified) return false;
+
+        const sixHoursInMs = 6 * 60 * 60 * 1000;
+        const now = Date.now();
+
+        console.log("Last prompt:", user.lastVerificationPrompt);
+        console.log("Now:", now);
+        console.log("Difference:", now - (user.lastVerificationPrompt || 0));
+
+        return (
+          !user.lastVerificationPrompt ||
+          now - user.lastVerificationPrompt > sixHoursInMs
+        );
       },
     }),
 

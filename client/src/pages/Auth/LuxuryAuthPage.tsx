@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
@@ -14,8 +14,28 @@ const LuxuryAuthPage: React.FC = () => {
   const [username, setUsername] = useState("");
   const { login, signup, error, isLoading, clearError } = useAuth();
   const { toast } = useToast();
-  const { showVerificationPrompt, clearError: clearAuthError } = useAuthStore();
+  const {
+    shouldShowVerificationPrompt,
+    user,
+    clearError: clearAuthError,
+  } = useAuthStore();
+  const [showPrompt, setShowPrompt] = useState(false);
+  const shouldShowPrompt = useAuthStore((state) =>
+    state.shouldShowVerificationPrompt()
+  );
 
+  useEffect(() => {
+    console.log("User:", user);
+    console.log("Should show prompt:", shouldShowPrompt);
+    setShowPrompt(shouldShowPrompt);
+  }, [user, shouldShowPrompt]);
+
+  const handleClosePrompt = () => {
+    setShowPrompt(false);
+    useAuthStore
+      .getState()
+      .updateUser({ lastVerificationPrompt: Date.now() }, toast);
+  };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     clearError();
@@ -121,10 +141,8 @@ const LuxuryAuthPage: React.FC = () => {
           </div>
         </div>
       </motion.div>
-      <VerificationPrompt
-        isOpen={showVerificationPrompt}
-        onClose={() => clearAuthError()}
-      />
+
+      <VerificationPrompt isOpen={showPrompt} onClose={handleClosePrompt} />
     </div>
   );
 };

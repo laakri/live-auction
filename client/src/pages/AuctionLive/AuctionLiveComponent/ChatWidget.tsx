@@ -4,6 +4,7 @@ import {
   Paperclip,
   ArrowRightFromLine,
   Users,
+  Loader2,
 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import {
@@ -14,11 +15,12 @@ import {
 } from "../../../components/ui/tooltip";
 import { Label } from "@radix-ui/react-dropdown-menu";
 import { Textarea } from "../../../components/ui/textarea";
-import { ScrollArea } from "../../../components/ui/scroll-area";
 import { Badge } from "../../../components/ui/badge";
 import useAuthStore from "../../../stores/authStore";
 import AnimatedBidButton from "../../../components/AnimatedBidButton";
 import { socketService } from "../socketService";
+import { Skeleton } from "../../../components/ui/skeleton";
+import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
 
 interface IChatMessage {
   _id: string;
@@ -41,6 +43,13 @@ interface IBid {
   };
   amount: number;
   timestamp: Date;
+}
+
+interface ChatWidgetProps {
+  isOpen: boolean;
+  onToggle: () => void;
+  auctionId: string;
+  currentPrice: number;
 }
 
 const getRandomColor = () => {
@@ -71,50 +80,62 @@ const ChatMessage: React.FC<{
           : "bg-gray-200 dark:bg-gray-700"
       }`}
     >
-      <p className="text-sm font-semibold mb-1">{message.sender.username}</p>
+      <p className="text-sm font-semibold mb-1">
+        {message.sender.username || "Anonymous"}
+      </p>
       <p className="text-sm">{message.content}</p>
     </div>
   </div>
 );
 
-const BidMessage: React.FC<{ bid: IBid; color: string }> = ({ bid, color }) => (
-  <div className="flex items-start space-x-2 p-2 rounded-lg mb-2 bg-secondary/30">
-    <div className="flex-1">
-      <p className={`font-semibold ${color}`}>{bid.bidder.username}</p>
-      <p className="text-sm">Placed a bid of ${bid.amount.toFixed(2)}</p>
+const BidMessage: React.FC<{ bid: IBid; color: string }> = ({ bid, color }) => {
+  const username = bid?.bidder?.username || "Anonymous";
+
+  return (
+    <div className="flex items-start space-x-2 p-2 rounded-lg mb-2 bg-secondary/30">
+      <div className="flex-1">
+        <p className={`font-semibold ${color}`}>{username}</p>
+        <p className="text-sm">Placed a bid of ${bid.amount}</p>
+      </div>
+      <span className="text-xs opacity-75">
+        {new Date(bid.timestamp).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        })}
+      </span>
     </div>
-    <span className="text-xs opacity-75">
-      {new Date(bid.timestamp).toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      })}
-    </span>
-  </div>
-);
+  );
+};
 
 const TopBids: React.FC<{ bids: IBid[] }> = ({ bids }) => (
-  <div className="bg-secondary p-4 rounded-lg mb-4">
+  <div className="bg-secondary/30 p-4 rounded-lg mb-4 ">
     <h3 className="font-semibold mb-2">Top Bids</h3>
-    <div className="flex flex-wrap gap-2">
-      {bids.map((bid) => (
-        <Badge
-          key={bid._id}
-          variant="outline"
-          className={`text-xs ${getRandomColor()}`}
-        >
-          {bid.bidder.username}: ${bid.amount.toFixed(2)}
-        </Badge>
-      ))}
-    </div>
+    <ScrollArea className="w-full whitespace-nowrap pb-4">
+      <div className="flex space-x-2">
+        {bids.map((bid, index) => (
+          <Badge
+            key={index}
+            variant="outline"
+            className={`text-xs ${getRandomColor()} whitespace-nowrap py-2`}
+          >
+            {bid.bidder.username || "Anonymous"}: ${bid.amount}
+          </Badge>
+        ))}
+      </div>
+      <ScrollBar orientation="horizontal" />
+    </ScrollArea>
   </div>
 );
 
-interface ChatWidgetProps {
-  isOpen: boolean;
-  onToggle: () => void;
-  auctionId: string;
-  currentPrice: number;
-}
+const LoadingSkeleton = () => (
+  <div className="space-y-4">
+    <Skeleton className="h-10 w-full" />
+    <Skeleton className="h-20 w-full" />
+    <Skeleton className="h-10 w-3/4" />
+    <Skeleton className="h-10 w-full" />
+  </div>
+);
+
 const ChatWidget: React.FC<ChatWidgetProps> = ({
   isOpen,
   onToggle,
@@ -128,14 +149,21 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   const [bids, setBids] = useState<IBid[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const [isPlaceBidOpen, setIsPlaceBidOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchBidsAndChat = async () => {
       if (!isAuthenticated || !token || !user) {
-        console.error("User is not authenticated");
+        setError("User is not authenticated");
+        setIsLoading(false);
         return;
       }
 
       try {
+        setIsLoading(true);
+        setError(null);
+
         const headers = {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -151,7 +179,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           const chatData: IChatMessage[] = await chatResponse.json();
 
           setBids(bidsData);
-          // Mark messages as current user's messages
           setChatMessages(
             chatData.map((msg) => ({
               ...msg,
@@ -159,10 +186,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
             }))
           );
         } else {
-          console.error("Failed to fetch bids or chat data");
+          throw new Error("Failed to fetch bids or chat data");
         }
       } catch (error) {
         console.error("Error fetching bids and chat data:", error);
+        setError("Failed to load auction data. Please try again.");
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -189,7 +219,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           _id: bid._id,
           auction: bid.auction,
           sender: bid.bidder,
-          content: `Placed a bid of $${bid.amount.toFixed(2)}`,
+          content: `Placed a bid of $${bid.amount}`,
           timestamp: bid.timestamp,
           isCurrentUser: bid.bidder._id === user?.id,
         },
@@ -210,7 +240,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         behavior: "smooth",
       });
     }
-  }, []);
+  }, [chatMessages]);
 
   const handleSend = async () => {
     if (message.trim() && user) {
@@ -230,10 +260,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         if (response.ok) {
           setMessage("");
         } else {
-          console.error("Failed to send message");
+          throw new Error("Failed to send message");
         }
       } catch (error) {
         console.error("Error sending message:", error);
+        setError("Failed to send message. Please try again.");
       }
     }
   };
@@ -262,37 +293,52 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
               <Users className="h-5 w-5" />
             </button>
           </div>
-          <TopBids bids={bids} />
-          <div className="flex items-center justify-between bg-secondary/30 rounded-lg py-2 px-4 ">
-            <div>
-              <p className="text-sm text-gray">Current Bid</p>
-              <p className="text-2xl font-bold text-primary">${currentPrice}</p>
-            </div>
-            <AnimatedBidButton onClick={() => setIsPlaceBidOpen(true)} />
-          </div>
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : error ? (
+            <div className="text-red-500 text-center py-4">{error}</div>
+          ) : (
+            <>
+              <TopBids bids={bids} />
+              <div className="flex items-center justify-between bg-secondary/30 rounded-lg py-2 px-4 ">
+                <div>
+                  <p className="text-sm text-gray">Current Bid</p>
+                  <p className="text-2xl font-bold text-primary">
+                    ${currentPrice}
+                  </p>
+                </div>
+                <AnimatedBidButton onClick={() => setIsPlaceBidOpen(true)} />
+              </div>
+            </>
+          )}
         </div>
 
         <ScrollArea ref={scrollAreaRef} className="flex-grow p-4">
-          <div className="space-y-2">
-            {chatMessages.map((msg) =>
-              msg.content.startsWith("Placed a bid of $") ? (
-                <BidMessage
-                  key={msg._id}
-                  bid={msg as unknown as IBid}
-                  color={getRandomColor()}
-                />
-              ) : (
-                <ChatMessage
-                  key={msg._id}
-                  message={msg}
-                  isCurrentUser={msg.isCurrentUser || false}
-                />
-              )
-            )}
-          </div>
+          {isLoading ? (
+            <LoadingSkeleton />
+          ) : error ? (
+            <div className="text-red-500 text-center py-4">{error}</div>
+          ) : (
+            <div className="space-y-2">
+              {chatMessages.map((msg) =>
+                msg.content.startsWith("Placed a bid of $") ? (
+                  <BidMessage
+                    key={msg._id}
+                    bid={msg as unknown as IBid}
+                    color={getRandomColor()}
+                  />
+                ) : (
+                  <ChatMessage
+                    key={msg._id}
+                    message={msg}
+                    isCurrentUser={msg.isCurrentUser || false}
+                  />
+                )
+              )}
+            </div>
+          )}
         </ScrollArea>
 
-        {/* Fixed form at the bottom */}
         <div className="p-4 border-t">
           <form
             onSubmit={(e) => {
@@ -308,11 +354,17 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
               className="min-h-12 max-h-32 resize-none border-0 p-3 shadow-none focus-visible:ring-0"
               value={message}
               onChange={(e) => setMessage(e.target.value)}
+              disabled={isLoading}
             />
             <div className="flex items-center p-3 pt-0">
               <Tooltip>
                 <TooltipTrigger asChild>
-                  <Button type="button" variant="ghost" size="icon">
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="icon"
+                    disabled={isLoading}
+                  >
                     <Paperclip className="size-4" />
                     <span className="sr-only">Attach file</span>
                   </Button>
@@ -320,9 +372,20 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                 <TooltipContent side="top">Attach File</TooltipContent>
               </Tooltip>
 
-              <Button type="submit" size="sm" className="ml-auto gap-1.5">
-                Send
-                <CornerDownLeft className="size-3.5" />
+              <Button
+                type="submit"
+                size="sm"
+                className="ml-auto gap-1.5"
+                disabled={isLoading}
+              >
+                {isLoading ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  <>
+                    Send
+                    <CornerDownLeft className="size-3.5" />
+                  </>
+                )}
               </Button>
             </div>
           </form>

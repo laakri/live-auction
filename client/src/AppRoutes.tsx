@@ -1,6 +1,5 @@
 import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
-import AuctionDetail from "./pages/AuctionLive/test/AuctionDetail";
 import ProtectedRoute from "./pagesComponents/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import AuctionDiscoveryPage from "./pages/AuctionDiscoveryPage";
@@ -27,7 +26,6 @@ const AppRoutes: React.FC = () => {
         <Route path="/UserVerification" element={<UserVerificationPage />} />
         <Route path="/create-auction" element={<CreateAuctionPage />} />
         <Route path="/auction/:id" element={<AuctionPage />} />
-        <Route path="/AuctionRoom/:id" element={<AuctionDetail />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<UserProfilePage />} />
         </Route>

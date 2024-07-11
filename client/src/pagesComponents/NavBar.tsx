@@ -6,7 +6,6 @@ import { Input } from "../components/ui/input";
 import {
   Search,
   Bell,
-  ChevronDown,
   LogOut,
   Settings,
   HelpCircle,
@@ -14,6 +13,8 @@ import {
   UserRound,
   Menu,
   X,
+  Award,
+  CreditCard,
 } from "lucide-react";
 import {
   DropdownMenu,
@@ -25,9 +26,25 @@ import {
 } from "../components/ui/dropdown-menu";
 import useAuthStore from "../stores/authStore";
 import logo from "../assets/logo.png";
+import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
+import { Progress } from "../components/ui/progress";
+
+interface IUser {
+  username: string;
+  email: string;
+  profilePicture?: string;
+  balance: number;
+  reputation: number;
+  rank: string;
+  isVerified: boolean;
+  level: number;
+  xp: number;
+  customizations: any;
+  achievements: string[];
+}
 
 const NavBar: React.FC = () => {
-  const { isAuthenticated, logout } = useAuthStore();
+  const { isAuthenticated, logout, user } = useAuthStore();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -50,31 +67,25 @@ const NavBar: React.FC = () => {
   return (
     <>
       <nav
-        className={`fixed  top-0 left-0 right-0 z-50 transition-all duration-300 ${
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           isScrolled
             ? "bg-background/95 backdrop-blur-sm shadow-md"
             : "bg-background"
         }`}
       >
-        <div className=" mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center">
               <Link to="/" className="flex-shrink-0 flex items-center gap-2">
                 <img src={logo} alt="" className="h-8" />
-                <span className="text-2xl font-bold  bg-clip-text ">
-                  Lexura
-                </span>
+                <span className="text-2xl font-bold bg-clip-text">Lexura</span>
               </Link>
               <div className="hidden lg:flex ml-10 items-center space-x-4">
-                {/*<ExploreDropdown />
-                 <NavLink to="/how-it-works" label="How It Works" />
-                <NavLink to="/about" label="About Us" /> */}
                 <NavLink to="/AuctionDiscovery" label="Discovery" />
                 <NavLink
                   to="/auction/668be00bd59683fb936bf011"
                   label="AuctionPage"
                 />
-                <NavLink to="/create-auction" label="CreateAuction" />
               </div>
             </div>
 
@@ -82,7 +93,11 @@ const NavBar: React.FC = () => {
               <SearchBar />
               <ModeToggle />
               <NotificationBell />
-              {isAuthenticated ? <UserMenu logout={logout} /> : <LoginButton />}
+              {isAuthenticated ? (
+                <UserMenu logout={logout} user={user} />
+              ) : (
+                <LoginButton />
+              )}
             </div>
 
             <div className="lg:hidden flex items-center">
@@ -125,12 +140,15 @@ const NavBar: React.FC = () => {
           </div>
           <div className="flex flex-col space-y-4 mt-4">
             <SearchBar />
-            <ExploreDropdown isMobile />
-            <NavLink to="/how-it-works" label="How It Works" />
-            <NavLink to="/about" label="About Us" />
+            <NavLink to="/AuctionDiscovery" label="Discovery" />
+            <NavLink
+              to="/auction/668be00bd59683fb936bf011"
+              label="AuctionPage"
+            />
             {isAuthenticated ? (
               <>
-                <Link to="/profile" className="py-2">
+                <UserInfo user={user} />
+                <Link to="/UserProfile" className="py-2">
                   Profile
                 </Link>
                 <Link to="/create-auction" className="py-2">
@@ -169,40 +187,6 @@ const NavLink: React.FC<{ to: string; label: string }> = ({ to, label }) => (
   </Link>
 );
 
-const ExploreDropdown: React.FC<{ isMobile?: boolean }> = ({ isMobile }) => (
-  <DropdownMenu>
-    <DropdownMenuTrigger
-      className={`flex items-center ${
-        isMobile ? "w-full justify-between" : ""
-      }`}
-    >
-      Explore <ChevronDown className="h-4 ml-1" />
-    </DropdownMenuTrigger>
-    <DropdownMenuContent className={isMobile ? "w-full" : ""}>
-      <DropdownMenuItem>
-        <Link to="/auctions/art" className="w-full">
-          Art
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <Link to="/auctions/electronics" className="w-full">
-          Electronics
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <Link to="/auctions/fashion" className="w-full">
-          Fashion
-        </Link>
-      </DropdownMenuItem>
-      <DropdownMenuItem>
-        <Link to="/auctions/collectibles" className="w-full">
-          Collectibles
-        </Link>
-      </DropdownMenuItem>
-    </DropdownMenuContent>
-  </DropdownMenu>
-);
-
 const SearchBar: React.FC = () => (
   <div className="relative w-full lg:w-64">
     <Input
@@ -227,18 +211,50 @@ const NotificationBell: React.FC = () => (
   </Button>
 );
 
-const UserMenu: React.FC<{ logout: () => void }> = ({ logout }) => (
+const UserInfo: React.FC<{ user: IUser }> = ({ user }) => (
+  <div className="flex items-center space-x-4 p-4 bg-secondary rounded-lg">
+    <Avatar>
+      <AvatarImage alt={user.username} />
+      <AvatarFallback>{user.username[0]}</AvatarFallback>
+    </Avatar>
+    <div>
+      <p className="font-semibold">{user.username}</p>
+      <p className="text-sm text-muted-foreground">Level {user.level}</p>
+      <div className="mt-1">
+        <Progress value={((user.xp % 100) / 100) * 100} className="h-1 w-20" />
+      </div>
+    </div>
+  </div>
+);
+
+const UserMenu: React.FC<{ logout: () => void; user: IUser }> = ({
+  logout,
+  user,
+}) => (
   <DropdownMenu>
     <DropdownMenuTrigger asChild>
-      <Button variant="ghost" size="icon" aria-label="User menu">
-        <UserRound className="h-5 w-5" />
+      <Button
+        variant="ghost"
+        size="icon"
+        aria-label="User menu"
+        className="relative"
+      >
+        <Avatar>
+          <AvatarImage alt={user.username} />
+          <AvatarFallback>{user.username[0]}</AvatarFallback>
+        </Avatar>
+        <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full text-xs px-1">
+          {user.level}
+        </span>
       </Button>
     </DropdownMenuTrigger>
-    <DropdownMenuContent align="end" className="w-56">
-      <DropdownMenuLabel>My Account</DropdownMenuLabel>
+    <DropdownMenuContent align="end" className="w-64">
+      <DropdownMenuLabel>
+        <UserInfo user={user} />
+      </DropdownMenuLabel>
       <DropdownMenuSeparator />
       <DropdownMenuItem>
-        <Link to="/profile" className="flex items-center w-full">
+        <Link to="/UserProfile" className="flex items-center w-full">
           <UserRound className="mr-2 h-4 w-4" />
           Profile
         </Link>
@@ -247,6 +263,18 @@ const UserMenu: React.FC<{ logout: () => void }> = ({ logout }) => (
         <Link to="/create-auction" className="flex items-center w-full">
           <PlusCircle className="mr-2 h-4 w-4" />
           Create Auction
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem>
+        <Link to="/balance" className="flex items-center w-full">
+          <CreditCard className="mr-2 h-4 w-4" />
+          Balance: ${user.balance.toFixed(2)}
+        </Link>
+      </DropdownMenuItem>
+      <DropdownMenuItem>
+        <Link to="/achievements" className="flex items-center w-full">
+          <Award className="mr-2 h-4 w-4" />
+          Achievements: {user.achievements.length}
         </Link>
       </DropdownMenuItem>
       <DropdownMenuItem>
