@@ -1,26 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  CornerDownLeft,
-  Paperclip,
-  ArrowRightFromLine,
-  Users,
-  Loader2,
-} from "lucide-react";
+import { Send, ArrowRightFromLine, Clock, Loader2 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "../../../components/ui/tooltip";
-import { Label } from "@radix-ui/react-dropdown-menu";
 import { Textarea } from "../../../components/ui/textarea";
 import { Badge } from "../../../components/ui/badge";
 import useAuthStore from "../../../stores/authStore";
-import AnimatedBidButton from "../../../components/AnimatedBidButton";
 import { socketService } from "../socketService";
-import { Skeleton } from "../../../components/ui/skeleton";
 import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
+import AnimatedBidButton from "../../../components/AnimatedBidButton";
 
 interface IChatMessage {
   _id: string;
@@ -31,7 +17,6 @@ interface IChatMessage {
   };
   content: string;
   timestamp: Date;
-  isCurrentUser?: boolean;
 }
 
 interface IBid {
@@ -52,20 +37,6 @@ interface ChatWidgetProps {
   currentPrice: number;
 }
 
-const getRandomColor = () => {
-  const colors = [
-    "text-red-500",
-    "text-blue-500",
-    "text-green-500",
-    "text-yellow-500",
-    "text-purple-500",
-    "text-pink-500",
-    "text-indigo-500",
-    "text-teal-500",
-  ];
-  return colors[Math.floor(Math.random() * colors.length)];
-};
-
 const ChatMessage: React.FC<{
   message: IChatMessage;
   isCurrentUser: boolean;
@@ -74,41 +45,37 @@ const ChatMessage: React.FC<{
     className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} mb-4`}
   >
     <div
-      className={`max-w-[70%] p-2 rounded-lg ${
-        isCurrentUser
-          ? "bg-purple-500 text-white"
-          : "bg-gray-200 dark:bg-gray-700"
+      className={`max-w-[80%] p-3 rounded-lg shadow-md ${
+        isCurrentUser ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-800"
       }`}
     >
       <p className="text-sm font-semibold mb-1">
         {message.sender.username || "Anonymous"}
       </p>
       <p className="text-sm">{message.content}</p>
+      <p className="text-xs mt-1 opacity-75">
+        {new Date(message.timestamp).toLocaleTimeString()}
+      </p>
     </div>
   </div>
 );
 
-const BidMessage: React.FC<{ bid: IBid; color: string }> = ({ bid, color }) => {
-  const username = bid?.bidder?.username || "Anonymous";
-
-  return (
-    <div className="flex items-start space-x-2 p-2 rounded-lg mb-2 bg-secondary/30">
-      <div className="flex-1">
-        <p className={`font-semibold ${color}`}>{username}</p>
-        <p className="text-sm">Placed a bid of ${bid.amount}</p>
-      </div>
-      <span className="text-xs opacity-75">
-        {new Date(bid.timestamp).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        })}
-      </span>
+const BidMessage: React.FC<{ bid: IBid }> = ({ bid }) => (
+  <div className="mb-4 p-4 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg">
+    <div className="flex justify-between items-center">
+      <p className="text-sm font-semibold">
+        {bid.bidder.username || "Anonymous"}
+      </p>
+      <p className="text-lg font-bold">${bid.amount.toLocaleString()}</p>
     </div>
-  );
-};
+    <p className="text-xs mt-2 opacity-75">
+      {new Date(bid.timestamp).toLocaleTimeString()}
+    </p>
+  </div>
+);
 
 const TopBids: React.FC<{ bids: IBid[] }> = ({ bids }) => (
-  <div className="bg-secondary/30 p-4 rounded-lg mb-4 ">
+  <div className="bg-secondary/30 p-4 rounded-lg mb-4">
     <h3 className="font-semibold mb-2">Top Bids</h3>
     <ScrollArea className="w-full whitespace-nowrap pb-4">
       <div className="flex space-x-2">
@@ -116,23 +83,14 @@ const TopBids: React.FC<{ bids: IBid[] }> = ({ bids }) => (
           <Badge
             key={index}
             variant="outline"
-            className={`text-xs ${getRandomColor()} whitespace-nowrap py-2`}
+            className="text-xs whitespace-nowrap py-2"
           >
-            {bid.bidder.username || "Anonymous"}: ${bid.amount}
+            {bid.bidder.username || "Anonymous"}: ${bid.amount.toLocaleString()}
           </Badge>
         ))}
       </div>
       <ScrollBar orientation="horizontal" />
     </ScrollArea>
-  </div>
-);
-
-const LoadingSkeleton = () => (
-  <div className="space-y-4">
-    <Skeleton className="h-10 w-full" />
-    <Skeleton className="h-20 w-full" />
-    <Skeleton className="h-10 w-3/4" />
-    <Skeleton className="h-10 w-full" />
   </div>
 );
 
@@ -142,19 +100,29 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   auctionId,
   currentPrice,
 }) => {
-  const { isAuthenticated, token, user } = useAuthStore();
-
+  const { token, user } = useAuthStore();
   const [message, setMessage] = useState("");
-  const [chatMessages, setChatMessages] = useState<IChatMessage[]>([]);
-  const [bids, setBids] = useState<IBid[]>([]);
+  const [chatMessages, setChatMessages] = useState<(IChatMessage | IBid)[]>([]);
+  const [topBids, setTopBids] = useState<IBid[]>([]);
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const [isPlaceBidOpen, setIsPlaceBidOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showBidHistory, setShowBidHistory] = useState(false);
+
+  const scrollToBottom = () => {
+    if (scrollAreaRef.current) {
+      const scrollElement = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
+      if (scrollElement) {
+        scrollElement.scrollTop = scrollElement.scrollHeight;
+      }
+    }
+  };
 
   useEffect(() => {
-    const fetchBidsAndChat = async () => {
-      if (!isAuthenticated || !token || !user) {
+    const fetchChatAndBids = async () => {
+      if (!token || !user) {
         setError("User is not authenticated");
         setIsLoading(false);
         return;
@@ -169,61 +137,53 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           "Content-Type": "application/json",
         };
 
-        const [bidsResponse, chatResponse] = await Promise.all([
-          fetch(`http://localhost:3000/api/bids/${auctionId}`, { headers }),
+        const [chatResponse, bidsResponse] = await Promise.all([
           fetch(`http://localhost:3000/api/chat/${auctionId}`, { headers }),
+          fetch(`http://localhost:3000/api/bids/${auctionId}`, { headers }),
         ]);
 
-        if (bidsResponse.ok && chatResponse.ok) {
-          const bidsData = await bidsResponse.json();
+        if (chatResponse.ok && bidsResponse.ok) {
           const chatData: IChatMessage[] = await chatResponse.json();
+          const bidsData: IBid[] = await bidsResponse.json();
 
-          setBids(bidsData);
-          setChatMessages(
-            chatData.map((msg) => ({
-              ...msg,
-              isCurrentUser: msg.sender._id === user.id,
-            }))
+          const combinedData = [...chatData, ...bidsData].sort(
+            (a, b) =>
+              new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime()
           );
+
+          setChatMessages(combinedData);
+          setTopBids(bidsData.sort((a, b) => b.amount - a.amount).slice(0, 5));
         } else {
-          throw new Error("Failed to fetch bids or chat data");
+          throw new Error("Failed to fetch chat or bids data");
         }
       } catch (error) {
-        console.error("Error fetching bids and chat data:", error);
+        console.error("Error fetching data:", error);
         setError("Failed to load auction data. Please try again.");
       } finally {
         setIsLoading(false);
+        setTimeout(scrollToBottom, 100);
       }
     };
 
-    fetchBidsAndChat();
+    fetchChatAndBids();
 
     socketService.connect("http://localhost:3000");
     socketService.joinAuction(auctionId);
 
     socketService.on("new message", (msg: IChatMessage) => {
-      setChatMessages((prev) => [
-        ...prev,
-        { ...msg, isCurrentUser: msg.sender._id === user?.id },
-      ]);
+      setChatMessages((prev) => [...prev, msg]);
+      setTimeout(scrollToBottom, 100);
     });
 
     socketService.on("new bid", (bid: IBid) => {
-      setBids((prev) => {
-        const newBids = [...prev, bid];
-        return newBids.sort((a, b) => b.amount - a.amount).slice(0, 5);
+      setChatMessages((prev) => [...prev, bid]);
+      setTopBids((prev) => {
+        const newBids = [...prev, bid]
+          .sort((a, b) => b.amount - a.amount)
+          .slice(0, 5);
+        return newBids;
       });
-      setChatMessages((prev) => [
-        ...prev,
-        {
-          _id: bid._id,
-          auction: bid.auction,
-          sender: bid.bidder,
-          content: `Placed a bid of $${bid.amount}`,
-          timestamp: bid.timestamp,
-          isCurrentUser: bid.bidder._id === user?.id,
-        },
-      ]);
+      setTimeout(scrollToBottom, 100);
     });
 
     return () => {
@@ -231,15 +191,10 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       socketService.off("new message");
       socketService.off("new bid");
     };
-  }, [auctionId, isAuthenticated, token, user]);
+  }, [auctionId, token, user]);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({
-        top: scrollAreaRef.current.scrollHeight,
-        behavior: "smooth",
-      });
-    }
+    scrollToBottom();
   }, [chatMessages]);
 
   const handleSend = async () => {
@@ -270,128 +225,106 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   };
 
   const handlePlaceBid = () => {
-    setIsPlaceBidOpen(true);
+    // Implement bid placement logic here
+    console.log("Place bid clicked");
   };
 
   return (
-    <TooltipProvider>
-      <div
-        className={`fixed right-0 top-16 bottom-0 w-96 bg-background shadow-lg transition-transform duration-300 ease-in-out ${
-          isOpen ? "translate-x-0" : "translate-x-full"
-        } flex flex-col`}
-      >
-        <div className="p-4 border-b">
-          <div className="flex justify-between items-center mb-4">
-            <button
-              onClick={onToggle}
-              className="p-2 rounded-full hover:bg-secondary"
-            >
-              <ArrowRightFromLine className="h-5 w-5" />
-            </button>
-            <h2 className="text-lg font-semibold">Live Auction Chat</h2>
-            <button className="p-2 rounded-full hover:bg-secondary">
-              <Users className="h-5 w-5" />
-            </button>
-          </div>
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : error ? (
-            <div className="text-red-500 text-center py-4">{error}</div>
-          ) : (
-            <>
-              <TopBids bids={bids} />
-              <div className="flex items-center justify-between bg-secondary/30 rounded-lg py-2 px-4 ">
-                <div>
-                  <p className="text-sm text-gray">Current Bid</p>
-                  <p className="text-2xl font-bold text-primary">
-                    ${currentPrice}
-                  </p>
-                </div>
-                <AnimatedBidButton onClick={() => setIsPlaceBidOpen(true)} />
-              </div>
-            </>
-          )}
-        </div>
-
-        <ScrollArea ref={scrollAreaRef} className="flex-grow p-4">
-          {isLoading ? (
-            <LoadingSkeleton />
-          ) : error ? (
-            <div className="text-red-500 text-center py-4">{error}</div>
-          ) : (
-            <div className="space-y-2">
-              {chatMessages.map((msg) =>
-                msg.content.startsWith("Placed a bid of $") ? (
-                  <BidMessage
-                    key={msg._id}
-                    bid={msg as unknown as IBid}
-                    color={getRandomColor()}
-                  />
-                ) : (
-                  <ChatMessage
-                    key={msg._id}
-                    message={msg}
-                    isCurrentUser={msg.isCurrentUser || false}
-                  />
-                )
-              )}
-            </div>
-          )}
-        </ScrollArea>
-
-        <div className="p-4 border-t">
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              handleSend();
-            }}
-            className="relative overflow-hidden rounded-lg border focus-within:ring-1 focus-within:ring-primary"
+    <div
+      className={`fixed right-0 top-16 bottom-0 w-96 border-l shadow-2xl transition-transform duration-300 ease-in-out ${
+        isOpen ? "translate-x-0" : "translate-x-full"
+      } flex flex-col`}
+    >
+      <div className="p-6 border-b border-gray-200 dark:border-gray-700">
+        <div className="flex justify-between items-center mb-6">
+          <button
+            onClick={onToggle}
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
           >
-            <Label className="sr-only">Message</Label>
-            <Textarea
-              id="message"
-              placeholder="Type your message here..."
-              className="min-h-12 max-h-32 resize-none border-0 p-3 shadow-none focus-visible:ring-0"
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              disabled={isLoading}
-            />
-            <div className="flex items-center p-3 pt-0">
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    disabled={isLoading}
-                  >
-                    <Paperclip className="size-4" />
-                    <span className="sr-only">Attach file</span>
-                  </Button>
-                </TooltipTrigger>
-                <TooltipContent side="top">Attach File</TooltipContent>
-              </Tooltip>
-
-              <Button
-                type="submit"
-                size="sm"
-                className="ml-auto gap-1.5"
-                disabled={isLoading}
-              >
-                {isLoading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    Send
-                    <CornerDownLeft className="size-3.5" />
-                  </>
-                )}
-              </Button>
-            </div>
-          </form>
+            <ArrowRightFromLine className="h-5 w-5" />
+          </button>
+          <h2 className="text-2xl font-bold text-gray-800 dark:text-gray-100">
+            Live Auction
+          </h2>
+          <button
+            className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+            onClick={() => setShowBidHistory(!showBidHistory)}
+          >
+            <Clock className="h-5 w-5" />
+          </button>
         </div>
+        {!showBidHistory && (
+          <>
+            <TopBids bids={topBids} />
+            <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 shadow-inner flex justify-between items-center">
+              <div className="flex flex-col   gap-2 items-center mb-4">
+                <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
+                  Current Bid
+                </p>
+                <AnimatedBidButton onClick={handlePlaceBid} />
+              </div>
+              <p className="text-2xl font-bold text-indigo-600 dark:text-indigo-400">
+                ${currentPrice.toLocaleString()}
+              </p>
+            </div>
+          </>
+        )}
       </div>
-    </TooltipProvider>
+
+      <ScrollArea ref={scrollAreaRef} className="flex-grow">
+        <div className="p-6 space-y-4">
+          {isLoading ? (
+            <div className="flex justify-center items-center h-full">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+          ) : error ? (
+            <div className="text-red-500 text-center py-4">{error}</div>
+          ) : showBidHistory ? (
+            chatMessages
+              .filter((item) => "bidder" in item)
+              .map((bid: IBid) => <BidMessage key={bid._id} bid={bid} />)
+          ) : (
+            chatMessages.map((item) =>
+              "bidder" in item ? (
+                <BidMessage key={item._id} bid={item} />
+              ) : (
+                <ChatMessage
+                  key={item._id}
+                  message={item}
+                  isCurrentUser={item.sender._id === user?.id}
+                />
+              )
+            )
+          )}
+        </div>
+      </ScrollArea>
+
+      <div className="p-6 border-t border-gray-200 dark:border-gray-700">
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            handleSend();
+          }}
+          className="flex items-center space-x-2"
+        >
+          <Textarea
+            placeholder="Type your message..."
+            className="flex-grow resize-none rounded-lg border-gray-300 dark:border-gray-700 focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400 focus:border-transparent"
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            disabled={isLoading}
+          />
+          <Button
+            type="submit"
+            size="icon"
+            className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white"
+            disabled={isLoading}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+        </form>
+      </div>
+    </div>
   );
 };
 
