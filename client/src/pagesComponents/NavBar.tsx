@@ -214,7 +214,10 @@ const NotificationBell: React.FC = () => (
 const UserInfo: React.FC<{ user: IUser }> = ({ user }) => (
   <div className="flex items-center space-x-4 p-4 bg-secondary rounded-lg">
     <Avatar>
-      <AvatarImage alt={user.username} />
+      <AvatarImage
+        src={user.customizations.avatar}
+        alt={user.customizations.avatar}
+      />
       <AvatarFallback>{user.username[0]}</AvatarFallback>
     </Avatar>
     <div>
@@ -240,7 +243,10 @@ const UserMenu: React.FC<{ logout: () => void; user: IUser }> = ({
         className="relative"
       >
         <Avatar>
-          <AvatarImage alt={user.username} />
+          <AvatarImage
+            src={user.customizations.avatar}
+            alt={user.customizations.avatar}
+          />
           <AvatarFallback>{user.username[0]}</AvatarFallback>
         </Avatar>
         <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground rounded-full text-xs px-1">

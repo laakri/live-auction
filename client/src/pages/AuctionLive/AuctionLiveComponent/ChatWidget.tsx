@@ -1,5 +1,12 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Send, ArrowRightFromLine, Clock, Loader2 } from "lucide-react";
+import {
+  Send,
+  ArrowRightFromLine,
+  Clock,
+  Loader2,
+  UserCircleIcon,
+  TrendingUp,
+} from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Textarea } from "../../../components/ui/textarea";
 import { Badge } from "../../../components/ui/badge";
@@ -7,7 +14,6 @@ import useAuthStore from "../../../stores/authStore";
 import { socketService } from "../socketService";
 import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
 import AnimatedBidButton from "../../../components/AnimatedBidButton";
-
 interface IChatMessage {
   _id: string;
   auction: string;
@@ -60,20 +66,40 @@ const ChatMessage: React.FC<{
   </div>
 );
 
-const BidMessage: React.FC<{ bid: IBid }> = ({ bid }) => (
-  <div className="mb-4 p-4 rounded-lg bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg">
-    <div className="flex justify-between items-center">
-      <p className="text-sm font-semibold">
-        {bid.bidder.username || "Anonymous"}
-      </p>
-      <p className="text-lg font-bold">${bid.amount.toLocaleString()}</p>
+const BidMessage: React.FC<{ bid: IBid; isHighestBid: boolean }> = ({
+  bid,
+  isHighestBid,
+}) => (
+  <div
+    className={`mb-4 p-4 rounded-lg ${
+      isHighestBid
+        ? "bg-gradient-to-r from-amber-500 to-orange-600"
+        : "bg-gradient-to-r from-purple-500 to-indigo-600"
+    } 
+    text-white shadow-lg transition-all duration-300 hover:shadow-xl`}
+  >
+    <div className="flex justify-between items-center mb-2">
+      <div className="flex items-center space-x-2">
+        <UserCircleIcon className="h-6 w-6" />
+        <p className="text-sm font-semibold">
+          {bid.bidder.username || "Anonymous"}
+        </p>
+      </div>
+      <div className="flex items-center space-x-2">
+        <TrendingUp className="h-5 w-5" />
+        <p className="text-lg font-bold">${bid.amount.toLocaleString()}</p>
+      </div>
     </div>
-    <p className="text-xs mt-2 opacity-75">
-      {new Date(bid.timestamp).toLocaleTimeString()}
-    </p>
+    <div className="flex justify-between items-center text-xs mt-2 opacity-75">
+      <p>{new Date(bid.timestamp).toLocaleString()}</p>
+      {isHighestBid && (
+        <span className="bg-white text-orange-600 px-2 py-1 rounded-full font-semibold">
+          Highest Bid
+        </span>
+      )}
+    </div>
   </div>
 );
-
 const TopBids: React.FC<{ bids: IBid[] }> = ({ bids }) => (
   <div className="bg-secondary/30 p-4 rounded-lg mb-4">
     <h3 className="font-semibold mb-2">Top Bids</h3>
@@ -108,14 +134,30 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showBidHistory, setShowBidHistory] = useState(false);
+  const [isNearBottom, setIsNearBottom] = useState(true);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = (smooth = true) => {
     if (scrollAreaRef.current) {
       const scrollElement = scrollAreaRef.current.querySelector(
         "[data-radix-scroll-area-viewport]"
       );
       if (scrollElement) {
-        scrollElement.scrollTop = scrollElement.scrollHeight;
+        scrollElement.scrollTo({
+          top: scrollElement.scrollHeight,
+          behavior: smooth ? "smooth" : "auto",
+        });
+      }
+    }
+  };
+
+  const handleScroll = () => {
+    if (scrollAreaRef.current) {
+      const scrollElement = scrollAreaRef.current.querySelector(
+        "[data-radix-scroll-area-viewport]"
+      );
+      if (scrollElement) {
+        const { scrollTop, scrollHeight, clientHeight } = scrollElement;
+        setIsNearBottom(scrollHeight - scrollTop - clientHeight < 50);
       }
     }
   };
@@ -172,7 +214,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
 
     socketService.on("new message", (msg: IChatMessage) => {
       setChatMessages((prev) => [...prev, msg]);
-      setTimeout(scrollToBottom, 100);
+      if (isNearBottom) {
+        setTimeout(() => scrollToBottom(), 100);
+      }
     });
 
     socketService.on("new bid", (bid: IBid) => {
@@ -183,7 +227,9 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           .slice(0, 5);
         return newBids;
       });
-      setTimeout(scrollToBottom, 100);
+      if (isNearBottom) {
+        setTimeout(() => scrollToBottom(), 100);
+      }
     });
 
     return () => {
@@ -191,11 +237,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
       socketService.off("new message");
       socketService.off("new bid");
     };
-  }, [auctionId, token, user]);
+  }, [auctionId, token, user, isNearBottom]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [chatMessages]);
+    if (isNearBottom) {
+      scrollToBottom(false);
+    }
+  }, [chatMessages, isNearBottom]);
 
   const handleSend = async () => {
     if (message.trim() && user) {
@@ -257,7 +305,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           <>
             <TopBids bids={topBids} />
             <div className="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 shadow-inner flex justify-between items-center">
-              <div className="flex flex-col   gap-2 items-center mb-4">
+              <div className="flex flex-col gap-2 items-center ">
                 <p className="text-sm font-semibold text-gray-600 dark:text-gray-400">
                   Current Bid
                 </p>
@@ -271,7 +319,11 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
         )}
       </div>
 
-      <ScrollArea ref={scrollAreaRef} className="flex-grow">
+      <ScrollArea
+        ref={scrollAreaRef}
+        className="flex-grow"
+        onScroll={handleScroll}
+      >
         <div className="p-6 space-y-4">
           {isLoading ? (
             <div className="flex justify-center items-center h-full">
@@ -282,11 +334,13 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           ) : showBidHistory ? (
             chatMessages
               .filter((item) => "bidder" in item)
-              .map((bid: IBid) => <BidMessage key={bid._id} bid={bid} />)
+              .map((bid: IBid) => (
+                <BidMessage key={bid._id} bid={bid} isHighestBid={false} />
+              ))
           ) : (
             chatMessages.map((item) =>
               "bidder" in item ? (
-                <BidMessage key={item._id} bid={item} />
+                <BidMessage key={item._id} bid={item} isHighestBid={false} />
               ) : (
                 <ChatMessage
                   key={item._id}
@@ -298,7 +352,6 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
           )}
         </div>
       </ScrollArea>
-
       <div className="p-6 border-t border-gray-200 dark:border-gray-700">
         <form
           onSubmit={(e) => {
