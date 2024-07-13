@@ -1,12 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  Send,
-  ArrowRightFromLine,
-  Clock,
-  Loader2,
-  UserCircleIcon,
-  TrendingUp,
-} from "lucide-react";
+import { Send, ArrowRightFromLine, Clock, Loader2 } from "lucide-react";
 import { Button } from "../../../components/ui/button";
 import { Textarea } from "../../../components/ui/textarea";
 import { Badge } from "../../../components/ui/badge";
@@ -14,6 +7,7 @@ import useAuthStore from "../../../stores/authStore";
 import { socketService } from "../socketService";
 import { ScrollArea, ScrollBar } from "../../../components/ui/scroll-area";
 import AnimatedBidButton from "../../../components/AnimatedBidButton";
+import { Card, CardContent } from "../../../components/ui/card";
 interface IChatMessage {
   _id: string;
   auction: string;
@@ -47,18 +41,22 @@ const ChatMessage: React.FC<{
   message: IChatMessage;
   isCurrentUser: boolean;
 }> = ({ message, isCurrentUser }) => (
-  <div
-    className={`flex ${isCurrentUser ? "justify-end" : "justify-start"} mb-4`}
-  >
+  <div>
     <div
-      className={`max-w-[80%] p-3 rounded-lg shadow-md ${
-        isCurrentUser ? "bg-indigo-600 text-white" : "bg-white dark:bg-gray-800"
+      className={`max-w-[100%] p-3 rounded-lg shadow-md   ${
+        isCurrentUser
+          ? " text-purple-700 dark:text-purple-300"
+          : " text-black dark:text-white"
       }`}
     >
-      <p className="text-sm font-semibold mb-1">
-        {message.sender.username || "Anonymous"}
-      </p>
-      <p className="text-sm">{message.content}</p>
+      <div className="flex gap-1">
+        <p className="text-sm">
+          <span className="text-md font-bold  ">
+            {message.sender.username || "Anonymous"} :{" "}
+          </span>
+          {message.content}
+        </p>
+      </div>
       <p className="text-xs mt-1 opacity-75">
         {new Date(message.timestamp).toLocaleTimeString()}
       </p>
@@ -70,35 +68,26 @@ const BidMessage: React.FC<{ bid: IBid; isHighestBid: boolean }> = ({
   bid,
   isHighestBid,
 }) => (
-  <div
-    className={`mb-4 p-4 rounded-lg ${
-      isHighestBid
-        ? "bg-gradient-to-r from-amber-500 to-orange-600"
-        : "bg-gradient-to-r from-purple-500 to-indigo-600"
-    } 
-    text-white shadow-lg transition-all duration-300 hover:shadow-xl`}
-  >
-    <div className="flex justify-between items-center mb-2">
-      <div className="flex items-center space-x-2">
-        <UserCircleIcon className="h-6 w-6" />
-        <p className="text-sm font-semibold">
-          {bid.bidder.username || "Anonymous"}
-        </p>
+  <Card className={`mb-4 ${isHighestBid ? "border-gold" : ""}`}>
+    <CardContent className="p-4">
+      <div className="flex justify-between items-center">
+        <div className="flex items-center space-x-3">
+          <div>
+            <p className="font-semibold">
+              {bid.bidder.username || "Anonymous"}
+            </p>
+            <p className="text-sm text-muted-foreground">
+              {new Date(bid.timestamp).toLocaleString()}
+            </p>
+          </div>
+        </div>
+        <div className="text-right">
+          <p className="text-xl font-bold">${bid.amount.toLocaleString()}</p>
+          {isHighestBid && <Badge variant="secondary">Highest Bid</Badge>}
+        </div>
       </div>
-      <div className="flex items-center space-x-2">
-        <TrendingUp className="h-5 w-5" />
-        <p className="text-lg font-bold">${bid.amount.toLocaleString()}</p>
-      </div>
-    </div>
-    <div className="flex justify-between items-center text-xs mt-2 opacity-75">
-      <p>{new Date(bid.timestamp).toLocaleString()}</p>
-      {isHighestBid && (
-        <span className="bg-white text-orange-600 px-2 py-1 rounded-full font-semibold">
-          Highest Bid
-        </span>
-      )}
-    </div>
-  </div>
+    </CardContent>
+  </Card>
 );
 const TopBids: React.FC<{ bids: IBid[] }> = ({ bids }) => (
   <div className="bg-secondary/30 p-4 rounded-lg mb-4">

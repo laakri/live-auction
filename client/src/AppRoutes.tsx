@@ -3,9 +3,9 @@ import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./pagesComponents/ProtectedRoute";
 import HomePage from "./pages/HomePage";
 import AuctionDiscoveryPage from "./pages/AuctionDiscoveryPage";
-import OpenSeaClone from "./pages/OpenSeaClone";
 import UserProfile from "./pages/Profile/UserProfile";
 import UserVerificationPage from "./pages/UserVerificationPage";
+import SearchResults from "./pages/SearchResults";
 
 const LuxuryAuthPage = lazy(() => import("./pages/Auth/LuxuryAuthPage"));
 const AuctionHomePage = lazy(() => import("./pages/AuctionHomePage"));
@@ -19,9 +19,10 @@ const AppRoutes: React.FC = () => {
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/AuctionHomePage" element={<AuctionHomePage />} />
-        <Route path="/OpenSeaClone" element={<OpenSeaClone />} />
         <Route path="/AuthPage" element={<LuxuryAuthPage />} />
         <Route path="/AuctionDiscovery" element={<AuctionDiscoveryPage />} />
+        <Route path="/search" element={<SearchResults />} />
+        <Route path="/category/:categoryName" element={<SearchResults />} />
         <Route path="/UserProfile" element={<UserProfile />} />
         <Route path="/UserVerification" element={<UserVerificationPage />} />
         <Route path="/create-auction" element={<CreateAuctionPage />} />
