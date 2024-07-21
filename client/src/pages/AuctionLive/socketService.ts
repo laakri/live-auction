@@ -4,7 +4,10 @@ class SocketService {
   private socket: Socket | null = null;
 
   connect(serverUrl: string) {
-    this.socket = io(serverUrl);
+    this.socket = io(serverUrl, {
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+    });
     this.setupEventListeners();
   }
 

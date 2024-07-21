@@ -172,7 +172,7 @@ const AuctionPage: React.FC = () => {
                 </Button>
                 <Button variant="outline" size="sm">
                   <Heart className="mr-2 h-4 w-4" />
-                   Watch
+                  Watch
                 </Button>
               </div>
             </div>
@@ -326,13 +326,6 @@ const AuctionPage: React.FC = () => {
         >
           <MessageCircle className="h-6 w-6" />
         </Button>
-        // <button
-        //   onClick={toggleChat}
-        //   className="fixed bottom-4 right-4 p-3 rounded-full bg-primary text-primary-foreground shadow-lg transition-all duration-300 ease-in-out hover:bg-primary/90"
-        // >
-        //   <MessageCircle className="h-6 w-6" />
-
-        // </button>
       )}
     </div>
   );
