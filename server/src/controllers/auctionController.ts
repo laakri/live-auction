@@ -63,7 +63,6 @@ export const createAuction = async (
     const auction = new Auction({
       ...auctionData,
       seller: userId,
-      status: "upcoming",
       currentPrice: auctionData.startingPrice,
       images,
     });
@@ -77,6 +76,7 @@ export const createAuction = async (
     reply.status(500).send({ error: "Error creating auction" });
   }
 };
+
 export const getDiscoveryAuctions = async (
   request: FastifyRequest,
   reply: FastifyReply
@@ -128,7 +128,9 @@ export const getDiscoveryAuctions = async (
       .lean();
 
     // Get trending auctions (most watched)
-    const trendingAuctions = await Auction.find({ status: "active" })
+    const trendingAuctions = await Auction.find({
+      endTime: { $gt: new Date() },
+    })
       .sort({ "watchedBy.length": -1 })
       .limit(6)
       .populate("seller", "username avatar rating")
@@ -136,7 +138,6 @@ export const getDiscoveryAuctions = async (
 
     // Get upcoming auctions
     const upcomingAuctions = await Auction.find({
-      status: "upcoming",
       startTime: { $gt: new Date() },
     })
       .sort({ startTime: 1 })
@@ -159,6 +160,7 @@ export const getDiscoveryAuctions = async (
     reply.status(500).send({ error: "Error fetching auctions" });
   }
 };
+
 export const updateAuction = async (
   request: FastifyRequest,
   reply: FastifyReply
@@ -178,10 +180,10 @@ export const updateAuction = async (
         .send({ error: "Not authorized to update this auction" });
     }
 
-    if (auction.status !== "upcoming") {
+    if (new Date() > auction.startTime && new Date() < auction.endTime) {
       return reply
         .status(400)
-        .send({ error: "Cannot update an active or ended auction" });
+        .send({ error: "Cannot update an active auction" });
     }
 
     const parts = request.parts();
@@ -219,6 +221,7 @@ export const updateAuction = async (
 };
 
 // ... (keep other existing functions)
+
 export const deleteAuction = async (
   request: FastifyRequest,
   reply: FastifyReply
@@ -238,10 +241,10 @@ export const deleteAuction = async (
         .send({ error: "Not authorized to delete this auction" });
     }
 
-    if (auction.status !== "upcoming") {
+    if (new Date() > auction.startTime && new Date() < auction.endTime) {
       return reply
         .status(400)
-        .send({ error: "Cannot delete an active or ended auction" });
+        .send({ error: "Cannot delete an active auction" });
     }
 
     // Delete associated images
@@ -307,4 +310,7 @@ export const getAuction = async (
 //   } catch (error) {
 //     reply.status(500).send({ error: "Error updating watch status" });
 //   }
+// };
+// };
+
 // };
