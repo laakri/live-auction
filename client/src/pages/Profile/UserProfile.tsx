@@ -49,7 +49,7 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen text-white">
-      <div className="relative overflow-hidden rounded-xl m-4">
+      <div className="relative overflow-hidden rounded-xl m-2">
         {/* Blurred background image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
