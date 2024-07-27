@@ -336,6 +336,7 @@ const AuctionDiscoveryPage: React.FC = () => {
                   </h3>
                   <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
                     Current bid: ${auction.currentPrice.toLocaleString()}
+                    Current bid: ${auction._id}
                   </p>
                   <div className="flex justify-between items-center">
                     <Badge variant="outline">

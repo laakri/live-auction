@@ -6,6 +6,7 @@ import AuctionDiscoveryPage from "./pages/AuctionDiscoveryPage";
 import UserProfile from "./pages/Profile/UserProfile";
 import UserVerificationPage from "./pages/UserVerificationPage";
 import SearchResults from "./pages/SearchResults";
+import VoiceConverterPage from "./pages/Profiletest";
 
 const LuxuryAuthPage = lazy(() => import("./pages/Auth/LuxuryAuthPage"));
 const AuctionHomePage = lazy(() => import("./pages/AuctionHomePage"));
@@ -26,6 +27,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/UserProfile" element={<UserProfile />} />
         <Route path="/UserVerification" element={<UserVerificationPage />} />
         <Route path="/create-auction" element={<CreateAuctionPage />} />
+        <Route path="/VoiceConverterPage" element={<VoiceConverterPage />} />
         <Route path="/auction/:id" element={<AuctionPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/profile" element={<UserProfilePage />} />

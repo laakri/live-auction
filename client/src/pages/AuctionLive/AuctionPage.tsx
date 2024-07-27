@@ -1,7 +1,7 @@
 // src/pages/AuctionPage.tsx
 import React, { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-import { getAuction, Auction } from "../../services/auctionService";
+import { Auction } from "../../services/auctionService";
 import ChatWidget from "./AuctionLiveComponent/ChatWidget";
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader } from "../../components/ui/card";
@@ -24,7 +24,6 @@ import RecentBids from "./AuctionLiveComponent/RecentBids";
 import RelatedAuctions from "./AuctionLiveComponent/RelatedAuctions";
 import ImageGallery from "./AuctionLiveComponent/ImageGallery";
 import WatchersCard from "./AuctionLiveComponent/WatchersCard";
-import socket from "../../utils/socket";
 import PlaceBidDialog from "./AuctionLiveComponent/PlaceBidDialog";
 import { socketService } from "./socketService";
 import AnimatedBidButton from "../../components/AnimatedBidButton";
@@ -155,7 +154,7 @@ const AuctionPage: React.FC = () => {
 
   return (
     <div
-      className={` mx-auto py-4 mt-8 transition-all duration-300 ease-in-out ${
+      className={` mx-auto transition-all duration-300 ease-in-out ${
         isChatOpen ? "pr-96" : ""
       }`}
     >
@@ -163,20 +162,6 @@ const AuctionPage: React.FC = () => {
         className={"flex flex-col mt-4 transition-all duration-300 ease-in-out"}
       >
         <Card className="mb-4 border-0 shadow-none">
-          <CardHeader>
-            <div className="flex justify-between items-center">
-              <h1 className="text-3xl font-bold">{auction.title}</h1>
-              <div className="flex items-center space-x-4">
-                <Button variant="outline" size="sm">
-                  <Share2 className="mr-2 h-4 w-4" /> Share
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Heart className="mr-2 h-4 w-4" />
-                  Watch
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
           <CardContent>
             <div className="relative mb-4">
               <ImageGallery images={auction.images} />
@@ -250,11 +235,21 @@ const AuctionPage: React.FC = () => {
             </div>
             <div className="flex flex-col gap-6 mb-6">
               <div className="col-span-2">
-                <h2 className="text-2xl font-bold mb-3">{auction.title}</h2>
+                <div className="flex justify-between items-center">
+                  <h1 className="text-2xl font-bold">{auction.title}</h1>
+                  <div className="flex items-center space-x-4">
+                    <Button variant="outline" size="sm">
+                      <Share2 className="mr-2 h-4 w-4" /> Share
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Heart className="mr-2 h-4 w-4" />
+                      Watch
+                    </Button>
+                  </div>
+                </div>{" "}
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
                   {auction.description}
                 </p>
-
                 <div className="bg-secondary/50 rounded-lg p-4 mb-4">
                   <h3 className="font-semibold mb-2">Key Details</h3>
                   <div className="grid grid-cols-2 gap-4">
@@ -284,7 +279,6 @@ const AuctionPage: React.FC = () => {
                     </div>
                   </div>
                 </div>
-
                 <div>
                   <h3 className="font-semibold mb-2">Tags</h3>
                   <div className="flex flex-wrap gap-2">
