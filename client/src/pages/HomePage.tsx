@@ -19,10 +19,15 @@ import Footer from "../pagesComponents/Footer";
 
 const Homepage = () => {
   return (
-    <div className="min-h-screen  ">
+    <div className="min-h-screen  text-white relative overflow-hidden">
+      {/* Blurred Circles */}
+      <div className="absolute top-0 left-0 w-96 h-96 bg-purple-500 rounded-full filter blur-3xl opacity-30"></div>
+      <div className="absolute top-1/2 right-0 w-96 h-96 bg-pink-500 rounded-full filter blur-3xl opacity-30"></div>
+      <div className="absolute bottom-0 left-1/2 w-96 h-96 bg-blue-500 rounded-full filter blur-3xl opacity-30"></div>
+
       <main>
-        <section className="relative overflow-hidden  text-black dark:text-white">
-          <div className="container mx-auto px-4 py-32">
+        <section className="relative text-white py-32">
+          <div className="container mx-auto px-4">
             <div className="flex flex-col lg:flex-row items-center">
               <motion.div
                 initial={{ opacity: 0, x: -50 }}
@@ -37,7 +42,7 @@ const Homepage = () => {
                     transition={{ duration: 0.5, delay: 0.2 }}
                     className="block"
                   >
-                    Unlock
+                    Discover
                   </motion.span>
                   <motion.span
                     initial={{ opacity: 0, y: 20 }}
@@ -45,29 +50,29 @@ const Homepage = () => {
                     transition={{ duration: 0.5, delay: 0.4 }}
                     className="block"
                   >
-                    Exclusive
+                    The Future
                   </motion.span>
                   <motion.span
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ duration: 0.5, delay: 0.6 }}
-                    className="block mt-2 text-transparent bg-clip-text animate-gradient-x bg-gradient-to-r from-yellow-400 via-pink-300 to-purple-400"
+                    className="block mt-2 text-transparent bg-clip-text animate-gradient-x bg-gradient-to-r from-blue-400 via-purple-300 to-pink-400"
                   >
-                    Luxury Auctions
+                    Of Auctions
                   </motion.span>
                 </h1>
 
-                <p className="text-xl mb-8  text-gray-600 dark:text-gray-200">
-                  Dive into a world of rare treasures and luxury items. Bid,
-                  win, and elevate your collection.
+                <p className="text-xl mb-8 text-gray-300">
+                  Step into a new era of luxury auctions. Bid, win, and elevate
+                  your collection with futuristic ease.
                 </p>
                 <div className="flex flex-col sm:flex-row gap-4">
-                  <Button className="bg-white text-purple-600 hover:bg-gray-100 px-8 py-6 text-lg">
+                  <Button className="bg-purple-600 text-white hover:bg-purple-700 px-8 py-6 text-lg">
                     Start Bidding <ArrowRight className="ml-2" />
                   </Button>
                   <Button
                     variant="outline"
-                    className="px-8 py-6 text-lg border-white text-black dark:text-white hover:bg-white hover:text-purple-600 bg-transparent"
+                    className="px-8 py-6 text-lg border-purple-600 text-white hover:bg-purple-600 hover:text-white bg-transparent"
                   >
                     How It Works
                   </Button>
@@ -112,27 +117,29 @@ const Homepage = () => {
           </motion.div>
         </section>
 
-        <section className="py-20">
+        <section className="py-20 ">
           <div className="container mx-auto px-4">
             <h2 className="text-4xl font-bold mb-12 text-center">
               Featured Auctions
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {[1, 2, 3].map((item, index) => (
-                <Card key={item} className="overflow-hidden">
+                <Card key={item} className="overflow-hidden bg-gray-800/30">
                   <motion.div
                     whileHover={{ scale: 1.05 }}
                     transition={{ duration: 0.3 }}
                   >
                     <AuctionItemPlaceholder index={index} />
                     <CardContent className="p-6">
-                      <Badge className="mb-2">Ending Soon</Badge>
+                      <Badge className="mb-2 bg-purple-600 text-white">
+                        Ending Soon
+                      </Badge>
                       <h3 className="text-xl font-semibold mb-2">
                         {index === 0 && "Vintage Rolex Submariner"}
                         {index === 1 && "Rare Blue Diamond"}
                         {index === 2 && "Classic Ferrari 250 GTO"}
                       </h3>
-                      <p className="text-gray mb-4">
+                      <p className="text-gray-400 mb-4">
                         {index === 0 &&
                           "1960s collector's timepiece in excellent condition"}
                         {index === 1 &&
@@ -141,12 +148,12 @@ const Homepage = () => {
                           "One of only 36 ever made, fully restored"}
                       </p>
                       <div className="flex justify-between items-center">
-                        <span className="text-purple-600 font-bold text-lg">
+                        <span className="text-purple-400 font-bold text-lg">
                           {index === 0 && "$45,000"}
                           {index === 1 && "$3,500,000"}
                           {index === 2 && "$48,000,000"}
                         </span>
-                        <Button className="bg-purple-600 hover:bg-purple-700 text-black dark:text-white">
+                        <Button className="bg-purple-600 hover:bg-purple-700 text-white">
                           Bid Now
                         </Button>
                       </div>
@@ -157,9 +164,10 @@ const Homepage = () => {
             </div>
           </div>
         </section>
-        <section className="py-20">
+
+        <section className="py-20 ">
           <div className="container mx-auto px-4">
-            <h2 className="text-4xl  font-bold mb-12 text-center">
+            <h2 className="text-4xl font-bold mb-12 text-center">
               How It Works
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -193,13 +201,13 @@ const Homepage = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: index * 0.2 }}
-                  className="text-center p-6 border rounded-lg shadow-lg"
+                  className="text-center p-6 border rounded-lg shadow-lg bg-gray-800/30"
                 >
-                  <div className="bg-purple-500 text-black dark:text-white rounded-full p-4 inline-block mb-4">
+                  <div className="bg-purple-500 text-white rounded-full p-4 inline-block mb-4">
                     {step.icon}
                   </div>
                   <h3 className="text-xl font-semibold mb-2">{step.title}</h3>
-                  <p className="text-gray">{step.description}</p>
+                  <p className="text-gray-400">{step.description}</p>
                 </motion.div>
               ))}
             </div>
@@ -220,11 +228,11 @@ const Homepage = () => {
                 <Input
                   type="email"
                   placeholder="Enter your email"
-                  className="rounded-l-full flex-grow"
+                  className="rounded-l-full flex-grow bg-gray-700 text-white"
                 />
                 <Button
                   type="submit"
-                  className="bg-white text-purple-600 rounded-r-full hover:bg-gray-100"
+                  className="bg-purple-600 text-white rounded-r-full hover:bg-purple-700"
                 >
                   Subscribe
                 </Button>
