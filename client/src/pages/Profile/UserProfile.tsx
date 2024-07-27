@@ -100,8 +100,13 @@ const UserProfile = () => {
       </div>
 
       <main className="max-w-6xl mx-auto">
+        <div className="flex gap-2 mt-4">
+          <Button variant={"outline"}>Create Auction </Button>
+          <Button variant={"outline"}>Get verified </Button>
+        </div>
         {/* Referral section */}
-        <Card className="bg-purple-950/30 py-2 px-4 my-8 rounded-xl">
+
+        <Card className="bg-purple-950/30 py-2 px-4 rounded-xl my-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <AlertCircle className="h-5 w-5 text-purple-400" />
@@ -119,7 +124,7 @@ const UserProfile = () => {
           </div>
         </Card>
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 mb-8">
+          <TabsList className="grid w-full grid-cols-4 ">
             <TabsTrigger value="overview">
               <BarChart2 className="w-4 h-4 mr-2 text-blue-500" />
               Overview
@@ -138,7 +143,7 @@ const UserProfile = () => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="overview">
-            <div className="grid grid-cols-2 gap-6">
+            <div className="grid grid-cols-2 gap-2">
               <Card className="bg-zinc-900 p-6 rounded-xl">
                 <h3 className="font-semibold mb-4">Profile Stats</h3>
                 <div className="space-y-4">
