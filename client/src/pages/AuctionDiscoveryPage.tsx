@@ -122,8 +122,8 @@ const AuctionDiscoveryPage: React.FC = () => {
   );
 
   return (
-    <div className="w-full mx-auto mt-12">
-      <section className="relative overflow-hidden bg-gray-900 mb-6 h-[39rem] border border-red">
+    <div className="w-full mx-auto">
+      <section className="relative overflow-hidden bg-gray-900 mb-6 h-[28rem] border border-red">
         {upcomingAuctions.length > 0 && (
           <>
             <AnimatePresence>
@@ -146,8 +146,23 @@ const AuctionDiscoveryPage: React.FC = () => {
             </AnimatePresence>
             <div className="absolute inset-0 bg-black/50" />
 
-            <div className="relative z-10 container mx-auto h-full flex items-center ">
-              <div ref={sliderRef} className="keen-slider h-4/5 w-full">
+            <div className="relative z-10 container mx-auto h-full flex items-center  flex-col gap-6">
+              <div className="flex items-center space-x-2 mt-4 fixed top-0  z-50">
+                <Input
+                  type="text"
+                  placeholder="Search auctions..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-96 border border-gray-200/20 bg-white/10 backdrop-blur-md p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300"
+                />
+                <Button
+                  onClick={() => handleSearch()}
+                  className="border border-gray-200/20 bg-white/10 hover:bg-white/40 text-white p-3 rounded-lg transition duration-300 flex items-center"
+                >
+                  <Search size={18} />
+                </Button>
+              </div>
+              <div ref={sliderRef} className="keen-slider  h-4/6 w-full mt-16">
                 {upcomingAuctions.map((auction) => (
                   <div key={auction._id} className="keen-slider__slide">
                     <div className="relative h-full w-full rounded-2xl overflow-hidden">
@@ -160,15 +175,15 @@ const AuctionDiscoveryPage: React.FC = () => {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black via-black/70 to-transparent" />
                       <div className="absolute bottom-0 left-0 right-0 p-8">
-                        <h3 className="text-4xl font-bold text-white mb-4">
+                        <h3 className="text-4xl font-bold text-white mb-2">
                           {auction.title}
                         </h3>
-                        <p className="text-lg text-gray-200 mb-6 line-clamp-2">
+                        <p className="text-lg text-gray-200 mb-2 line-clamp-2">
                           {auction.description}
                         </p>
                         <div className="flex justify-between items-end">
                           <div>
-                            <div className="flex items-center mb-4">
+                            <div className="flex items-center mb-2">
                               <Avatar className="h-10 w-10 mr-3 ring-2 ring-purple-400">
                                 <AvatarImage
                                   src={`https://api.dicebear.com/6.x/initials/svg?seed=${auction.seller.username}`}
