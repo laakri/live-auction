@@ -14,7 +14,7 @@ import {
   DollarSign,
 } from "lucide-react";
 import useAuthStore from "../stores/authStore";
-import logo from "../assets/logo.png";
+import logo from "../assets/logoWhite.png";
 import { Progress } from "../components/ui/progress";
 import { ScrollArea } from "../components/ui/scroll-area";
 
