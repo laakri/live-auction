@@ -54,8 +54,7 @@ const UserProfile = () => {
         <div
           className="absolute inset-0 bg-cover bg-center"
           style={{
-            backgroundImage:
-              "url('https://app.kits.ai/_next/image?url=https%3A%2F%2Farpeggi-prod-public.s3.us-west-2.amazonaws.com%2Fvoice-models%2Fimages%2Ffallback%2F1.jpeg&w=64&q=75')",
+            backgroundImage: `url(${customizations?.avatar})`,
             filter: "blur(20px)",
             transform: "scale(1.1)",
           }}
@@ -80,7 +79,7 @@ const UserProfile = () => {
                 <p className="text-zinc-300 text-sm">{email}</p>
               </div>
             </div>
-            <Card className="ml-auto bg-purple-900/80 p-4 rounded-xl">
+            <Card className="ml-auto bg-gray-900/30 p-4 border-none rounded-xl">
               <div className="flex flex-col justify-between gap-4 items-center   ">
                 <div>
                   <span className="text-xs font-semibold text-purple-300">
