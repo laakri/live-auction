@@ -11,7 +11,7 @@ const App: React.FC = () => {
     <ThemeProvider defaultTheme="dark" storageKey="vite-ui-theme">
       <Router>
         <div className="min-h-screen flex flex-col lg:flex-row">
-          <div className="w-64 ">
+          <div className="w-60 ">
             <Sidebar />
           </div>
           <main className="flex-grow mx-auto">
