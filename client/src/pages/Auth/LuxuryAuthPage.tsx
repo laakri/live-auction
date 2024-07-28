@@ -25,8 +25,6 @@ const LuxuryAuthPage: React.FC = () => {
   );
 
   useEffect(() => {
-    console.log("User:", user);
-    console.log("Should show prompt:", shouldShowPrompt);
     setShowPrompt(shouldShowPrompt);
   }, [user, shouldShowPrompt]);
 

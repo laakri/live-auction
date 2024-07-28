@@ -85,7 +85,13 @@ const useAuthStore = create<AuthState>()(
               token: response.data.token,
               isAuthenticated: true,
               showVerificationPrompt: !newUser.isVerified,
-              isLoading: false,
+            });
+          } else {
+            set({
+              user: response.data.user,
+              token: response.data.token,
+              isAuthenticated: true,
+              showVerificationPrompt: false,
             });
           }
           axios.defaults.headers.common[
@@ -101,7 +107,9 @@ const useAuthStore = create<AuthState>()(
             title: "Uh oh! Something went wrong.",
             description: "Login failed",
           });
-          set({ error: "Invalid credentials", isLoading: false });
+          set({ error: "Invalid credentials" });
+        } finally {
+          set({ isLoading: false });
         }
       },
 
@@ -127,7 +135,6 @@ const useAuthStore = create<AuthState>()(
             user: newUser,
             token: response.data.token,
             isAuthenticated: true,
-            isLoading: false,
           });
           axios.defaults.headers.common[
             "Authorization"
@@ -142,7 +149,9 @@ const useAuthStore = create<AuthState>()(
             title: "Uh oh! Something went wrong.",
             description: "Signup failed",
           });
-          set({ error: "Signup failed", isLoading: false });
+          set({ error: "Signup failed" });
+        } finally {
+          set({ isLoading: false });
         }
       },
 

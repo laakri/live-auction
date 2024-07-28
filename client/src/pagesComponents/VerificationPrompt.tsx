@@ -20,8 +20,6 @@ const VerificationPrompt: React.FC<VerificationPromptProps> = ({
 }) => {
   const navigate = useNavigate();
 
-  console.log("VerificationPrompt rendered with isOpen:", isOpen);
-
   const handleVerificationClick = () => {
     onClose();
     navigate("/UserVerification");
