@@ -2,13 +2,14 @@ import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./pagesComponents/ProtectedRoute";
 import HomePage from "./pages/HomePage";
-import UserVerificationPage from "./pages/UserVerificationPage";
+import UserVerificationPage from "./pages/Profile/UserVerificationPage";
 import SearchResults from "./pages/Discovery/SearchResults";
 import UserProfile from "./pages/Profile/UserProfile";
 import AuctionGuides from "./pages/AuctionGuides";
 import VerifySellers from "./pages/AuctionGuides/VerifySellers";
 import SafeBidding from "./pages/AuctionGuides/SafeBidding";
 import AuctionTips from "./pages/AuctionGuides/AuctionTips";
+import UserSettings from "./pages/Profile/UserSettings";
 
 const LuxuryAuthPage = lazy(() => import("./pages/Auth/LuxuryAuthPage"));
 const CreateAuctionPage = lazy(() => import("./pages/CreateAuctionPage"));
@@ -27,6 +28,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/auction/:id" element={<AuctionPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/UserProfile" element={<UserProfile />} />
+          <Route path="/UserSettings" element={<UserSettings />} />
         </Route>
         <Route path="/AuctionGuides" element={<AuctionGuides />}>
           <Route index element={<AuctionTips />} />

@@ -135,7 +135,7 @@ const Sidebar: React.FC = () => {
                 label="Help Center"
               />
               <NavLink
-                to="/settings"
+                to="/UserSettings"
                 icon={<Settings className="h-4 w-4" />}
                 label="Settings"
               />

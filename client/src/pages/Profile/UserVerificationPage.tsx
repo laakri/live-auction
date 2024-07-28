@@ -1,11 +1,11 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Button } from "../components/ui/button";
-import { useToast } from "../components/ui/use-toast";
-import useAuthStore from "../stores/authStore";
+import { Button } from "../../components/ui/button";
+import { useToast } from "../../components/ui/use-toast";
+import useAuthStore from "../../stores/authStore";
 import { User, MapPin, Phone, CreditCard } from "lucide-react";
-import { Input } from "../components/ui/input";
-import { Textarea } from "../components/ui/textarea";
+import { Input } from "../../components/ui/input";
+import { Textarea } from "../../components/ui/textarea";
 
 interface InputWithIconProps
   extends React.InputHTMLAttributes<HTMLInputElement | HTMLTextAreaElement> {
@@ -22,7 +22,7 @@ const InputWithIcon: React.FC<InputWithIconProps> = ({
     <div className="absolute inset-y-0 left-0 flex items-center pl-3 pointer-events-none">
       {icon}
     </div>
-    {props.as === "textarea" ? (
+    {props.type === "textarea" ? (
       <Textarea {...props} className="pl-10 w-full" />
     ) : (
       <Input {...props} className="pl-10 w-full" />
@@ -176,11 +176,9 @@ const UserVerificationPage: React.FC = () => {
                   transition={{ delay: 0.1 * index }}
                 >
                   <InputWithIcon
-                    icon={field.icon}
-                    name={field.name}
-                    placeholder={field.placeholder}
                     value={formData[field.name as keyof typeof formData]}
                     onChange={handleInputChange}
+                    {...field}
                     error={errors[field.name as keyof typeof errors]}
                     {...field}
                   />

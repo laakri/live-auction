@@ -137,21 +137,22 @@ const UserProfile = () => {
       <main className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col sm:flex-row justify-between gap-2 mt-4">
           <div className="flex flex-wrap gap-2">
-            <Button
-              variant={"outline"}
-              className="border-dashed w-full sm:w-auto"
-            >
-              <Plus className="h-4 mr-2" />
-              Create Auction
-            </Button>
-            <Button variant={"outline"} className="w-full sm:w-auto">
-              Get verified
-            </Button>
+            <Link to="/create-auction">
+              <Button
+                variant="outline"
+                className="border-dashed w-full sm:w-auto"
+              >
+                <Plus className="h-4 mr-2" />
+                Create Auction
+              </Button>
+            </Link>
           </div>
           <div className="flex gap-2 mt-2 sm:mt-0">
-            <Button variant={"outline"} className="w-full sm:w-auto">
-              Get verified
-            </Button>
+            <Link to="/UserVerification">
+              <Button variant={"outline"} className="w-full sm:w-auto">
+                Get verified
+              </Button>
+            </Link>
           </div>
         </div>
         <div className="mt-4">
