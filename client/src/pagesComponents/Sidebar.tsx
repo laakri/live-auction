@@ -17,6 +17,7 @@ import useAuthStore from "../stores/authStore";
 import logo from "../assets/logoWhite.png";
 import { Progress } from "../components/ui/progress";
 import { ScrollArea } from "../components/ui/scroll-area";
+import SearchComponent from "./SearchComponent";
 
 interface IUser {
   username: string;
@@ -75,7 +76,9 @@ const Sidebar: React.FC = () => {
               </div>
             </div>
             <div className="border-t border-gray-600 opacity-20"></div>
-
+            <div>
+              <SearchComponent />
+            </div>
             <div className="mt-2 p-2">
               {isAuthenticated ? (
                 <UserProfile user={user as IUser} logout={logout} />
@@ -138,9 +141,9 @@ const Sidebar: React.FC = () => {
             </nav>
 
             {isAuthenticated && (
-              <div className="p-4 mt-auto">
+              <div className="p-4 mt-auto  ">
                 <Button
-                  className="w-full bg-red-500/20 text-red-500 hover:bg-red-600/30 hover:text-red-100 transition-colors duration-300"
+                  className="w-full bg-red-500/30 text-red-300 hover:bg-red-600/30 hover:text-red-100 transition-colors duration-300"
                   onClick={logout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />

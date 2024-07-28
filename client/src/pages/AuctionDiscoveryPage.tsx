@@ -19,6 +19,7 @@ import { Bell, Heart, Share2, Search } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Footer from "../pagesComponents/Footer";
 import { useNavigate } from "react-router-dom";
+import SearchComponent from "../pagesComponents/SearchComponent";
 
 const AuctionDiscoveryPage: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -147,21 +148,6 @@ const AuctionDiscoveryPage: React.FC = () => {
             <div className="absolute inset-0 bg-black/50" />
 
             <div className="relative z-10 container mx-auto h-full flex items-center  flex-col gap-6">
-              <div className="flex items-center space-x-2 mt-4 fixed top-0  z-50">
-                <Input
-                  type="text"
-                  placeholder="Search auctions..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-96 border border-gray-200/20 bg-white/10 backdrop-blur-md p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500 transition duration-300"
-                />
-                <Button
-                  onClick={() => handleSearch()}
-                  className="border border-gray-200/20 bg-white/10 hover:bg-white/40 text-white p-3 rounded-lg transition duration-300 flex items-center"
-                >
-                  <Search size={18} />
-                </Button>
-              </div>
               <div ref={sliderRef} className="keen-slider  h-4/6 w-full mt-16">
                 {upcomingAuctions.map((auction) => (
                   <div key={auction._id} className="keen-slider__slide">

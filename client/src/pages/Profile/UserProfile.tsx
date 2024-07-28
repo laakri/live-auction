@@ -15,6 +15,7 @@ import {
   BarChart2,
   Edit2Icon,
   Gavel,
+  Plus,
   Settings,
   User,
   Wallet,
@@ -31,6 +32,7 @@ const UserProfile = () => {
   const {
     username,
     email,
+    bio,
     level,
     xp,
     balance,
@@ -49,7 +51,7 @@ const UserProfile = () => {
 
   return (
     <div className="min-h-screen text-white">
-      <div className="relative overflow-hidden rounded-xl m-2">
+      <div className="relative overflow-hidden rounded-xl m-2  ">
         {/* Blurred background image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -77,6 +79,7 @@ const UserProfile = () => {
               <div>
                 <h1 className="text-4xl font-bold mb-1">{username}</h1>
                 <p className="text-zinc-300 text-sm">{email}</p>
+                <p className="text-zinc-300 text-sm">{bio}</p>
               </div>
             </div>
             <Card className="ml-auto bg-gray-900/30 p-4 border-none rounded-xl">
@@ -89,7 +92,7 @@ const UserProfile = () => {
                     {loyaltyTier}
                   </h3>
                 </div>
-                <Button variant="secondary" className=" w-full">
+                <Button className=" w-full bg-black/30 hover:bg-black/90 text-white">
                   View Benefits
                   <span className="ml-2">→</span>
                 </Button>
@@ -100,13 +103,21 @@ const UserProfile = () => {
       </div>
 
       <main className="max-w-6xl mx-auto">
-        <div className="flex gap-2 mt-4">
-          <Button variant={"outline"}>Create Auction </Button>
-          <Button variant={"outline"}>Get verified </Button>
+        <div className="flex justify-between">
+          <div className="flex gap-2 mt-4">
+            <Button variant={"outline"} className="border-dashed">
+              <Plus className="h-4 mr-2" />
+              Create Auction{" "}
+            </Button>
+            <Button variant={"outline"}>Get verified </Button>
+          </div>
+          <div className="flex gap-2 mt-4">
+            <Button variant={"outline"}>Get verified </Button>
+          </div>
         </div>
         {/* Referral section */}
 
-        <Card className="bg-purple-950/30 py-2 px-4 rounded-xl my-4">
+        <Card className="bg-purple-950/30  py-2 px-4 rounded-xl my-4">
           <div className="flex justify-between items-center">
             <div className="flex items-center space-x-2">
               <AlertCircle className="h-5 w-5 text-purple-400" />
