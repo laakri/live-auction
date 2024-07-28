@@ -24,13 +24,15 @@ import {
   Wallet,
   Shield,
   Search,
+  Coins,
 } from "lucide-react";
 import useAuthStore from "../../stores/authStore";
 import { Link } from "react-router-dom";
-
+import { useToast } from "../../components/ui/use-toast";
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { user, error } = useAuthStore();
+  const { toast } = useToast();
 
   if (!user) return <div>User Not Found Login again</div>;
   if (error) return <div>Error: {error}</div>;
@@ -66,7 +68,7 @@ const UserProfile = () => {
     description: string;
     beta?: boolean;
   }) => (
-    <div className="bg-gray-800/40 rounded-lg p-4 flex flex-col items-start space-y-2 hover:bg-gray-700/60 transition-colors cursor-pointer">
+    <div className="bg-zinc-800/40 rounded-lg p-4 flex flex-col items-start space-y-2 hover:bg-zinc-700/60 transition-colors cursor-pointer">
       <div className="flex items-center space-x-2">
         {icon}
         <h3 className="text-white font-semibold">{title}</h3>
@@ -76,7 +78,7 @@ const UserProfile = () => {
           </span>
         )}
       </div>
-      <p className="text-gray-400 text-sm">{description}</p>
+      <p className="text-zinc-400 text-sm">{description}</p>
     </div>
   );
   return (
@@ -114,7 +116,7 @@ const UserProfile = () => {
                 <p className="text-zinc-300 text-sm">{bio}</p>
               </div>
             </div>
-            <Card className="bg-gray-900/30 p-4 border-none rounded-xl w-full sm:w-auto mt-4 sm:mt-0">
+            <Card className="bg-zinc-900/30 p-4 border-none rounded-xl w-full sm:w-auto mt-4 sm:mt-0">
               <div className="flex flex-row sm:flex-col justify-between gap-4 items-center">
                 <div className="text-center">
                   <span className="text-xs font-semibold text-purple-300">
@@ -194,6 +196,16 @@ const UserProfile = () => {
               variant="outline"
               size="sm"
               className="text-xs bg-transparent text-purple-200 w-full sm:w-auto"
+              onClick={() => {
+                navigator.clipboard.writeText(referralCode);
+
+                toast({
+                  title: "Referral Code Copied!",
+                  description:
+                    "The referral code has been copied to your clipboard.",
+                  duration: 3000,
+                });
+              }}
             >
               <span className="mr-2">COPY CODE : </span> {referralCode}
             </Button>
@@ -242,7 +254,7 @@ const UserProfile = () => {
                   </div>
                 </div>
               </Card>
-              <Card className="bg-zinc-900/40 p-6 rounded-xl">
+              <Card className="bg-zinc-900/40 p-6 rounded-xl flex flex-col justify-between">
                 <h3 className="font-semibold mb-4">Wallet</h3>
                 <div className="space-y-4">
                   <div>
@@ -253,8 +265,9 @@ const UserProfile = () => {
                   </div>
                   <div>
                     <p className="text-sm text-zinc-400">Virtual Currency</p>
-                    <p className="text-2xl font-bold">
-                      {virtualCurrencyBalance.toLocaleString()} VC
+                    <p className="text-2xl font-bold flex items-center gap-2">
+                      {virtualCurrencyBalance.toLocaleString()}{" "}
+                      <Coins className="text-yellow-500 h-5 w-5" />
                     </p>
                   </div>
                   <Button variant="outline" className="w-full">
