@@ -62,97 +62,102 @@ const Sidebar: React.FC = () => {
       <div
         className={`fixed border-r inset-y-0 left-0 z-50 w-60 bg-background text-foreground shadow-lg transform transition-transform duration-500 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0`}
+        } lg:translate-x-0 flex flex-col`}
       >
-        <ScrollArea className="h-full">
-          <div className="flex flex-col h-full">
-            <div className="p-4 flex items-center justify-between">
-              <Link to="/" className="flex items-center gap-3 ">
-                <img src={logo} alt="" className="h-7" />
-                <span className="text-xl font-bold text-primary">Lexura</span>
-              </Link>
-              <div className="border-gray-700 text-gray-200 text-xs py-1 px-2 bg-secondary rounded-md">
-                Beta
-              </div>
+        <div className="flex-shrink-0">
+          <div className="p-4 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3 ">
+              <img src={logo} alt="" className="h-7" />
+              <span className="text-xl font-bold text-primary">Lexura</span>
+            </Link>
+            <div className="border-gray-700 text-gray-200 text-xs py-1 px-2 bg-secondary rounded-md">
+              BETA
             </div>
-            <div className="border-t border-gray-600 opacity-20"></div>
-            <div>
-              <SearchComponent />
-            </div>
-            <div className="mt-2 p-2">
-              {isAuthenticated ? (
-                <UserProfile user={user as IUser} logout={logout} />
-              ) : (
-                <AuthButtons />
-              )}
-            </div>
-            <div className="border-t border-gray-600 opacity-20 my-4"></div>
-            <nav className="flex-1 px-4">
-              <NavSection title="General">
-                <NavLink
-                  to="/AuctionDiscovery"
-                  icon={<Search className="h-4 w-4" />}
-                  label="Discovery"
-                />
-                <NavLink
-                  to="/history"
-                  icon={<Clock className="h-4 w-4" />}
-                  label="History"
-                />
-                <NavLink
-                  to="/earn"
-                  icon={<DollarSign className="h-4 w-4" />}
-                  label="Earn"
-                />
-              </NavSection>
+          </div>
+          <div className="border-t border-gray-600 opacity-20"></div>
+          <div>
+            <SearchComponent />
+          </div>
+        </div>
 
-              {isAuthenticated && (
-                <NavSection title="User">
-                  <NavLink
-                    to="/UserProfile"
-                    icon={<UserRound className="h-4 w-4" />}
-                    label="Profile"
-                  />
-                  <NavLink
-                    to="/create-auction"
-                    icon={<PlusCircle className="h-4 w-4" />}
-                    label="Create Auction"
-                  />
-                  <NavLink
-                    to="/achievements"
-                    icon={<Award className="h-4 w-4" />}
-                    label={`Achievements (${user?.achievements?.length ?? 0})`}
-                  />
-                </NavSection>
-              )}
-
-              <NavSection title="Support">
-                <NavLink
-                  to="/help"
-                  icon={<HelpCircle className="h-4 w-4" />}
-                  label="Help Center"
-                />
-                <NavLink
-                  to="/settings"
-                  icon={<Settings className="h-4 w-4" />}
-                  label="Settings"
-                />
-              </NavSection>
-            </nav>
-
-            {isAuthenticated && (
-              <div className="p-4 mt-auto  ">
-                <Button
-                  className="w-full bg-red-500/30 text-red-300 hover:bg-red-600/30 hover:text-red-100 transition-colors duration-300"
-                  onClick={logout}
-                >
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Log out
-                </Button>
-              </div>
+        <ScrollArea className="flex-grow">
+          <div className="p-4">
+            {isAuthenticated ? (
+              <UserProfile user={user as IUser} logout={logout} />
+            ) : (
+              <AuthButtons />
             )}
           </div>
+          <div className="border-t border-gray-600 opacity-20 my-4"></div>
+          <nav className="px-4">
+            <NavSection title="General">
+              <NavLink
+                to="/AuctionDiscovery"
+                icon={<Search className="h-4 w-4" />}
+                label="Discovery"
+              />
+              <NavLink
+                to="/history"
+                icon={<Clock className="h-4 w-4" />}
+                label="History"
+              />
+              <NavLink
+                to="/earn"
+                icon={<DollarSign className="h-4 w-4" />}
+                label="Earn"
+              />
+            </NavSection>
+
+            {isAuthenticated && (
+              <NavSection title="User">
+                <NavLink
+                  to="/UserProfile"
+                  icon={<UserRound className="h-4 w-4" />}
+                  label="Profile"
+                />
+                <NavLink
+                  to="/create-auction"
+                  icon={<PlusCircle className="h-4 w-4" />}
+                  label="Create Auction"
+                />
+                <NavLink
+                  to="/achievements"
+                  icon={<Award className="h-4 w-4" />}
+                  label={`Achievements (${user?.achievements?.length ?? 0})`}
+                />
+              </NavSection>
+            )}
+
+            <NavSection title="Support">
+              <NavLink
+                to="/help"
+                icon={<HelpCircle className="h-4 w-4" />}
+                label="Help Center"
+              />
+              <NavLink
+                to="/settings"
+                icon={<Settings className="h-4 w-4" />}
+                label="Settings"
+              />
+            </NavSection>
+          </nav>
         </ScrollArea>
+
+        {isAuthenticated && (
+          <>
+            <div className="border-t border-gray-600 opacity-20"></div>
+
+            <div className="p-4 mt-auto ">
+              <Button
+                className="w-full bg-red-500/30 text-red-300 hover:bg-red-600/30 hover:text-red-100 transition-colors duration-300"
+                onClick={logout}
+              >
+                <LogOut className="mr-2 h-4 w-4" />
+                Log out
+              </Button>
+            </div>
+          </>
+        )}
       </div>
 
       {isOpen && (

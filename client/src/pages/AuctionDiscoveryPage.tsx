@@ -124,7 +124,7 @@ const AuctionDiscoveryPage: React.FC = () => {
 
   return (
     <div className="w-full mx-auto">
-      <section className="relative overflow-hidden bg-gray-900 mb-6 h-[28rem] border border-red">
+      <section className="relative overflow-hidden bg-gray-900 mb-6 h-[26rem] border border-red">
         {upcomingAuctions.length > 0 && (
           <>
             <AnimatePresence>
@@ -148,7 +148,7 @@ const AuctionDiscoveryPage: React.FC = () => {
             <div className="absolute inset-0 bg-black/50" />
 
             <div className="relative z-10 container mx-auto h-full flex items-center  flex-col gap-6">
-              <div ref={sliderRef} className="keen-slider  h-4/6 w-full mt-16">
+              <div ref={sliderRef} className="keen-slider  h-5/6 w-full mt-4">
                 {upcomingAuctions.map((auction) => (
                   <div key={auction._id} className="keen-slider__slide">
                     <div className="relative h-full w-full rounded-2xl overflow-hidden">

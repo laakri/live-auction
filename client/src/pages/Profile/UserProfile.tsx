@@ -13,12 +13,17 @@ import {
   AlertCircle,
   Award,
   BarChart2,
+  Blend,
   Edit2Icon,
   Gavel,
+  Mic,
   Plus,
   Settings,
+  Triangle,
   User,
   Wallet,
+  Shield,
+  Search,
 } from "lucide-react";
 import useAuthStore from "../../stores/authStore";
 
@@ -49,9 +54,33 @@ const UserProfile = () => {
     return ((xp % 100) / xpForNextLevel) * 100;
   };
 
+  const FeatureCard = ({
+    icon,
+    title,
+    description,
+    beta = false,
+  }: {
+    icon: React.ReactNode;
+    title: string;
+    description: string;
+    beta?: boolean;
+  }) => (
+    <div className="bg-gray-800/40 rounded-lg p-4 flex flex-col items-start space-y-2 hover:bg-gray-700/60 transition-colors cursor-pointer">
+      <div className="flex items-center space-x-2">
+        {icon}
+        <h3 className="text-white font-semibold">{title}</h3>
+        {beta && (
+          <span className="text-xs bg-blue-500 text-white px-2 py-0.5 rounded">
+            BETA
+          </span>
+        )}
+      </div>
+      <p className="text-gray-400 text-sm">{description}</p>
+    </div>
+  );
   return (
     <div className="min-h-screen text-white">
-      <div className="relative overflow-hidden rounded-xl m-2  ">
+      <div className="relative overflow-hidden rounded-xl m-2">
         {/* Blurred background image */}
         <div
           className="absolute inset-0 bg-cover bg-center"
@@ -63,10 +92,10 @@ const UserProfile = () => {
         />
 
         {/* Content overlay */}
-        <div className="relative bg-zinc-900/60 p-6 ">
-          <div className="flex items-center  justify-between max-w-6xl mx-auto">
-            <div className="flex items-center gap-4">
-              <div className="h-32 w-32 rounded-xl overflow-hidden">
+        <div className="relative bg-zinc-900/80 p-4 sm:p-6">
+          <div className="flex flex-col sm:flex-row items-center justify-between max-w-6xl mx-auto">
+            <div className="flex flex-col sm:flex-row items-center gap-4 mb-4 sm:mb-0">
+              <div className="h-28 w-28 sm:h-48 sm:w-48 rounded-xl overflow-hidden">
                 <img
                   src={
                     customizations?.avatar ||
@@ -76,15 +105,17 @@ const UserProfile = () => {
                   className="h-full w-full object-cover"
                 />
               </div>
-              <div>
-                <h1 className="text-4xl font-bold mb-1">{username}</h1>
+              <div className="text-center sm:text-left">
+                <h1 className="text-3xl sm:text-4xl font-bold mb-1">
+                  {username}
+                </h1>
                 <p className="text-zinc-300 text-sm">{email}</p>
                 <p className="text-zinc-300 text-sm">{bio}</p>
               </div>
             </div>
-            <Card className="ml-auto bg-gray-900/30 p-4 border-none rounded-xl">
-              <div className="flex flex-col justify-between gap-4 items-center   ">
-                <div>
+            <Card className="bg-gray-900/30 p-4 border-none rounded-xl w-full sm:w-auto mt-4 sm:mt-0">
+              <div className="flex flex-row sm:flex-col justify-between gap-4 items-center">
+                <div className="text-center">
                   <span className="text-xs font-semibold text-purple-300">
                     LOYALTY TIER
                   </span>
@@ -92,7 +123,7 @@ const UserProfile = () => {
                     {loyaltyTier}
                   </h3>
                 </div>
-                <Button className=" w-full bg-black/30 hover:bg-black/90 text-white">
+                <Button className="w-full bg-black/30 hover:bg-black/90 text-white">
                   View Benefits
                   <span className="ml-2">→</span>
                 </Button>
@@ -102,23 +133,49 @@ const UserProfile = () => {
         </div>
       </div>
 
-      <main className="max-w-6xl mx-auto">
-        <div className="flex justify-between">
-          <div className="flex gap-2 mt-4">
-            <Button variant={"outline"} className="border-dashed">
+      <main className="max-w-6xl mx-auto px-4">
+        <div className="flex flex-col sm:flex-row justify-between gap-2 mt-4">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant={"outline"}
+              className="border-dashed w-full sm:w-auto"
+            >
               <Plus className="h-4 mr-2" />
-              Create Auction{" "}
+              Create Auction
             </Button>
-            <Button variant={"outline"}>Get verified </Button>
+            <Button variant={"outline"} className="w-full sm:w-auto">
+              Get verified
+            </Button>
           </div>
-          <div className="flex gap-2 mt-4">
-            <Button variant={"outline"}>Get verified </Button>
+          <div className="flex gap-2 mt-2 sm:mt-0">
+            <Button variant={"outline"} className="w-full sm:w-auto">
+              Get verified
+            </Button>
+          </div>
+        </div>
+        <div className="mt-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <FeatureCard
+              icon={<Gavel className="w-6 h-6 text-blue-400" />}
+              title="Create Auction"
+              description="List your items for auction. Set starting prices and auction duration."
+            />
+            <FeatureCard
+              icon={<Shield className="w-6 h-6 text-green-400" />}
+              title="Safe Bidding"
+              description="Learn how to bid safely and avoid common auction scams."
+              beta={true}
+            />
+            <FeatureCard
+              icon={<Search className="w-6 h-6 text-purple-400" />}
+              title="Verify Sellers"
+              description="Tips on how to verify seller authenticity and item legitimacy."
+            />
           </div>
         </div>
         {/* Referral section */}
-
-        <Card className="bg-purple-950/30  py-2 px-4 rounded-xl my-4">
-          <div className="flex justify-between items-center">
+        <Card className="bg-purple-950/30 py-2 px-4 rounded-xl my-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
             <div className="flex items-center space-x-2">
               <AlertCircle className="h-5 w-5 text-purple-400" />
               <p className="text-sm">
@@ -128,14 +185,15 @@ const UserProfile = () => {
             <Button
               variant="outline"
               size="sm"
-              className="text-xs bg-transparent text-purple-200 "
+              className="text-xs bg-transparent text-purple-200 w-full sm:w-auto"
             >
               <span className="mr-2">COPY CODE : </span> {referralCode}
             </Button>
           </div>
         </Card>
+
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-4 ">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
             <TabsTrigger value="overview">
               <BarChart2 className="w-4 h-4 mr-2 text-blue-500" />
               Overview
@@ -154,8 +212,8 @@ const UserProfile = () => {
             </TabsTrigger>
           </TabsList>
           <TabsContent value="overview">
-            <div className="grid grid-cols-2 gap-2">
-              <Card className="bg-zinc-900 p-6 rounded-xl">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <Card className="bg-zinc-900/40 p-6 rounded-xl">
                 <h3 className="font-semibold mb-4">Profile Stats</h3>
                 <div className="space-y-4">
                   <div>
@@ -176,7 +234,7 @@ const UserProfile = () => {
                   </div>
                 </div>
               </Card>
-              <Card className="bg-zinc-900 p-6 rounded-xl">
+              <Card className="bg-zinc-900/40 p-6 rounded-xl">
                 <h3 className="font-semibold mb-4">Wallet</h3>
                 <div className="space-y-4">
                   <div>
@@ -200,7 +258,7 @@ const UserProfile = () => {
             </div>
           </TabsContent>
           <TabsContent value="achievements">
-            <Card className="bg-zinc-900 p-6 rounded-xl">
+            <Card className="bg-zinc-900/40 p-6 rounded-xl">
               <h3 className="font-semibold mb-4">Your Achievements</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {achievements && achievements.length > 0 ? (
@@ -216,13 +274,13 @@ const UserProfile = () => {
             </Card>
           </TabsContent>
           <TabsContent value="auctions">
-            <Card className="bg-zinc-900 p-6 rounded-xl">
+            <Card className="bg-zinc-900/40 p-6 rounded-xl">
               <h3 className="font-semibold mb-4">Your Auctions</h3>
               <p className="text-zinc-400">You have no active auctions.</p>
             </Card>
           </TabsContent>
           <TabsContent value="settings">
-            <Card className="bg-zinc-900 p-6 rounded-xl">
+            <Card className="bg-zinc-900/40 p-6 rounded-xl">
               <h3 className="font-semibold mb-4">Account Settings</h3>
               <div className="space-y-4">
                 <Button
