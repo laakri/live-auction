@@ -68,7 +68,7 @@ const UserProfile = () => {
     description: string;
     beta?: boolean;
   }) => (
-    <div className="bg-zinc-800/40 rounded-lg p-4 flex flex-col items-start space-y-2 hover:bg-zinc-700/60 transition-colors cursor-pointer">
+    <div className="bg-gray-800/40 rounded-lg p-4 flex flex-col items-start space-y-2 hover:bg-gray-700/60 transition-colors cursor-pointer">
       <div className="flex items-center space-x-2">
         {icon}
         <h3 className="text-white font-semibold">{title}</h3>
@@ -78,7 +78,7 @@ const UserProfile = () => {
           </span>
         )}
       </div>
-      <p className="text-zinc-400 text-sm">{description}</p>
+      <p className="text-gray-400 text-sm">{description}</p>
     </div>
   );
   return (
@@ -95,7 +95,7 @@ const UserProfile = () => {
         />
 
         {/* Content overlay */}
-        <div className="relative bg-zinc-900/80 p-4 sm:p-6">
+        <div className="relative bg-gray-900/80 p-4 sm:p-6">
           <div className="flex flex-col sm:flex-row items-center justify-between max-w-6xl mx-auto">
             <div className="flex flex-col sm:flex-row items-center gap-4 mb-4 sm:mb-0">
               <div className="h-28 w-28 sm:h-48 sm:w-48 rounded-xl overflow-hidden">
@@ -112,11 +112,11 @@ const UserProfile = () => {
                 <h1 className="text-3xl sm:text-4xl font-bold mb-1">
                   {username}
                 </h1>
-                <p className="text-zinc-300 text-sm">{email}</p>
-                <p className="text-zinc-300 text-sm">{bio}</p>
+                <p className="text-gray-300 text-sm">{email}</p>
+                <p className="text-gray-300 text-sm">{bio}</p>
               </div>
             </div>
-            <Card className="bg-zinc-900/30 p-4 border-none rounded-xl w-full sm:w-auto mt-4 sm:mt-0">
+            <Card className="bg-gray-900/30 p-4 border-none rounded-xl w-full sm:w-auto mt-4 sm:mt-0">
               <div className="flex flex-row sm:flex-col justify-between gap-4 items-center">
                 <div className="text-center">
                   <span className="text-xs font-semibold text-purple-300">
@@ -233,11 +233,11 @@ const UserProfile = () => {
           </TabsList>
           <TabsContent value="overview">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <Card className="bg-zinc-900/40 p-6 rounded-xl">
+              <Card className="bg-gray-900/40 p-6 rounded-xl">
                 <h3 className="font-semibold mb-4">Profile Stats</h3>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-zinc-400">Level</p>
+                    <p className="text-sm text-gray-400">Level</p>
                     <p className="text-2xl font-bold">{level}</p>
                     <Progress
                       value={calculateLevelProgress(xp, level)}
@@ -245,26 +245,26 @@ const UserProfile = () => {
                     />
                   </div>
                   <div>
-                    <p className="text-sm text-zinc-400">XP</p>
+                    <p className="text-sm text-gray-400">XP</p>
                     <p className="text-2xl font-bold">{xp.toLocaleString()}</p>
                   </div>
                   <div>
-                    <p className="text-sm text-zinc-400">Rank</p>
+                    <p className="text-sm text-gray-400">Rank</p>
                     <p className="text-2xl font-bold capitalize">{rank}</p>
                   </div>
                 </div>
               </Card>
-              <Card className="bg-zinc-900/40 p-6 rounded-xl flex flex-col justify-between">
+              <Card className="bg-gray-900/40 p-6 rounded-xl flex flex-col justify-between">
                 <h3 className="font-semibold mb-4">Wallet</h3>
                 <div className="space-y-4">
                   <div>
-                    <p className="text-sm text-zinc-400">Balance</p>
+                    <p className="text-sm text-gray-400">Balance</p>
                     <p className="text-2xl font-bold">
                       ${balance.toLocaleString()}
                     </p>
                   </div>
                   <div>
-                    <p className="text-sm text-zinc-400">Virtual Currency</p>
+                    <p className="text-sm text-gray-400">Virtual Currency</p>
                     <p className="text-2xl font-bold flex items-center gap-2">
                       {virtualCurrencyBalance.toLocaleString()}{" "}
                       <Coins className="text-yellow-500 h-5 w-5" />
@@ -279,7 +279,7 @@ const UserProfile = () => {
             </div>
           </TabsContent>
           <TabsContent value="achievements">
-            <Card className="bg-zinc-900/40 p-6 rounded-xl">
+            <Card className="bg-gray-900/40 p-6 rounded-xl">
               <h3 className="font-semibold mb-4">Your Achievements</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {achievements && achievements.length > 0 ? (
@@ -289,19 +289,19 @@ const UserProfile = () => {
                     </Badge>
                   ))
                 ) : (
-                  <p className="text-zinc-400">No achievements yet.</p>
+                  <p className="text-gray-400">No achievements yet.</p>
                 )}
               </div>
             </Card>
           </TabsContent>
           <TabsContent value="auctions">
-            <Card className="bg-zinc-900/40 p-6 rounded-xl">
+            <Card className="bg-gray-900/40 p-6 rounded-xl">
               <h3 className="font-semibold mb-4">Your Auctions</h3>
-              <p className="text-zinc-400">You have no active auctions.</p>
+              <p className="text-gray-400">You have no active auctions.</p>
             </Card>
           </TabsContent>
           <TabsContent value="settings">
-            <Card className="bg-zinc-900/40 p-6 rounded-xl">
+            <Card className="bg-gray-900/40 p-6 rounded-xl">
               <h3 className="font-semibold mb-4">Account Settings</h3>
               <div className="  flex flex-col gap-3">
                 <Link to="/UserSettings" state={{ activeTab: "profile" }}>

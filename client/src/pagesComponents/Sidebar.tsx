@@ -41,7 +41,7 @@ const Sidebar: React.FC = () => {
 
   return (
     <>
-      <div className="lg:hidden fixed top-0 left-0 right-0 z-50 bg-background flex items-center justify-between p-4 shadow-md border-b ">
+      <div className="xl:hidden fixed top-0 left-0 right-0 z-50 bg-background flex items-center justify-between p-4 shadow-md border-b ">
         <Button variant="outline" size="icon" onClick={toggleSidebar}>
           <Menu className="h-6 w-6" />
         </Button>
@@ -62,7 +62,7 @@ const Sidebar: React.FC = () => {
       <div
         className={`fixed border-r inset-y-0 left-0 z-50 w-60 bg-background text-foreground shadow-lg transform transition-transform duration-500 ease-in-out ${
           isOpen ? "translate-x-0" : "-translate-x-full"
-        } lg:translate-x-0 flex flex-col`}
+        } xl:translate-x-0 flex flex-col`}
       >
         <div className="flex-shrink-0">
           <div className="p-4 flex items-center justify-between">

@@ -60,7 +60,7 @@ const UserSettings = () => {
 
   return (
     <div className="p-4">
-      <div className="mb-2 bg-zinc-800/60 p-4 rounded-xl">
+      <div className="mb-2 bg-gray-800/60 p-4 rounded-xl">
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-bold">Account Settings</h2>
           <Button variant={"secondary"} onClick={() => setEditMode(!editMode)}>
@@ -85,7 +85,7 @@ const UserSettings = () => {
           ))}
         </div>
       </div>
-      <div className="bg-gradient-to-t from-black to-zinc-600/50 p-6 rounded-xl min-h-[calc(100vh-10rem)]">
+      <div className="bg-gradient-to-t from-transparent to-gray-600/30 p-6 rounded-xl min-h-[calc(100vh-10rem)]">
         <Card className="border-none p-6 rounded-xl">
           <form onSubmit={handleSubmit}>
             <div className="space-y-4">

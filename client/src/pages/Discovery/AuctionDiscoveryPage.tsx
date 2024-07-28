@@ -18,6 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "../../components/ui/select";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "../../components/ui/carousel";
 import CountdownTimer from "../../components/CountdownTimer";
 import { Bell, Heart, Share2, Search } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -276,20 +283,8 @@ const AuctionDiscoveryPage: React.FC = () => {
         )}
       </section>
 
-      <div className="container mx-auto px-4">
-        <div className="flex flex-wrap justify-center mb-8">
-          {categories.map((cat) => (
-            <CategoryBadge
-              key={cat.name}
-              name={cat.name}
-              icon={cat.icon}
-              active={category === cat.name.toLowerCase()}
-              onClick={() => setCategory(cat.name.toLowerCase())}
-            />
-          ))}
-        </div>
-
-        <section className="mb-16">
+      <div className="mx-auto px-6">
+        <section className="mb-8">
           <div className="flex flex-col md:flex-row justify-between items-center mb-6">
             <h2 className="text-3xl font-bold mb-4 md:mb-0">
               Discover Auctions
@@ -321,40 +316,55 @@ const AuctionDiscoveryPage: React.FC = () => {
           </div>
         </section>
 
-        <section className="mb-16">
+        <section className="mb-8 pl-24 pr-16">
           <h2 className="text-3xl font-bold mb-6">Trending Live Auctions</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {trendingAuctions.map((auction) => (
-              <Card
-                key={auction._id}
-                className="hover:shadow-lg transition-all duration-300"
-              >
-                <CardContent className="p-4">
-                  <img
-                    src={"http://localhost:3000/uploads/" + auction.images[0]}
-                    alt={auction.title}
-                    className="w-full h-48 object-cover mb-4 rounded"
-                  />
-                  <h3 className="text-lg font-semibold mb-2">
-                    {auction.title}
-                  </h3>
-                  <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
-                    Current bid: ${auction.currentPrice.toLocaleString()}
-                    Current bid: ${auction._id}
-                  </p>
-                  <div className="flex justify-between items-center">
-                    <Badge variant="outline">
-                      {auction.watchedBy?.length || 0} watchers
-                    </Badge>
-                    <CountdownTimer
-                      endTime={auction.endTime}
-                      size="sm"
-                      shortLabels
-                    />
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
+          <div className="relative">
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent className="-ml-2 md:-ml-4">
+                {trendingAuctions.map((auction) => (
+                  <CarouselItem
+                    key={auction._id}
+                    className="pl-2 md:pl-4 basis-full sm:basis-1/2 md:basis-1/3 lg:basis-1/4 xl:basis-1/5"
+                  >
+                    <Card className="hover:shadow-lg transition-all duration-300 ">
+                      <CardContent className="p-4">
+                        <img
+                          src={
+                            "http://localhost:3000/uploads/" + auction.images[0]
+                          }
+                          alt={auction.title}
+                          className="w-full h-36 object-cover mb-4 rounded"
+                        />
+                        <h3 className="text-lg font-semibold mb-2 truncate">
+                          {auction.title}
+                        </h3>
+                        <p className="text-sm text-gray-600 dark:text-gray-300 mb-2">
+                          Current bid: ${auction.currentPrice.toLocaleString()}
+                        </p>
+                        <div className="flex justify-between items-center">
+                          <Badge variant="outline">
+                            {auction.watchedBy?.length || 0} watchers
+                          </Badge>
+                          <CountdownTimer
+                            endTime={auction.endTime}
+                            size="sm"
+                            shortLabels
+                          />
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious className="absolute -left-12 top-1/2 transform -translate-y-1/2" />
+              <CarouselNext className="absolute -right-12 top-1/2 transform -translate-y-1/2" />
+            </Carousel>
           </div>
         </section>
 
