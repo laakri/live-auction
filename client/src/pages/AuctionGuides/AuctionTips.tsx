@@ -79,7 +79,7 @@ const AuctionTips = () => {
             className="hover:shadow-lg transition-all duration-300"
           >
             <CardHeader>
-              <CardTitle className="flex items-center text-xl mb-2">
+              <CardTitle className="flex items-center text-xl -mb-4">
                 {tip.icon}
                 <span className="ml-2">{tip.title}</span>
               </CardTitle>
