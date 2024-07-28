@@ -10,6 +10,7 @@ import VerifySellers from "./pages/AuctionGuides/VerifySellers";
 import SafeBidding from "./pages/AuctionGuides/SafeBidding";
 import AuctionTips from "./pages/AuctionGuides/AuctionTips";
 import UserSettings from "./pages/Profile/UserSettings";
+import AuctionDiscoveryPage from "./pages/Discovery/AuctionDiscoveryPage";
 
 const LuxuryAuthPage = lazy(() => import("./pages/Auth/LuxuryAuthPage"));
 const CreateAuctionPage = lazy(() => import("./pages/CreateAuctionPage"));
@@ -25,6 +26,7 @@ const AppRoutes: React.FC = () => {
         <Route path="/category/:categoryName" element={<SearchResults />} />
         <Route path="/UserVerification" element={<UserVerificationPage />} />
         <Route path="/create-auction" element={<CreateAuctionPage />} />
+        <Route path="/AuctionDiscovery" element={<AuctionDiscoveryPage />} />
         <Route path="/auction/:id" element={<AuctionPage />} />
         <Route element={<ProtectedRoute />}>
           <Route path="/UserProfile" element={<UserProfile />} />

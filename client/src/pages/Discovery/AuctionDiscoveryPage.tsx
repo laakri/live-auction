@@ -2,24 +2,27 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { useKeenSlider } from "keen-slider/react";
 import "keen-slider/keen-slider.min.css";
-import { Card, CardContent } from "../components/ui/card";
-import { Avatar, AvatarFallback, AvatarImage } from "../components/ui/avatar";
-import { Badge } from "../components/ui/badge";
-import { Button } from "../components/ui/button";
-import { Input } from "../components/ui/input";
+import { Card, CardContent } from "../../components/ui/card";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../components/ui/avatar";
+import { Badge } from "../../components/ui/badge";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "../components/ui/select";
-import CountdownTimer from "../components/CountdownTimer";
+} from "../../components/ui/select";
+import CountdownTimer from "../../components/CountdownTimer";
 import { Bell, Heart, Share2, Search } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
-import Footer from "../pagesComponents/Footer";
 import { useNavigate } from "react-router-dom";
-import SearchComponent from "../pagesComponents/SearchComponent";
+import Footer from "../../pagesComponents/Footer";
 
 const AuctionDiscoveryPage: React.FC = () => {
   const [currentSlide, setCurrentSlide] = useState(0);

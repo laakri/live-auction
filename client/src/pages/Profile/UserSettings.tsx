@@ -154,7 +154,11 @@ const UserSettings = () => {
               )}
             </div>
             {editMode && (
-              <Button type="submit" className="mt-6 w-full">
+              <Button
+                variant={"secondary"}
+                type="submit"
+                className="mt-6 w-full bg-purple-600/40"
+              >
                 Save Changes
               </Button>
             )}

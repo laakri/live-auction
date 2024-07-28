@@ -290,28 +290,34 @@ const UserProfile = () => {
           <TabsContent value="settings">
             <Card className="bg-zinc-900/40 p-6 rounded-xl">
               <h3 className="font-semibold mb-4">Account Settings</h3>
-              <div className="space-y-4">
-                <Button
-                  variant="outline"
-                  className="w-full flex justify-between items-center"
-                >
-                  <span>Edit Profile</span>
-                  <Edit2Icon className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full flex justify-between items-center"
-                >
-                  <span>Privacy Settings</span>
-                  <User className="h-4 w-4" />
-                </Button>
-                <Button
-                  variant="outline"
-                  className="w-full flex justify-between items-center"
-                >
-                  <span>Notification Preferences</span>
-                  <Settings className="h-4 w-4" />
-                </Button>
+              <div className="  flex flex-col gap-3">
+                <Link to="/UserSettings" state={{ activeTab: "profile" }}>
+                  <Button
+                    variant="outline"
+                    className="w-full flex justify-between items-center"
+                  >
+                    Edit Profile
+                    <Edit2Icon className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/UserSettings" state={{ activeTab: "privacy" }}>
+                  <Button
+                    variant="outline"
+                    className="w-full flex justify-between items-center"
+                  >
+                    <span>Privacy Settings</span>
+                    <User className="h-4 w-4" />
+                  </Button>
+                </Link>
+                <Link to="/UserSettings" state={{ activeTab: "notifications" }}>
+                  <Button
+                    variant="outline"
+                    className="w-full flex justify-between items-center"
+                  >
+                    <span>Notification Preferences</span>
+                    <Settings className="h-4 w-4" />
+                  </Button>
+                </Link>
               </div>
             </Card>
           </TabsContent>
