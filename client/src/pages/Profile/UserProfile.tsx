@@ -26,6 +26,7 @@ import {
   Search,
 } from "lucide-react";
 import useAuthStore from "../../stores/authStore";
+import { Link } from "react-router-dom";
 
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState("overview");
@@ -191,6 +192,12 @@ const UserProfile = () => {
             </Button>
           </div>
         </Card>
+
+        <Link to="/AuctionGuides">
+          <Button variant="outline" className="mt-4">
+            View Auction Guides
+          </Button>
+        </Link>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">

@@ -132,7 +132,7 @@ export default function CreateAuctionPage() {
     { name: "Vehicles", icon: "🚗" },
   ];
   return (
-    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8 mt-4">
+    <div className="min-h-screen py-4 px-4 ">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-4xl font-extrabold mb-8 text-center">
           Create Your Exclusive Auction

@@ -2,15 +2,16 @@ import React, { Suspense, lazy } from "react";
 import { Routes, Route } from "react-router-dom";
 import ProtectedRoute from "./pagesComponents/ProtectedRoute";
 import HomePage from "./pages/HomePage";
-import AuctionDiscoveryPage from "./pages/AuctionDiscoveryPage";
 import UserVerificationPage from "./pages/UserVerificationPage";
-import SearchResults from "./pages/SearchResults";
+import SearchResults from "./pages/Discovery/SearchResults";
 import UserProfile from "./pages/Profile/UserProfile";
+import AuctionGuides from "./pages/AuctionGuides";
+import VerifySellers from "./pages/AuctionGuides/VerifySellers";
+import SafeBidding from "./pages/AuctionGuides/SafeBidding";
+import AuctionTips from "./pages/AuctionGuides/AuctionTips";
 
 const LuxuryAuthPage = lazy(() => import("./pages/Auth/LuxuryAuthPage"));
-const AuctionHomePage = lazy(() => import("./pages/AuctionHomePage"));
 const CreateAuctionPage = lazy(() => import("./pages/CreateAuctionPage"));
-const UserProfilePage = lazy(() => import("./pages/UserProfilePage"));
 const AuctionPage = lazy(() => import("./pages/AuctionLive/AuctionPage"));
 
 const AppRoutes: React.FC = () => {
@@ -18,17 +19,20 @@ const AppRoutes: React.FC = () => {
     <Suspense fallback={<div>Loading...</div>}>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/AuctionHomePage" element={<AuctionHomePage />} />
         <Route path="/AuthPage" element={<LuxuryAuthPage />} />
-        <Route path="/AuctionDiscovery" element={<AuctionDiscoveryPage />} />
         <Route path="/search" element={<SearchResults />} />
         <Route path="/category/:categoryName" element={<SearchResults />} />
-        <Route path="/UserProfile" element={<UserProfile />} />
         <Route path="/UserVerification" element={<UserVerificationPage />} />
         <Route path="/create-auction" element={<CreateAuctionPage />} />
         <Route path="/auction/:id" element={<AuctionPage />} />
         <Route element={<ProtectedRoute />}>
-          <Route path="/profile" element={<UserProfilePage />} />
+          <Route path="/UserProfile" element={<UserProfile />} />
+        </Route>
+        <Route path="/AuctionGuides" element={<AuctionGuides />}>
+          <Route index element={<AuctionTips />} />
+          <Route path="SafeBidding" element={<SafeBidding />} />
+          <Route path="VerifySellers" element={<VerifySellers />} />
+          <Route path="AuctionTips" element={<AuctionTips />} />
         </Route>
       </Routes>
     </Suspense>
