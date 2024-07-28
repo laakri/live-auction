@@ -130,7 +130,7 @@ const Sidebar: React.FC = () => {
 
             <NavSection title="Support">
               <NavLink
-                to="/help"
+                to="/AuctionGuides"
                 icon={<HelpCircle className="h-4 w-4" />}
                 label="Help Center"
               />

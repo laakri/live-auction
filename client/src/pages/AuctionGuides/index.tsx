@@ -1,4 +1,4 @@
-import { Link, Outlet } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { Shield, Search, Lightbulb } from "lucide-react";
 
 const AuctionGuides = () => {
@@ -24,7 +24,7 @@ const AuctionGuides = () => {
   ];
 
   return (
-    <div className="container mx-auto px-4 py-8  text-gray-100">
+    <div className="container mx-auto px-4 py-8  text-gray-100 ">
       <h1 className="text-3xl font-bold mb-8 text-center">Auction Guides</h1>
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {guides.map((guide, index) => (
@@ -46,17 +46,32 @@ const GuideCard = ({
   title: string;
   description: string;
   link: string;
-}) => (
-  <Link
-    to={link}
-    className="block p-6 bg-gray-800/30 rounded-lg hover:bg-gray-700/40 transition-all duration-300"
-  >
-    <div className="flex items-center mb-4">
-      <div className="mr-4">{icon}</div>
-      <h2 className="text-xl font-semibold">{title}</h2>
-    </div>
-    <p className="text-gray-400">{description}</p>
-  </Link>
-);
+}) => {
+  const location = useLocation();
+  const isActive = location.pathname === link;
+
+  return (
+    <Link
+      to={link}
+      className={`block p-6 rounded-lg  border ${
+        isActive
+          ? "bg-purple-900/20 hover:bg-purple-900/40 border-2 border-purple-600/40 "
+          : "bg-gray-800/30 hover:bg-gray-700/40"
+      }`}
+    >
+      <div className="flex items-center mb-4">
+        <div className="mr-4">{icon}</div>
+        <h2
+          className={`text-xl font-semibold ${isActive ? "text-blue-200" : ""}`}
+        >
+          {title}
+        </h2>
+      </div>
+      <p className={isActive ? "text-blue-100" : "text-gray-400"}>
+        {description}
+      </p>
+    </Link>
+  );
+};
 
 export default AuctionGuides;

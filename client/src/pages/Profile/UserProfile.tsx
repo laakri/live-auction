@@ -156,22 +156,28 @@ const UserProfile = () => {
         </div>
         <div className="mt-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <FeatureCard
-              icon={<Gavel className="w-6 h-6 text-blue-400" />}
-              title="Create Auction"
-              description="List your items for auction. Set starting prices and auction duration."
-            />
-            <FeatureCard
-              icon={<Shield className="w-6 h-6 text-green-400" />}
-              title="Safe Bidding"
-              description="Learn how to bid safely and avoid common auction scams."
-              beta={true}
-            />
-            <FeatureCard
-              icon={<Search className="w-6 h-6 text-purple-400" />}
-              title="Verify Sellers"
-              description="Tips on how to verify seller authenticity and item legitimacy."
-            />
+            <Link to="/create-auction">
+              <FeatureCard
+                icon={<Gavel className="w-6 h-6 text-blue-400" />}
+                title="Create Auction"
+                description="List your items for auction. Set starting prices and auction duration."
+              />
+            </Link>
+            <Link to="/AuctionGuides/SafeBidding">
+              <FeatureCard
+                icon={<Shield className="w-6 h-6 text-green-400" />}
+                title="Safe Bidding"
+                description="Learn how to bid safely and avoid common auction scams."
+                beta={true}
+              />
+            </Link>
+            <Link to="/AuctionGuides/VerifySellers">
+              <FeatureCard
+                icon={<Search className="w-6 h-6 text-purple-400" />}
+                title="Verify Sellers"
+                description="Tips on how to verify seller authenticity and item legitimacy."
+              />
+            </Link>
           </div>
         </div>
         {/* Referral section */}
@@ -192,12 +198,6 @@ const UserProfile = () => {
             </Button>
           </div>
         </Card>
-
-        <Link to="/AuctionGuides">
-          <Button variant="outline" className="mt-4">
-            View Auction Guides
-          </Button>
-        </Link>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
