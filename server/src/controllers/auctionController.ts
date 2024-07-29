@@ -280,7 +280,132 @@ export const getAuction = async (
     reply.status(500).send({ error: "Error fetching auction" });
   }
 };
+interface SearchQuery {
+  q?: string;
+  category?: string;
+  minPrice?: string;
+  maxPrice?: string;
+  status?: "upcoming" | "active" | "ended";
+  sort?: "price_asc" | "price_desc" | "end_time" | "start_time";
+  page?: string;
+  limit?: string;
+}
 
+export const searchAuctions = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  try {
+    const {
+      q,
+      category,
+      minPrice,
+      maxPrice,
+      status,
+      sort,
+      page = "1",
+      limit = "10",
+    } = request.query as SearchQuery;
+
+    // Build the query
+    const query: any = {};
+
+    // Text search
+    if (q) {
+      query.$text = { $search: q };
+    }
+
+    // Category filter
+    if (category) {
+      query.category = category;
+    }
+
+    // Price range
+    if (minPrice || maxPrice) {
+      query.currentPrice = {};
+      if (minPrice) query.currentPrice.$gte = parseFloat(minPrice);
+      if (maxPrice) query.currentPrice.$lte = parseFloat(maxPrice);
+    }
+
+    // Status filter
+    if (status) {
+      const now = new Date();
+      switch (status) {
+        case "upcoming":
+          query.startTime = { $gt: now };
+          break;
+        case "active":
+          query.startTime = { $lte: now };
+          query.endTime = { $gt: now };
+          break;
+        case "ended":
+          query.endTime = { $lte: now };
+          break;
+      }
+    }
+
+    // Sorting
+    let sortOption: any = { createdAt: -1 }; // Default sort by newest
+    switch (sort) {
+      case "price_asc":
+        sortOption = { currentPrice: 1 };
+        break;
+      case "price_desc":
+        sortOption = { currentPrice: -1 };
+        break;
+      case "end_time":
+        sortOption = { endTime: 1 };
+        break;
+      case "start_time":
+        sortOption = { startTime: 1 };
+        break;
+    }
+
+    // Pagination
+    const pageNum = parseInt(page, 10);
+    const limitNum = parseInt(limit, 10);
+
+    if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
+      return reply.status(400).send({ error: "Invalid pagination parameters" });
+    }
+
+    const skip = (pageNum - 1) * limitNum;
+
+    // Execute query
+    const totalAuctions = await Auction.countDocuments(query);
+    const totalPages = Math.ceil(totalAuctions / limitNum);
+
+    const auctions = await Auction.find(query)
+      .sort(sortOption)
+      .skip(skip)
+      .limit(limitNum)
+      .populate("seller", "username avatar rating")
+      .lean();
+
+    // Prepare response
+    const response = {
+      auctions,
+      pagination: {
+        currentPage: pageNum,
+        totalPages,
+        totalAuctions,
+        hasNextPage: pageNum < totalPages,
+        hasPrevPage: pageNum > 1,
+      },
+    };
+
+    reply.send(response);
+  } catch (error) {
+    console.error("Error in searchAuctions:", error);
+    if (error instanceof Error) {
+      reply
+        .status(500)
+        .send({ error: `Internal Server Error: ${error.message}` });
+    } else {
+      reply.status(500).send({ error: "An unexpected error occurred" });
+    }
+  }
+};
 // export const watchAuction = async (
 //   request: FastifyRequest,
 //   reply: FastifyReply

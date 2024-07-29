@@ -133,11 +133,13 @@ export default function CreateAuctionPage() {
   ];
   return (
     <div className="min-h-screen py-4 px-4 ">
-      <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-extrabold mb-8 text-center">
-          Create Your Exclusive Auction
-        </h1>
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-8">
+      <div className="mb-2 bg-gray-800/60 p-4 rounded-xl">
+        <div className="flex justify-between items-center ">
+          <h2 className="text-xl font-bold">Create Your Exclusive Auction</h2>
+        </div>
+      </div>
+      <div className="bg-gradient-to-t from-transparent to-gray-600/30 p-4 rounded-xl min-h-[calc(100vh-10rem)]">
+        <form onSubmit={handleSubmit(onSubmit)} className="space-y-2">
           <Card>
             <CardHeader>
               <CardTitle>Auction Details</CardTitle>
@@ -441,9 +443,10 @@ export default function CreateAuctionPage() {
 
           <div className="flex justify-end">
             <Button
+              variant={"secondary"}
               type="submit"
               size="lg"
-              className="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-lg shadow-md hover:shadow-lg transition-all duration-300"
+              className="mt-6 w-full bg-purple-600/40"
             >
               Create Auction
             </Button>
