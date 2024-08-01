@@ -23,6 +23,10 @@ export interface IAuction extends Document {
     organization: string;
     percentage: number;
   };
+  ownerControls: {
+    isChatOpen: boolean;
+    canEndEarly: boolean;
+  };
 }
 
 const AuctionSchema: Schema = new Schema(
@@ -51,6 +55,10 @@ const AuctionSchema: Schema = new Schema(
     charity: {
       organization: String,
       percentage: Number,
+    },
+    ownerControls: {
+      isChatOpen: { type: Boolean, default: true },
+      canEndEarly: { type: Boolean, default: false },
     },
   },
   {

@@ -6,6 +6,7 @@ import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
+import { socketHandler } from "../websocket/socketHandler";
 
 const UPLOAD_DIR = path.join(__dirname, "../uploads");
 
@@ -280,6 +281,7 @@ export const getAuction = async (
     reply.status(500).send({ error: "Error fetching auction" });
   }
 };
+
 interface SearchQuery {
   q?: string;
   category?: string;
@@ -406,36 +408,84 @@ export const searchAuctions = async (
     }
   }
 };
-// export const watchAuction = async (
-//   request: FastifyRequest,
-//   reply: FastifyReply
-// ) => {
-//   const { id } = request.params as { id: string };
-//   const userId = request.user!._id;
 
-//   try {
-//     const auction = await Auction.findById(id);
-//     if (!auction) {
-//       return reply.status(404).send({ error: "Auction not found" });
-//     }
+export const updateOwnerControls = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const { auctionId } = request.params as { auctionId: string };
+  const { isChatOpen, canEndEarly } = request.body as {
+    isChatOpen?: boolean;
+    canEndEarly?: boolean;
+  };
+  const userId = request.user!._id;
 
-//     const userIdString = userId.toString();
-//     const index = auction.watchedBy.findIndex(
-//       (id) => id.toString() === userIdString
-//     );
+  try {
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+      return reply.status(404).send({ error: "Auction not found" });
+    }
 
-//     if (index !== -1) {
-//       auction.watchedBy.splice(index, 1);
-//     } else {
-//       auction.watchedBy.push(userId);
-//     }
+    if (auction.seller.toString() !== userId.toString()) {
+      return reply
+        .status(403)
+        .send({ error: "Not authorized to update this auction" });
+    }
 
-//     await auction.save();
-//     reply.send({ message: "Watch status updated successfully" });
-//   } catch (error) {
-//     reply.status(500).send({ error: "Error updating watch status" });
-//   }
-// };
-// };
+    if (isChatOpen !== undefined) {
+      auction.ownerControls.isChatOpen = isChatOpen;
+    }
+    if (canEndEarly !== undefined) {
+      auction.ownerControls.canEndEarly = canEndEarly;
+    }
 
-// };
+    await auction.save();
+
+    // Emit real-time update
+    socketHandler.emitOwnerControlsUpdate(auctionId, {
+      isChatOpen: auction.ownerControls.isChatOpen,
+      canEndEarly: auction.ownerControls.canEndEarly,
+    });
+
+    reply.send({ message: "Owner controls updated successfully", auction });
+  } catch (error) {
+    reply.status(500).send({ error: "Error updating owner controls" });
+  }
+};
+
+export const endAuctionEarly = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const { id: auctionId } = request.params as { id: string };
+  const userId = request.user!._id;
+
+  try {
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+      return reply.status(404).send({ error: "Auction not found" });
+    }
+
+    if (auction.seller.toString() !== userId.toString()) {
+      return reply
+        .status(403)
+        .send({ error: "Not authorized to end this auction" });
+    }
+
+    if (!auction.ownerControls.canEndEarly) {
+      return reply
+        .status(400)
+        .send({ error: "Early ending is not allowed for this auction" });
+    }
+
+    auction.status = "ended";
+    auction.endTime = new Date();
+    await auction.save();
+    // Emit real-time update
+    socketHandler.emitAuctionEnded(auction._id.toString());
+
+    reply.send({ message: "Auction ended successfully", auction });
+  } catch (error) {
+    reply.status(500).send({ error: "Error ending auction early" });
+  }
+};

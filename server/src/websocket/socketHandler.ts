@@ -25,4 +25,10 @@ export const socketHandler = {
   emitChatMessage: (auctionId: string, messageData: any) => {
     io?.to(auctionId).emit("new message", messageData);
   },
+  emitOwnerControlsUpdate: (auctionId: string, controlsData: any) => {
+    io?.to(auctionId).emit("owner controls update", controlsData);
+  },
+  emitAuctionEnded: (auctionId: string) => {
+    io?.to(auctionId).emit("auction ended");
+  },
 };

@@ -19,10 +19,24 @@ export interface Auction {
   isPrivate: boolean;
   invitedUsers: string[];
   status: string;
-  bids: any[]; // You might want to define a more specific type for bids
+  bids: {
+    _id: string;
+    bidder: {
+      username: string;
+      customizations?: {
+        avatar?: string;
+      };
+    };
+    amount: number;
+    timestamp: string;
+  }[];
   watchedBy: string[];
   createdAt: string;
   updatedAt: string;
+  ownerControls: {
+    isChatOpen: boolean;
+    canEndEarly: boolean;
+  };
 }
 
 export const getAuction = async (id: string): Promise<Auction> => {

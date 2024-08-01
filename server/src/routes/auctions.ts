@@ -22,5 +22,14 @@ export default async function auctionRoutes(fastify: FastifyInstance) {
   fastify.get("/:id", auctionController.getAuction);
   fastify.get("/discovery", auctionController.getDiscoveryAuctions);
 
-  fastify.get("/search", auctionController.searchAuctions);
+  fastify.put(
+    "/:auctionId/owner-controls",
+    { preHandler: authenticate },
+    auctionController.updateOwnerControls
+  );
+  fastify.post(
+    "/:auctionId/end-early",
+    { preHandler: authenticate },
+    auctionController.endAuctionEarly
+  );
 }
