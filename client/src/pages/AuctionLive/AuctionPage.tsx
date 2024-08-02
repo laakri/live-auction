@@ -36,9 +36,7 @@ const AuctionPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
   const [auction, setAuction] = useState<Auction | null>(null);
   const [loading, setLoading] = useState(true);
-  const [isChatOpen, setIsChatOpen] = useState(
-    auction?.ownerControls?.isChatOpen ?? false
-  );
+  const [isChatOpen, setIsChatOpen] = useState(true);
   const [isPlaceBidOpen, setIsPlaceBidOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
@@ -165,7 +163,7 @@ const AuctionPage: React.FC = () => {
   return (
     <div
       className={`mx-auto transition-all duration-300 ease-in-out ${
-        isChatOpen ? "pr-96" : ""
+        isChatOpen && auction.ownerControls?.isChatOpen ? "pr-96" : ""
       }`}
     >
       <div className="flex flex-col mt-4 transition-all duration-300 ease-in-out">
