@@ -334,7 +334,7 @@ const ChatWidget: React.FC<ChatWidgetProps> = ({
                 <ChatMessage
                   key={item._id}
                   message={item}
-                  isCurrentUser={item.sender._id === user?.id}
+                  isCurrentUser={item.sender._id === user?._id}
                 />
               )
             )

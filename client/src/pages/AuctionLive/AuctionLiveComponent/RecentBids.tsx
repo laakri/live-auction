@@ -36,8 +36,11 @@ const RecentBids: React.FC<RecentBidsProps> = ({ bids }) => {
     setVisibleBids((prevVisible) => prevVisible + 5);
   };
 
+  // Generate a key based on the latest bid's timestamp
+  const latestBidKey = bids.length > 0 ? bids[0].timestamp : "no-bids";
+
   return (
-    <Card className="mb-4">
+    <Card className="mb-4" key={latestBidKey}>
       <CardHeader>
         <CardTitle>Recent Bids</CardTitle>
       </CardHeader>

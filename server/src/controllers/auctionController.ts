@@ -34,7 +34,6 @@ export const createAuction = async (
   reply: FastifyReply
 ) => {
   const userId = request.user!._id;
-  console.log(request.user);
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -62,11 +61,19 @@ export const createAuction = async (
       }
     }
 
+    // Parse dates
+    auctionData.startTime = new Date(auctionData.startTime);
+    auctionData.endTime = new Date(auctionData.endTime);
+
     const auction = new Auction({
       ...auctionData,
       seller: userId,
       currentPrice: auctionData.startingPrice,
       images,
+      ownerControls: {
+        isChatOpen: auctionData.isChatOpen === "true",
+        canEndEarly: auctionData.allowEarlyEnd === "true",
+      },
     });
 
     await auction.save();
@@ -75,6 +82,7 @@ export const createAuction = async (
 
     reply.status(201).send(auction);
   } catch (error) {
+    console.error("Error creating auction:", error);
     reply.status(500).send({ error: "Error creating auction" });
   }
 };
