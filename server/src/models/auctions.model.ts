@@ -18,7 +18,6 @@ export interface IAuction extends Document {
   invitedUsers?: Schema.Types.ObjectId[];
   status: "upcoming" | "active" | "ended";
   bids: Schema.Types.ObjectId[];
-  watchedBy: Schema.Types.ObjectId[];
   charity?: {
     organization: string;
     percentage: number;
@@ -27,6 +26,8 @@ export interface IAuction extends Document {
     isChatOpen: boolean;
     canEndEarly: boolean;
   };
+  currentViewers: number;
+  totalUniqueViewers: number;
 }
 
 const AuctionSchema: Schema = new Schema(
@@ -45,11 +46,6 @@ const AuctionSchema: Schema = new Schema(
     images: [String],
     isPrivate: { type: Boolean, default: false },
     invitedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    status: {
-      type: String,
-      enum: ["upcoming", "active", "ended"],
-      default: "upcoming",
-    },
     bids: [{ type: Schema.Types.ObjectId, ref: "Bid" }],
     watchedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     charity: {
@@ -60,6 +56,8 @@ const AuctionSchema: Schema = new Schema(
       isChatOpen: { type: Boolean, default: true },
       canEndEarly: { type: Boolean, default: false },
     },
+    currentViewers: { type: Number, default: 0 },
+    totalUniqueViewers: { type: Number, default: 0 },
   },
   {
     timestamps: true,

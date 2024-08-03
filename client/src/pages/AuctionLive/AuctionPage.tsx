@@ -31,6 +31,15 @@ import AnimatedBidButton from "../../components/AnimatedBidButton";
 import { useToast } from "../../components/ui/use-toast";
 import { useAuth } from "../../hooks/useAuth";
 import OwnerControls from "./AuctionLiveComponent/OwnerControls";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "../../components/ui/dialog";
+import { Settings } from "lucide-react";
+import LiveViewerCount from "./LiveViewerCount";
 
 const AuctionPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -41,6 +50,7 @@ const AuctionPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const { user } = useAuth();
+  const [isOwnerControlsOpen, setIsOwnerControlsOpen] = useState(false);
 
   const toggleChat = () => {
     if (auction?.status === "active" && auction.ownerControls.isChatOpen) {
@@ -59,7 +69,6 @@ const AuctionPage: React.FC = () => {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
-        console.log("Fetched auction data:", data); // Log the entire auction data
         setAuction(data);
         setLoading(false);
       } catch (error) {
@@ -155,15 +164,20 @@ const AuctionPage: React.FC = () => {
       </div>
     );
   }
+  const isOwner =
+    !!user?._id && !!auction?.seller?._id && user._id === auction.seller._id;
 
-  const isOwner = user?.id === auction.seller.id;
-  const isActive = auction.status === "active";
-  const isEnded = auction.status === "ended";
+  const now = new Date();
+  const auctionEndDate = new Date(auction.endTime);
+  const isActive = now < auctionEndDate;
+  const isEnded = now >= auctionEndDate;
 
   return (
     <div
       className={`mx-auto transition-all duration-300 ease-in-out ${
-        isChatOpen && auction.ownerControls?.isChatOpen ? "pr-96" : ""
+        isChatOpen && auction.ownerControls?.isChatOpen && !isEnded
+          ? "pr-96"
+          : ""
       }`}
     >
       <div className="flex flex-col mt-4 transition-all duration-300 ease-in-out">
@@ -250,8 +264,9 @@ const AuctionPage: React.FC = () => {
                   </div>
                 </div>
               </div>
-              <div className="absolute top-2 right-2">
+              <div className="absolute top-2 right-2 flex space-x-2">
                 <WatchersCard watchers={auction.watchedBy.length} />
+                <LiveViewerCount auctionId={id!} />
               </div>
             </div>
             <div className="flex flex-col gap-6 mb-6">
@@ -265,6 +280,24 @@ const AuctionPage: React.FC = () => {
                     <Button variant="outline" size="sm">
                       <Heart className="mr-2 h-4 w-4" /> Watch
                     </Button>
+                    {isOwner && (
+                      <Dialog
+                        open={isOwnerControlsOpen}
+                        onOpenChange={setIsOwnerControlsOpen}
+                      >
+                        <DialogTrigger asChild>
+                          <Button variant="outline" size="sm">
+                            <Settings className="mr-2 h-4 w-4" /> Owner Controls
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-[425px]">
+                          <DialogHeader>
+                            <DialogTitle>Owner Controls</DialogTitle>
+                          </DialogHeader>
+                          <OwnerControls auction={auction} />
+                        </DialogContent>
+                      </Dialog>
+                    )}
                   </div>
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
@@ -311,12 +344,11 @@ const AuctionPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            {isOwner && <OwnerControls auction={auction} />}
+            {auction && auction.bids && <RecentBids bids={auction.bids} />}
+            <RelatedAuctions auctions={[]} />
+            {/* You'll need to fetch related auctions */}
           </CardContent>
         </Card>
-        {auction && auction.bids && <RecentBids bids={auction.bids} />}
-        <RelatedAuctions auctions={[]} />
-        {/* You'll need to fetch related auctions */}
       </div>
       {isActive && auction.ownerControls?.isChatOpen && (
         <ChatWidget
