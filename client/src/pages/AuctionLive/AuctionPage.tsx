@@ -24,7 +24,6 @@ import CountdownTimer from "../../components/CountdownTimer";
 import RecentBids from "./AuctionLiveComponent/RecentBids";
 import RelatedAuctions from "./AuctionLiveComponent/RelatedAuctions";
 import ImageGallery from "./AuctionLiveComponent/ImageGallery";
-import WatchersCard from "./AuctionLiveComponent/WatchersCard";
 import PlaceBidDialog from "./AuctionLiveComponent/PlaceBidDialog";
 import { socketService } from "./socketService";
 import AnimatedBidButton from "../../components/AnimatedBidButton";
@@ -53,7 +52,7 @@ const AuctionPage: React.FC = () => {
   const [isOwnerControlsOpen, setIsOwnerControlsOpen] = useState(false);
 
   const toggleChat = () => {
-    if (auction?.status === "active" && auction.ownerControls.isChatOpen) {
+    if (auction?.ownerControls.isChatOpen) {
       setIsChatOpen(!isChatOpen);
     }
   };
@@ -169,7 +168,6 @@ const AuctionPage: React.FC = () => {
 
   const now = new Date();
   const auctionEndDate = new Date(auction.endTime);
-  const isActive = now < auctionEndDate;
   const isEnded = now >= auctionEndDate;
 
   return (
@@ -209,7 +207,7 @@ const AuctionPage: React.FC = () => {
                       <button className="my-2 bg-gradient-to-r from-pink-500 via-purple-500 to-indigo-500 bg-[length:200%_200%] animate-gradient text-white font-bold py-1 px-2 rounded-lg transform transition-transform duration-300 hover:scale-105 shadow-md hover:shadow-lg focus:outline-none">
                         Follow
                       </button>
-                      {isActive && (
+                      {!isEnded && (
                         <div className="bg-[#24342b] text-[#79fbb8] flex items-center px-2 rounded-lg">
                           <Circle className="h-2 live-pulse" />
                           <span>Auction Live</span>
@@ -223,7 +221,7 @@ const AuctionPage: React.FC = () => {
                       )}
                     </div>
                   </div>
-                  {isActive && (
+                  {!isEnded && (
                     <AnimatedBidButton
                       onClick={() => setIsPlaceBidOpen(true)}
                     />
@@ -247,7 +245,7 @@ const AuctionPage: React.FC = () => {
                     </div>
                     <div className="flex flex-col items-center">
                       <span className="text-xl font-bold">
-                        {isActive ? (
+                        {!isEnded ? (
                           <CountdownTimer
                             endTime={auction.endTime}
                             size="sm"
@@ -258,21 +256,28 @@ const AuctionPage: React.FC = () => {
                         )}
                       </span>
                       <span className="text-sm text-gray-900 dark:text-gray-300">
-                        {isActive ? "Time Left" : "Auction Status"}
+                        {!isEnded ? "Time Left" : "Auction Status"}
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
               <div className="absolute top-2 right-2 flex space-x-2">
-                <WatchersCard watchers={auction.watchedBy.length} />
-                <LiveViewerCount auctionId={id!} />
+                <LiveViewerCount
+                  auctionId={id!}
+                  initialViewers={auction.currentViewers}
+                />
               </div>
             </div>
             <div className="flex flex-col gap-6 mb-6">
               <div className="col-span-2">
                 <div className="flex justify-between items-center">
-                  <h1 className="text-2xl font-bold">{auction.title}</h1>
+                  <div className="flex items-center gap-2">
+                    <h1 className="text-2xl font-bold">{auction.title}</h1>
+                    <Badge variant="secondary">
+                      {auction.totalUniqueViewers} total views
+                    </Badge>
+                  </div>
                   <div className="flex items-center space-x-4">
                     <Button variant="outline" size="sm">
                       <Share2 className="mr-2 h-4 w-4" /> Share
@@ -328,7 +333,9 @@ const AuctionPage: React.FC = () => {
                       <p className="text-sm text-gray-600 dark:text-gray-300">
                         Status
                       </p>
-                      <p className="font-medium">{auction.status}</p>
+                      <p className="font-medium">
+                        {isEnded ? "Ended" : "Active"}
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -344,13 +351,16 @@ const AuctionPage: React.FC = () => {
                 </div>
               </div>
             </div>
-            {auction && auction.bids && <RecentBids bids={auction.bids} />}
-            <RelatedAuctions auctions={[]} />
-            {/* You'll need to fetch related auctions */}
+            <div>
+              {/* ... other auction details ... */}
+              {auction.bids && <RecentBids bids={auction.bids as any[]} />}
+              <RelatedAuctions auctions={[]} />
+              {/* ... rest of the component ... */}
+            </div>
           </CardContent>
         </Card>
       </div>
-      {isActive && auction.ownerControls?.isChatOpen && (
+      {!isEnded && auction.ownerControls?.isChatOpen && (
         <ChatWidget
           isOpen={isChatOpen}
           onToggle={toggleChat}
@@ -367,7 +377,7 @@ const AuctionPage: React.FC = () => {
         auctionId={id!}
       />
 
-      {!isChatOpen && isActive && auction.ownerControls.isChatOpen && (
+      {!isChatOpen && !isEnded && auction.ownerControls.isChatOpen && (
         <Button
           size="icon"
           className="fixed bottom-4 right-4 bg-purple-600 text-white hover:bg-purple-500"

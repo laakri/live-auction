@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { MultipartFile } from "@fastify/multipart";
 import Auction, { IAuction } from "../models/auctions.model";
 import User from "../models/users.model";
+import Bid from "../models/bid.model";
 import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
@@ -269,15 +270,27 @@ export const getAuction = async (
   const { id } = request.params as { id: string };
 
   try {
-    const auction = await Auction.findById(id).populate(
-      "seller",
-      "username customizations"
-    );
+    const auction = await Auction.findById(id)
+      .populate("seller", "username customizations")
+      .lean();
+
     if (!auction) {
       return reply.status(404).send({ error: "Auction not found" });
     }
-    reply.send(auction);
+    // Fetch bids separately
+    const bids = await Bid.find({ auction: id })
+      .populate("bidder", "username customizations")
+      .sort({ timestamp: -1 })
+      .lean();
+    // Attach bids to the auction object
+    const auctionWithBids = {
+      ...auction,
+      bids: bids,
+    };
+
+    reply.send(auctionWithBids);
   } catch (error) {
+    console.error("Error fetching auction:", error);
     reply.status(500).send({ error: "Error fetching auction" });
   }
 };

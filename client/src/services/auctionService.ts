@@ -37,6 +37,8 @@ export interface Auction {
     isChatOpen: boolean;
     canEndEarly: boolean;
   };
+  currentViewers: number;
+  totalUniqueViewers: number;
 }
 
 export const getAuction = async (id: string): Promise<Auction> => {
