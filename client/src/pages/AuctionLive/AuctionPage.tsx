@@ -60,19 +60,30 @@ const AuctionPage: React.FC = () => {
   useEffect(() => {
     const fetchAuction = async () => {
       if (!id) return;
+      setLoading(true);
+      setError(null);
       try {
         const response = await fetch(
-          `http://localhost:3000/api/auctions/${id}`
+          `${import.meta.env.VITE_API_URL}/api/auctions/${id}`
         );
         if (!response.ok) {
+          if (response.status === 404) {
+            throw new Error("Auction not found");
+          }
           throw new Error(`HTTP error! status: ${response.status}`);
         }
         const data = await response.json();
         setAuction(data);
-        setLoading(false);
       } catch (error) {
         console.error("Error fetching auction:", error);
-        setError("Failed to fetch auction data. Please try again later.");
+        if (error instanceof TypeError && error.message === "Failed to fetch") {
+          setError("Network error. Please check your internet connection.");
+        } else if (error instanceof Error) {
+          setError(error.message);
+        } else {
+          setError("An unexpected error occurred. Please try again later.");
+        }
+      } finally {
         setLoading(false);
       }
     };
@@ -156,13 +167,26 @@ const AuctionPage: React.FC = () => {
     );
   }
 
-  if (!auction) {
+  if (error) {
     return (
-      <div className="flex justify-center items-center h-screen">
-        Auction not found
+      <div className="flex flex-col justify-center items-center h-screen">
+        <h2 className="text-2xl font-bold mb-4">Error</h2>
+        <p className="text-red-400 text-center">{error}</p>
+        <Button className="mt-4 " onClick={() => window.location.reload()}>
+          Retry
+        </Button>
       </div>
     );
   }
+
+  if (!auction) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        No auction data available
+      </div>
+    );
+  }
+
   const isOwner =
     !!user?._id && !!auction?.seller?._id && user._id === auction.seller._id;
 
@@ -308,35 +332,33 @@ const AuctionPage: React.FC = () => {
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
                   {auction.description}
                 </p>
-                <div className="bg-secondary/50 rounded-lg p-4 mb-4">
-                  <h3 className="font-semibold mb-2">Key Details</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Starting Price
-                      </p>
-                      <p className="font-medium">${auction.startingPrice}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Increment Amount
-                      </p>
-                      <p className="font-medium">${auction.incrementAmount}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Category
-                      </p>
-                      <p className="font-medium">{auction.category}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">
-                        Status
-                      </p>
-                      <p className="font-medium">
-                        {isEnded ? "Ended" : "Active"}
-                      </p>
-                    </div>
+                <div className="bg-gray-800/50 rounded-lg p-4 mb-4">
+                  <h3 className="text-lg font-semibold mb-4">Key Details</h3>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    {[
+                      {
+                        label: "Starting Price",
+                        value: `$${auction.startingPrice}`,
+                      },
+                      {
+                        label: "Increment Amount",
+                        value: `$${auction.incrementAmount}`,
+                      },
+                      { label: "Category", value: auction.category },
+                      { label: "Status", value: isEnded ? "Ended" : "Active" },
+                    ].map((item, index) => (
+                      <div
+                        key={index}
+                        className="bg-gray-700/50 rounded-md p-3 shadow-sm"
+                      >
+                        <p className="text-sm text-muted-foreground mb-1">
+                          {item.label}
+                        </p>
+                        <p className="font-medium text-foreground">
+                          {item.value}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
                 <div>
