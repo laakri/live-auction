@@ -1,6 +1,6 @@
 // src/pages/AuctionPage.tsx
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { Auction } from "../../services/auctionService";
 import ChatWidget from "./AuctionLiveComponent/ChatWidget";
 import { Button } from "../../components/ui/button";
@@ -19,6 +19,7 @@ import {
   Heart,
   MessageCircle,
   Share2,
+  UserPlus,
 } from "lucide-react";
 import CountdownTimer from "../../components/CountdownTimer";
 import RecentBids from "./AuctionLiveComponent/RecentBids";
@@ -29,6 +30,7 @@ import { socketService } from "./socketService";
 import AnimatedBidButton from "../../components/AnimatedBidButton";
 import { useToast } from "../../components/ui/use-toast";
 import { useAuth } from "../../hooks/useAuth";
+
 import OwnerControls from "./AuctionLiveComponent/OwnerControls";
 import {
   Dialog,
@@ -38,7 +40,8 @@ import {
   DialogTrigger,
 } from "../../components/ui/dialog";
 import { Settings } from "lucide-react";
-import LiveViewerCount from "./LiveViewerCount";
+import LiveViewerCount from "./AuctionLiveComponent/LiveViewerCount";
+import InviteUsersDialog from "./AuctionLiveComponent/InviteUsersDialog";
 
 const AuctionPage: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -48,8 +51,10 @@ const AuctionPage: React.FC = () => {
   const [isPlaceBidOpen, setIsPlaceBidOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, token } = useAuth();
   const [isOwnerControlsOpen, setIsOwnerControlsOpen] = useState(false);
+  const [isInviteUsersOpen, setIsInviteUsersOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleChat = () => {
     if (auction?.ownerControls.isChatOpen) {
@@ -64,22 +69,25 @@ const AuctionPage: React.FC = () => {
       setError(null);
       try {
         const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/auctions/${id}`
+          `${import.meta.env.VITE_API_URL}/api/auctions/${id}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         if (!response.ok) {
-          if (response.status === 404) {
-            throw new Error("Auction not found");
-          }
-          throw new Error(`HTTP error! status: ${response.status}`);
+          const errorData = await response.json();
+          throw new Error(
+            errorData.message || `HTTP error! status: ${response.status}`
+          );
         }
         const data = await response.json();
-        console.log(data);
-        setAuction(data);
+        console.log("Auction data:", data);
+        setAuction(data.auction);
       } catch (error) {
         console.error("Error fetching auction:", error);
-        if (error instanceof TypeError && error.message === "Failed to fetch") {
-          setError("Network error. Please check your internet connection.");
-        } else if (error instanceof Error) {
+        if (error instanceof Error) {
           setError(error.message);
         } else {
           setError("An unexpected error occurred. Please try again later.");
@@ -88,7 +96,6 @@ const AuctionPage: React.FC = () => {
         setLoading(false);
       }
     };
-
     fetchAuction();
 
     socketService.connect("http://localhost:3000");
@@ -157,6 +164,43 @@ const AuctionPage: React.FC = () => {
       }
     } catch (error) {
       console.error("Error submitting bid:", error);
+    }
+  };
+
+  const handleInviteUsers = async (emails: string[]) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auctions/${id}/invite`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("token")}`,
+          },
+          body: JSON.stringify({ emails }),
+        }
+      );
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Failed to invite users");
+      }
+
+      toast({
+        title: "Users Invited",
+        description:
+          "The selected users have been invited to this private auction.",
+      });
+    } catch (error) {
+      console.error("Error inviting users:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to invite users. Please try again.",
+        variant: "destructive",
+      });
     }
   };
 
@@ -328,6 +372,15 @@ const AuctionPage: React.FC = () => {
                         </DialogContent>
                       </Dialog>
                     )}
+                    {isOwner && auction.isPrivate && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsInviteUsersOpen(true)}
+                      >
+                        <UserPlus className="mr-2 h-4 w-4" /> Invite Users
+                      </Button>
+                    )}
                   </div>
                 </div>
                 <p className="text-gray-600 dark:text-gray-300 mb-4">
@@ -409,6 +462,13 @@ const AuctionPage: React.FC = () => {
           <MessageCircle className="h-6 w-6" />
         </Button>
       )}
+
+      <InviteUsersDialog
+        isOpen={isInviteUsersOpen}
+        onClose={() => setIsInviteUsersOpen(false)}
+        onInvite={handleInviteUsers}
+        auctionId={id!}
+      />
     </div>
   );
 };

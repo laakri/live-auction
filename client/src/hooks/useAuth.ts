@@ -1,6 +1,6 @@
 // src/hooks/useAuth.ts
 import { useEffect } from "react";
-import useAuthStore, { User } from "../stores/authStore";
+import useAuthStore from "../stores/authStore";
 import axios from "axios";
 
 export const useAuth = () => {
@@ -24,6 +24,7 @@ export const useAuth = () => {
 
   return {
     user,
+    token,
     isAuthenticated,
     isLoading,
     error,

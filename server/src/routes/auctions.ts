@@ -19,7 +19,11 @@ export default async function auctionRoutes(fastify: FastifyInstance) {
     { preHandler: authenticate },
     auctionController.deleteAuction
   );
-  fastify.get("/:id", auctionController.getAuction);
+  fastify.get(
+    "/:id",
+    { preHandler: authenticate },
+    auctionController.getAuction
+  );
   fastify.get("/discovery", auctionController.getDiscoveryAuctions);
 
   fastify.put(
@@ -31,5 +35,15 @@ export default async function auctionRoutes(fastify: FastifyInstance) {
     "/:auctionId/end-early",
     { preHandler: authenticate },
     auctionController.endAuctionEarly
+  );
+  fastify.post(
+    "/auctions/:id/invite",
+    { preHandler: authenticate },
+    auctionController.inviteUsers
+  );
+  fastify.delete(
+    "/auctions/:id/invite/:userId",
+    { preHandler: authenticate },
+    auctionController.removeInvitedUser
   );
 }

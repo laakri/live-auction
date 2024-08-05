@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { Eye } from "lucide-react";
-import { socketService } from "./socketService";
-import { Button } from "../../components/ui/button";
+import { socketService } from "../socketService";
+import { Button } from "../../../components/ui/button";
 
 interface LiveViewerCountProps {
   auctionId: string;

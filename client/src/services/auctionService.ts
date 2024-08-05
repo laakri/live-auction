@@ -1,5 +1,6 @@
 // src/services/auctionService.ts
 import axios from "axios";
+import { useAuth } from "../hooks/useAuth";
 
 const API_URL = "http://localhost:3000/api";
 
@@ -40,8 +41,3 @@ export interface Auction {
   currentViewers: number;
   totalUniqueViewers: number;
 }
-
-export const getAuction = async (id: string): Promise<Auction> => {
-  const response = await axios.get(`${API_URL}/auctions/${id}`);
-  return response.data;
-};

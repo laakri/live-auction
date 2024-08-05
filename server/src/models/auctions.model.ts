@@ -1,4 +1,4 @@
-import mongoose, { Document, ObjectId, Schema } from "mongoose";
+import mongoose, { Document, ObjectId, Schema, Types } from "mongoose";
 
 export interface IAuction extends Document {
   _id: ObjectId;
@@ -9,7 +9,10 @@ export interface IAuction extends Document {
   incrementAmount: number;
   startTime: Date;
   endTime: Date;
-  seller: Schema.Types.ObjectId;
+  seller: {
+    _id: Types.ObjectId | string;
+    username: string;
+  };
   winner?: Schema.Types.ObjectId;
   category: string;
   tags: string[];

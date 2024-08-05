@@ -8,6 +8,7 @@ import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
 import { socketHandler } from "../websocket/socketHandler";
+import { ObjectId } from "mongoose";
 
 const UPLOAD_DIR = path.join(__dirname, "../uploads");
 
@@ -276,6 +277,7 @@ export const getAuction = async (
   reply: FastifyReply
 ) => {
   const { id } = request.params as { id: string };
+  const userId = request.user?._id;
 
   try {
     const auction = await Auction.findById(id)
@@ -283,23 +285,76 @@ export const getAuction = async (
       .lean();
 
     if (!auction) {
-      return reply.status(404).send({ error: "Auction not found" });
+      return reply.status(404).send({
+        error: "Auction not found",
+        message: "The requested auction does not exist or has been removed.",
+      });
     }
+
     // Fetch bids separately
     const bids = await Bid.find({ auction: id })
       .populate("bidder", "username customizations")
       .sort({ timestamp: -1 })
       .lean();
-    // Attach bids to the auction object
-    const auctionWithBids = {
-      ...auction,
-      bids: bids,
-    };
 
-    reply.send(auctionWithBids);
+    // Check if the user is the owner of the auction
+    const isOwner =
+      userId && auction.seller._id.toString() === userId.toString();
+
+    // If the user is the owner, allow access regardless of privacy settings
+    if (isOwner) {
+      return reply.send({
+        auction: { ...auction, bids },
+        message: "You are viewing your own auction.",
+      });
+    }
+
+    // Handle private auction access for non-owners
+    if (auction.isPrivate) {
+      if (!userId) {
+        return reply.status(401).send({
+          error: "Authentication required",
+          message: "This is a private auction. Please log in to view it.",
+        });
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return reply.status(401).send({
+          error: "User not found",
+          message:
+            "Your user account could not be verified. Please log in again.",
+        });
+      }
+
+      const isInvited =
+        auction.invitedUsers?.some(
+          (invitedUser) => invitedUser.toString() === userId.toString()
+        ) || false;
+
+      if (!isInvited) {
+        return reply.status(403).send({
+          error: "Access denied",
+          message:
+            "This is a private auction, and you have not been invited to participate.",
+        });
+      }
+    }
+
+    // If we've reached this point, the user has access to the auction
+    reply.send({
+      auction: { ...auction, bids },
+      message: auction.isPrivate
+        ? "You are viewing a private auction."
+        : "You are viewing a public auction.",
+    });
   } catch (error) {
     console.error("Error fetching auction:", error);
-    reply.status(500).send({ error: "Error fetching auction" });
+    reply.status(500).send({
+      error: "Internal server error",
+      message:
+        "An unexpected error occurred while fetching the auction details. Please try again later.",
+    });
   }
 };
 
@@ -508,5 +563,87 @@ export const endAuctionEarly = async (
     reply.send({ message: "Auction ended successfully", auction });
   } catch (error) {
     reply.status(500).send({ error: "Error ending auction early" });
+  }
+};
+export const inviteUsers = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const { id } = request.params as { id: string };
+  const { emails } = request.body as { emails: string[] };
+  const userId = request.user?._id;
+
+  if (!userId) {
+    return reply.status(401).send({ error: "Unauthorized" });
+  }
+
+  try {
+    const auction = await Auction.findById(id);
+    if (!auction) {
+      return reply.status(404).send({ error: "Auction not found" });
+    }
+
+    if (auction.seller.toString() !== userId.toString()) {
+      return reply
+        .status(403)
+        .send({ error: "Not authorized to invite users to this auction" });
+    }
+
+    const users = await User.find({ email: { $in: emails } });
+    const newInvitedUsers = users.map((user) => user._id);
+
+    auction.invitedUsers = auction.invitedUsers || [];
+    auction.invitedUsers = [
+      ...new Set([...auction.invitedUsers, ...newInvitedUsers]),
+    ] as ObjectId[];
+    await auction.save();
+
+    reply.send({
+      message: "Users invited successfully",
+      invitedUsers: auction.invitedUsers,
+    });
+  } catch (error) {
+    reply.status(500).send({ error: "Error inviting users" });
+  }
+};
+
+export const removeInvitedUser = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const { id, userId: userIdToRemove } = request.params as {
+    id: string;
+    userId: string;
+  };
+  const userId = request.user?._id;
+
+  if (!userId) {
+    return reply.status(401).send({ error: "Unauthorized" });
+  }
+
+  try {
+    const auction = await Auction.findById(id);
+    if (!auction) {
+      return reply.status(404).send({ error: "Auction not found" });
+    }
+
+    if (auction.seller.toString() !== userId.toString()) {
+      return reply
+        .status(403)
+        .send({ error: "Not authorized to remove users from this auction" });
+    }
+
+    auction.invitedUsers = auction.invitedUsers || [];
+    auction.invitedUsers = auction.invitedUsers.filter(
+      (invitedUser) => invitedUser.toString() !== userIdToRemove
+    );
+    await auction.save();
+
+    reply.send({
+      message: "User removed successfully",
+      invitedUsers: auction.invitedUsers,
+    });
+  } catch (error) {
+    reply.status(500).send({ error: "Error removing user" });
   }
 };
