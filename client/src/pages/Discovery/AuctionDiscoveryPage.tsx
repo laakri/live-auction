@@ -1,12 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { AnimatePresence, motion } from "framer-motion";
-import { Card, CardContent } from "../../components/ui/card";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "../../components/ui/avatar";
-import { Badge } from "../../components/ui/badge";
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import {
@@ -23,20 +20,12 @@ import {
   CarouselPrevious,
 } from "../../components/ui/carousel";
 import CountdownTimer from "../../components/CountdownTimer";
-import {
-  Search,
-  Filter,
-  Box,
-  Flame,
-  Clock,
-  Zap,
-  Trophy,
-  Heart,
-  Eye,
-} from "lucide-react";
+import { Search, Flame, Clock, Zap, Eye } from "lucide-react";
 import ThreeDAuctionView from "./ThreeDAuctionViewProps";
 import { Auction, getDiscoveryAuctions } from "../../services/auctionService";
 import { Link } from "react-router-dom";
+import { Skeleton } from "../../components/ui/skeleton";
+import { motion } from "framer-motion";
 
 const AuctionDiscoveryPage: React.FC = () => {
   const [featuredAuctions, setFeaturedAuctions] = useState<Auction[]>([]);
@@ -75,9 +64,7 @@ const AuctionDiscoveryPage: React.FC = () => {
   };
 
   if (isLoading) {
-    return (
-      <div className="text-center text-white text-2xl mt-8">Loading...</div>
-    );
+    return <SkeletonLoader />;
   }
 
   if (error) {
@@ -110,7 +97,10 @@ const AuctionDiscoveryPage: React.FC = () => {
             Search
           </Button>
           <Button
-            onClick={() => setShowThreeDView(!showThreeDView)}
+            onClick={() => {
+              console.log("3D View button clicked");
+              setShowThreeDView(!showThreeDView);
+            }}
             className="bg-blue-600 hover:bg-blue-700"
           >
             {showThreeDView ? "2D View" : "3D View"}
@@ -323,6 +313,88 @@ const AuctionCarousel = ({
         <CarouselPrevious />
         <CarouselNext />
       </Carousel>
+    </section>
+  );
+};
+
+const SkeletonLoader = () => {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="flex justify-between items-center mb-8">
+        <Skeleton className="h-10 w-48" />
+        <div className="flex space-x-4">
+          <Skeleton className="h-10 w-64" />
+          <Skeleton className="h-10 w-24" />
+          <Skeleton className="h-10 w-24" />
+        </div>
+      </div>
+
+      <section className="mb-12">
+        <Skeleton className="h-8 w-48 mb-4" />
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[...Array(4)].map((_, index) => (
+            <SkeletonAuctionCard key={index} />
+          ))}
+        </div>
+      </section>
+
+      {[...Array(3)].map((_, index) => (
+        <SkeletonCarousel key={index} />
+      ))}
+
+      <section className="mb-12">
+        <Skeleton className="h-8 w-48 mb-4" />
+        <div className="flex space-x-2 mb-4">
+          {[...Array(5)].map((_, index) => (
+            <Skeleton key={index} className="h-10 w-24" />
+          ))}
+        </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          {[...Array(8)].map((_, index) => (
+            <SkeletonAuctionCard key={index} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+
+const SkeletonAuctionCard = () => {
+  return (
+    <div className="bg-gray-900 rounded-lg overflow-hidden shadow-md">
+      <Skeleton className="w-full h-40" />
+      <div className="p-3">
+        <Skeleton className="h-4 w-3/4 mb-2" />
+        <div className="flex items-center space-x-2 mb-2">
+          <Skeleton className="w-4 h-4 rounded-full" />
+          <Skeleton className="h-3 w-24" />
+        </div>
+        <div className="flex justify-between items-center">
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-3 w-16" />
+        </div>
+      </div>
+      <div className="px-3 pb-3">
+        <Skeleton className="h-8 w-full rounded-md" />
+      </div>
+    </div>
+  );
+};
+
+const SkeletonCarousel = () => {
+  return (
+    <section className="mb-12">
+      <div className="flex items-center mb-4">
+        <Skeleton className="w-6 h-6 mr-2" />
+        <Skeleton className="h-8 w-48" />
+      </div>
+      <div className="flex space-x-4 overflow-x-auto">
+        {[...Array(5)].map((_, index) => (
+          <div key={index} className="flex-shrink-0 w-64">
+            <SkeletonAuctionCard />
+          </div>
+        ))}
+      </div>
     </section>
   );
 };

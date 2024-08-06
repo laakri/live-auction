@@ -91,6 +91,8 @@ const ThreeDAuctionView: React.FC<ThreeDAuctionViewProps> = ({
 
     // Add auction cards to the 3D scene
     auctions.forEach((auction, index) => {
+      if (!auction) return; // Skip if auction is undefined
+
       const element = document.createElement("div");
       element.className = "auction-card";
       element.style.width = "200px";
