@@ -40,4 +40,19 @@ export interface Auction {
   };
   currentViewers: number;
   totalUniqueViewers: number;
+  watchersCount?: number;
+  image?: string;
+  timeLeft?: {
+    value?: string;
+  };
 }
+
+export const getDiscoveryAuctions = async (): Promise<{
+  featuredAuctions: Auction[];
+  trendingAuctions: Auction[];
+  endingSoonAuctions: Auction[];
+  newAuctions: Auction[];
+}> => {
+  const response = await axios.get(`${API_URL}/auctions/discovery`);
+  return response.data;
+};

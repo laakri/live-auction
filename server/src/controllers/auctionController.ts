@@ -93,79 +93,91 @@ export const getDiscoveryAuctions = async (
   reply: FastifyReply
 ) => {
   try {
-    const {
-      search,
-      category,
-      sort,
-      page = 1,
-      limit = 12,
-    } = request.query as {
-      search?: string;
-      category?: string;
-      sort?: string;
-      page?: number;
-      limit?: number;
+    const now = new Date();
+
+    // Common projection for all queries
+    const auctionProjection = {
+      title: 1,
+      images: { $slice: 1 }, // Only the first image
+      currentPrice: 1,
+      startTime: 1,
+      endTime: 1,
+      watchedBy: 1,
+      seller: 1,
+      category: 1,
     };
 
-    const query: any = {};
+    // Helper function to fetch auctions
+    const fetchAuctions = async (query: any, sort: any, limit: number) => {
+      const results = await Auction.find({
+        ...query,
+        startTime: { $lte: now },
+        endTime: { $gt: now },
+      })
+        .select(auctionProjection)
+        .sort(sort)
+        .limit(limit)
+        .populate("seller", "username customizations.avatar")
+        .lean();
 
-    // Search functionality
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ];
-    }
+      console.log(
+        `Query: ${JSON.stringify(query)}, Results: ${results.length}`
+      );
+      return results;
+    };
 
-    // Category filter
-    if (category) {
-      query.category = category;
-    }
-
-    // Sorting
-    let sortOption: any = { createdAt: -1 }; // Default sort by newest
-    if (sort === "price_asc") sortOption = { currentPrice: 1 };
-    if (sort === "price_desc") sortOption = { currentPrice: -1 };
-    if (sort === "ending_soon") sortOption = { endTime: 1 };
-
-    const totalAuctions = await Auction.countDocuments(query);
-    const totalPages = Math.ceil(totalAuctions / limit);
-
-    const auctions = await Auction.find(query)
-      .sort(sortOption)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate("seller", "username avatar rating")
-      .lean();
-
-    // Get trending auctions (most watched)
-    const trendingAuctions = await Auction.find({
-      endTime: { $gt: new Date() },
-    })
-      .sort({ "watchedBy.length": -1 })
-      .limit(6)
-      .populate("seller", "username avatar rating")
-      .lean();
-
-    // Get upcoming auctions
-    const upcomingAuctions = await Auction.find({
-      startTime: { $gt: new Date() },
-    })
-      .sort({ startTime: 1 })
-      .limit(3)
-      .populate("seller", "username avatar rating")
-      .lean();
-
-    reply.send({
-      auctions,
+    // Fetch auctions for different sections
+    const [
+      featuredAuctions,
       trendingAuctions,
-      upcomingAuctions,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalAuctions,
+      endingSoonAuctions,
+      newAuctions,
+    ] = await Promise.all([
+      fetchAuctions({}, { currentPrice: -1 }, 4),
+      fetchAuctions({}, { "watchedBy.length": -1 }, 10),
+      fetchAuctions({}, { endTime: 1 }, 10),
+      fetchAuctions({}, { startTime: -1 }, 10),
+    ]);
+
+    // Fetch a sample of auctions for each category
+    const categories = ["Art", "Electronics", "Fashion", "Jewelry"];
+    const categorySamples = await Promise.all(
+      categories.map(async (category) => {
+        const auctions = await fetchAuctions({ category }, {}, 8);
+        return { category, auctions };
+      })
+    );
+
+    // Process auctions to include only necessary information
+    const processAuction = (auction: any) => ({
+      _id: auction._id,
+      title: auction.title,
+      image: auction.images[0],
+      currentPrice: auction.currentPrice,
+      timeLeft:
+        auction.startTime > now
+          ? { type: "starts", value: auction.startTime }
+          : { type: "ends", value: auction.endTime },
+      watchersCount: auction.watchedBy?.length || 0,
+      seller: {
+        username: auction.seller.username,
+        avatar: auction.seller.customizations?.avatar,
       },
     });
+
+    // Prepare response with processed auctions
+    const response = {
+      featuredAuctions: featuredAuctions.map(processAuction),
+      trendingAuctions: trendingAuctions.map(processAuction),
+      endingSoonAuctions: endingSoonAuctions.map(processAuction),
+      newAuctions: newAuctions.map(processAuction),
+      categorySamples: categorySamples.map((category) => ({
+        category: category.category,
+        auctions: category.auctions.map(processAuction),
+      })),
+    };
+
+    reply.send(response);
   } catch (error) {
     console.error("Error fetching discovery auctions:", error);
     reply.status(500).send({ error: "Error fetching auctions" });
