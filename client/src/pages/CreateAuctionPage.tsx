@@ -26,6 +26,7 @@ import { DatePicker } from "../components/ui/date-picker";
 import axios from "axios";
 import useAuthStore from "../stores/authStore";
 import { useToast } from "../components/ui/use-toast";
+import { format } from "date-fns";
 
 interface AuctionFormData {
   title: string;
@@ -33,11 +34,17 @@ interface AuctionFormData {
   startingPrice: number;
   currentPrice: number;
   incrementAmount: number;
+  startDate: Date;
   startTime: Date;
+  endDate: Date;
   endTime: Date;
+  durationType: "custom" | "hours" | "days";
+  durationValue: number;
   category: string;
   tags: string;
   isPrivate: boolean;
+  isChatOpen: boolean;
+  allowEarlyEnd: boolean;
   charity?: {
     organization: string;
     percentage: number;
@@ -50,6 +57,14 @@ export default function CreateAuctionPage() {
       startingPrice: 0,
       incrementAmount: 0,
       isPrivate: false,
+      isChatOpen: true,
+      allowEarlyEnd: false,
+      startDate: new Date(),
+      startTime: new Date(),
+      endDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+      endTime: new Date(),
+      durationType: "hours",
+      durationValue: 24,
       charity: {
         organization: "",
         percentage: 0,
@@ -58,33 +73,67 @@ export default function CreateAuctionPage() {
   });
   const [images, setImages] = useState<File[]>([]);
   const charityPercentage = watch("charity.percentage");
+  const durationType = watch("durationType");
   const { token } = useAuthStore();
   const { toast } = useToast();
 
   const onSubmit = async (data: AuctionFormData) => {
     try {
       const formData = new FormData();
-      const currentPrice = data.startingPrice;
+
+      // Calculate start and end times
+      const startDateTime = new Date(data.startDate);
+      startDateTime.setHours(
+        data.startTime.getHours(),
+        data.startTime.getMinutes()
+      );
+
+      let endDateTime;
+      if (data.durationType === "custom") {
+        endDateTime = new Date(data.endDate);
+        endDateTime.setHours(
+          data.endTime.getHours(),
+          data.endTime.getMinutes()
+        );
+      } else {
+        endDateTime = new Date(startDateTime.getTime());
+        if (data.durationType === "hours") {
+          endDateTime.setHours(endDateTime.getHours() + data.durationValue);
+        } else if (data.durationType === "days") {
+          endDateTime.setDate(endDateTime.getDate() + data.durationValue);
+        }
+      }
+
       // Append auction data
       Object.entries(data).forEach(([key, value]) => {
-        if (key === "charity") {
+        if (
+          key === "startDate" ||
+          key === "endDate" ||
+          key === "startTime" ||
+          key === "endTime"
+        ) {
+          // Skip these as we're using calculated startDateTime and endDateTime
+        } else if (key === "charity") {
           formData.append(key, JSON.stringify(value));
         } else if (key === "tags") {
           formData.append(
             key,
             JSON.stringify(value.split(",").map((tag: string) => tag.trim()))
           );
-        } else if (value instanceof Date) {
-          formData.append(key, value.toISOString());
         } else {
           formData.append(key, value.toString());
         }
       });
 
+      formData.append("startTime", startDateTime.toISOString());
+      formData.append("endTime", endDateTime.toISOString());
+
       // Append images
       images.forEach((image) => {
         formData.append(`images`, image);
       });
+
+      formData.append("currentPrice", data.startingPrice.toString());
 
       const response = await axios.post(
         "http://localhost:3000/api/auctions/",
@@ -92,16 +141,14 @@ export default function CreateAuctionPage() {
         {
           headers: {
             Authorization: `Bearer ${token}`,
-
             "Content-Type": "multipart/form-data",
           },
         }
       );
-      formData.append("currentPrice", currentPrice.toString());
       console.log("Auction created:", response.data);
       toast({
         title: "Success",
-        description: "Auction created:",
+        description: "Auction created successfully",
       });
       // router.push(`/auctions/${response.data._id}`);
     } catch (error) {
@@ -121,6 +168,7 @@ export default function CreateAuctionPage() {
       }
     }
   };
+
   const categories = [
     { name: "Art", icon: "🎨" },
     { name: "Collectibles", icon: "🏺" },
@@ -131,6 +179,7 @@ export default function CreateAuctionPage() {
     { name: "Sports", icon: "⚽" },
     { name: "Vehicles", icon: "🚗" },
   ];
+
   return (
     <div className="min-h-screen py-4 px-4 ">
       <div className="mb-2 bg-gray-800/60 p-4 rounded-xl">
@@ -257,18 +306,45 @@ export default function CreateAuctionPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
-                  <Label>Start Time</Label>
+              <div className="space-y-2">
+                <Label>Start Time</Label>
+                <div className="grid grid-cols-2 gap-4">
+                  <Controller
+                    name="startDate"
+                    control={control}
+                    rules={{ required: "Start date is required" }}
+                    render={({ field, fieldState: { error } }) => (
+                      <>
+                        <DatePicker
+                          value={field.value}
+                          onChange={(date) => field.onChange(date)}
+                        />
+                        {error && (
+                          <p className="text-red-500 text-sm">
+                            {error.message}
+                          </p>
+                        )}
+                      </>
+                    )}
+                  />
                   <Controller
                     name="startTime"
                     control={control}
                     rules={{ required: "Start time is required" }}
                     render={({ field, fieldState: { error } }) => (
                       <>
-                        <DatePicker
-                          value={field.value}
-                          onChange={(date) => field.onChange(date)}
+                        <Input
+                          type="time"
+                          value={format(field.value, "HH:mm")}
+                          onChange={(e) => {
+                            const [hours, minutes] = e.target.value
+                              .split(":")
+                              .map(Number);
+                            const newDate = new Date(field.value);
+                            newDate.setHours(hours);
+                            newDate.setMinutes(minutes);
+                            field.onChange(newDate);
+                          }}
                         />
                         {error && (
                           <p className="text-red-500 text-sm">
@@ -279,17 +355,39 @@ export default function CreateAuctionPage() {
                     )}
                   />
                 </div>
-                <div className="space-y-2">
-                  <Label>End Time</Label>
+              </div>
+              <div className="space-y-2">
+                <Label>Duration</Label>
+                <Controller
+                  name="durationType"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      onValueChange={field.onChange}
+                      defaultValue={field.value}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select duration type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="hours">Hours</SelectItem>
+                        <SelectItem value="days">Days</SelectItem>
+                        <SelectItem value="custom">Custom End Time</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+                {durationType !== "custom" && (
                   <Controller
-                    name="endTime"
+                    name="durationValue"
                     control={control}
-                    rules={{ required: "End time is required" }}
+                    rules={{ required: "Duration is required" }}
                     render={({ field, fieldState: { error } }) => (
                       <>
-                        <DatePicker
-                          value={field.value}
-                          onChange={(date) => field.onChange(date)}
+                        <Input
+                          type="number"
+                          placeholder={`Number of ${durationType}`}
+                          {...field}
                         />
                         {error && (
                           <p className="text-red-500 text-sm">
@@ -299,7 +397,56 @@ export default function CreateAuctionPage() {
                       </>
                     )}
                   />
-                </div>
+                )}
+                {durationType === "custom" && (
+                  <div className="grid grid-cols-2 gap-4">
+                    <Controller
+                      name="endDate"
+                      control={control}
+                      rules={{ required: "End date is required" }}
+                      render={({ field, fieldState: { error } }) => (
+                        <>
+                          <DatePicker
+                            value={field.value}
+                            onChange={(date) => field.onChange(date)}
+                          />
+                          {error && (
+                            <p className="text-red-500 text-sm">
+                              {error.message}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    />
+                    <Controller
+                      name="endTime"
+                      control={control}
+                      rules={{ required: "End time is required" }}
+                      render={({ field, fieldState: { error } }) => (
+                        <>
+                          <Input
+                            type="time"
+                            value={format(field.value, "HH:mm")}
+                            onChange={(e) => {
+                              const [hours, minutes] = e.target.value
+                                .split(":")
+                                .map(Number);
+                              const newDate = new Date(field.value);
+                              newDate.setHours(hours);
+                              newDate.setMinutes(minutes);
+                              field.onChange(newDate);
+                            }}
+                          />
+                          {error && (
+                            <p className="text-red-500 text-sm">
+                              {error.message}
+                            </p>
+                          )}
+                        </>
+                      )}
+                    />
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -401,7 +548,42 @@ export default function CreateAuctionPage() {
                   control={control}
                   render={({ field }) => (
                     <Switch
-                      id="isPrivate"
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="isChatOpen">Open Chat</Label>
+                  <p className="text-sm text-gray-500">
+                    Allow bidders to chat during the auction
+                  </p>
+                </div>
+                <Controller
+                  name="isChatOpen"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
+                      checked={field.value}
+                      onCheckedChange={field.onChange}
+                    />
+                  )}
+                />
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label htmlFor="allowEarlyEnd">Allow Early End</Label>
+                  <p className="text-sm text-gray-500">
+                    Option to end the auction before the set time
+                  </p>
+                </div>
+                <Controller
+                  name="allowEarlyEnd"
+                  control={control}
+                  render={({ field }) => (
+                    <Switch
                       checked={field.value}
                       onCheckedChange={field.onChange}
                     />
@@ -418,11 +600,11 @@ export default function CreateAuctionPage() {
                       <Input placeholder="Charity organization" {...field} />
                     )}
                   />
-                  <div className="space-y-2">
-                    <Controller
-                      name="charity.percentage"
-                      control={control}
-                      render={({ field }) => (
+                  <Controller
+                    name="charity.percentage"
+                    control={control}
+                    render={({ field }) => (
+                      <div className="space-y-2">
                         <Slider
                           min={0}
                           max={100}
@@ -430,26 +612,17 @@ export default function CreateAuctionPage() {
                           value={[field.value]}
                           onValueChange={(value) => field.onChange(value[0])}
                         />
-                      )}
-                    />
-                    <p className="text-sm text-right">
-                      {charityPercentage || 0}% to charity
-                    </p>
-                  </div>
+                        <div className="text-center">{charityPercentage}%</div>
+                      </div>
+                    )}
+                  />
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <div className="flex justify-end">
-            <Button
-              variant={"secondary"}
-              type="submit"
-              size="lg"
-              className="mt-6 w-full bg-purple-600/40"
-            >
-              Create Auction
-            </Button>
+          <div className="flex justify-end mt-6">
+            <Button type="submit">Create Auction</Button>
           </div>
         </form>
       </div>

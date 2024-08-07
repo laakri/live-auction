@@ -2,10 +2,13 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import { MultipartFile } from "@fastify/multipart";
 import Auction, { IAuction } from "../models/auctions.model";
 import User from "../models/users.model";
+import Bid from "../models/bid.model";
 import sharp from "sharp";
 import { v4 as uuidv4 } from "uuid";
 import fs from "fs/promises";
 import path from "path";
+import { socketHandler } from "../websocket/socketHandler";
+import { ObjectId } from "mongoose";
 
 const UPLOAD_DIR = path.join(__dirname, "../uploads");
 
@@ -32,7 +35,6 @@ export const createAuction = async (
   reply: FastifyReply
 ) => {
   const userId = request.user!._id;
-  console.log(request.user);
   try {
     const user = await User.findById(userId);
     if (!user) {
@@ -60,11 +62,19 @@ export const createAuction = async (
       }
     }
 
+    // Parse dates
+    auctionData.startTime = new Date(auctionData.startTime);
+    auctionData.endTime = new Date(auctionData.endTime);
+
     const auction = new Auction({
       ...auctionData,
       seller: userId,
       currentPrice: auctionData.startingPrice,
       images,
+      ownerControls: {
+        isChatOpen: auctionData.isChatOpen === "true",
+        canEndEarly: auctionData.allowEarlyEnd === "true",
+      },
     });
 
     await auction.save();
@@ -73,6 +83,7 @@ export const createAuction = async (
 
     reply.status(201).send(auction);
   } catch (error) {
+    console.error("Error creating auction:", error);
     reply.status(500).send({ error: "Error creating auction" });
   }
 };
@@ -82,79 +93,91 @@ export const getDiscoveryAuctions = async (
   reply: FastifyReply
 ) => {
   try {
-    const {
-      search,
-      category,
-      sort,
-      page = 1,
-      limit = 12,
-    } = request.query as {
-      search?: string;
-      category?: string;
-      sort?: string;
-      page?: number;
-      limit?: number;
+    const now = new Date();
+
+    // Common projection for all queries
+    const auctionProjection = {
+      title: 1,
+      images: { $slice: 1 }, // Only the first image
+      currentPrice: 1,
+      startTime: 1,
+      endTime: 1,
+      watchedBy: 1,
+      seller: 1,
+      category: 1,
     };
 
-    const query: any = {};
+    // Helper function to fetch auctions
+    const fetchAuctions = async (query: any, sort: any, limit: number) => {
+      const results = await Auction.find({
+        ...query,
+        startTime: { $lte: now },
+        endTime: { $gt: now },
+      })
+        .select(auctionProjection)
+        .sort(sort)
+        .limit(limit)
+        .populate("seller", "username customizations.avatar")
+        .lean();
 
-    // Search functionality
-    if (search) {
-      query.$or = [
-        { title: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-      ];
-    }
+      console.log(
+        `Query: ${JSON.stringify(query)}, Results: ${results.length}`
+      );
+      return results;
+    };
 
-    // Category filter
-    if (category) {
-      query.category = category;
-    }
-
-    // Sorting
-    let sortOption: any = { createdAt: -1 }; // Default sort by newest
-    if (sort === "price_asc") sortOption = { currentPrice: 1 };
-    if (sort === "price_desc") sortOption = { currentPrice: -1 };
-    if (sort === "ending_soon") sortOption = { endTime: 1 };
-
-    const totalAuctions = await Auction.countDocuments(query);
-    const totalPages = Math.ceil(totalAuctions / limit);
-
-    const auctions = await Auction.find(query)
-      .sort(sortOption)
-      .skip((page - 1) * limit)
-      .limit(limit)
-      .populate("seller", "username avatar rating")
-      .lean();
-
-    // Get trending auctions (most watched)
-    const trendingAuctions = await Auction.find({
-      endTime: { $gt: new Date() },
-    })
-      .sort({ "watchedBy.length": -1 })
-      .limit(6)
-      .populate("seller", "username avatar rating")
-      .lean();
-
-    // Get upcoming auctions
-    const upcomingAuctions = await Auction.find({
-      startTime: { $gt: new Date() },
-    })
-      .sort({ startTime: 1 })
-      .limit(3)
-      .populate("seller", "username avatar rating")
-      .lean();
-
-    reply.send({
-      auctions,
+    // Fetch auctions for different sections
+    const [
+      featuredAuctions,
       trendingAuctions,
-      upcomingAuctions,
-      pagination: {
-        currentPage: page,
-        totalPages,
-        totalAuctions,
+      endingSoonAuctions,
+      newAuctions,
+    ] = await Promise.all([
+      fetchAuctions({}, { currentPrice: -1 }, 4),
+      fetchAuctions({}, { "watchedBy.length": -1 }, 10),
+      fetchAuctions({}, { endTime: 1 }, 10),
+      fetchAuctions({}, { startTime: -1 }, 10),
+    ]);
+
+    // Fetch a sample of auctions for each category
+    const categories = ["Art", "Electronics", "Fashion", "Jewelry"];
+    const categorySamples = await Promise.all(
+      categories.map(async (category) => {
+        const auctions = await fetchAuctions({ category }, {}, 8);
+        return { category, auctions };
+      })
+    );
+
+    // Process auctions to include only necessary information
+    const processAuction = (auction: any) => ({
+      _id: auction._id,
+      title: auction.title,
+      image: auction.images[0],
+      currentPrice: auction.currentPrice,
+      timeLeft:
+        auction.startTime > now
+          ? { type: "starts", value: auction.startTime }
+          : { type: "ends", value: auction.endTime },
+      watchersCount: auction.watchedBy?.length || 0,
+      seller: {
+        username: auction.seller.username,
+        avatar: auction.seller.customizations?.avatar,
       },
     });
+
+    // Prepare response with processed auctions
+    const response = {
+      featuredAuctions: featuredAuctions.map(processAuction),
+      trendingAuctions: trendingAuctions.map(processAuction),
+      endingSoonAuctions: endingSoonAuctions.map(processAuction),
+      newAuctions: newAuctions.map(processAuction),
+      categorySamples: categorySamples.map((category) => ({
+        category: category.category,
+        auctions: category.auctions.map(processAuction),
+      })),
+    };
+
+    reply.send(response);
   } catch (error) {
     console.error("Error fetching discovery auctions:", error);
     reply.status(500).send({ error: "Error fetching auctions" });
@@ -266,20 +289,87 @@ export const getAuction = async (
   reply: FastifyReply
 ) => {
   const { id } = request.params as { id: string };
+  const userId = request.user?._id;
 
   try {
-    const auction = await Auction.findById(id).populate(
-      "seller",
-      "username customizations"
-    );
+    const auction = await Auction.findById(id)
+      .populate("seller", "username customizations")
+      .lean();
+
     if (!auction) {
-      return reply.status(404).send({ error: "Auction not found" });
+      return reply.status(404).send({
+        error: "Auction not found",
+        message: "The requested auction does not exist or has been removed.",
+      });
     }
-    reply.send(auction);
+
+    // Fetch bids separately
+    const bids = await Bid.find({ auction: id })
+      .populate("bidder", "username customizations")
+      .sort({ timestamp: -1 })
+      .lean();
+
+    // Check if the user is the owner of the auction
+    const isOwner =
+      userId && auction.seller._id.toString() === userId.toString();
+
+    // If the user is the owner, allow access regardless of privacy settings
+    if (isOwner) {
+      return reply.send({
+        auction: { ...auction, bids },
+        message: "You are viewing your own auction.",
+      });
+    }
+
+    // Handle private auction access for non-owners
+    if (auction.isPrivate) {
+      if (!userId) {
+        return reply.status(401).send({
+          error: "Authentication required",
+          message: "This is a private auction. Please log in to view it.",
+        });
+      }
+
+      const user = await User.findById(userId);
+      if (!user) {
+        return reply.status(401).send({
+          error: "User not found",
+          message:
+            "Your user account could not be verified. Please log in again.",
+        });
+      }
+
+      const isInvited =
+        auction.invitedUsers?.some(
+          (invitedUser) => invitedUser.toString() === userId.toString()
+        ) || false;
+
+      if (!isInvited) {
+        return reply.status(403).send({
+          error: "Access denied",
+          message:
+            "This is a private auction, and you have not been invited to participate.",
+        });
+      }
+    }
+
+    // If we've reached this point, the user has access to the auction
+    reply.send({
+      auction: { ...auction, bids },
+      message: auction.isPrivate
+        ? "You are viewing a private auction."
+        : "You are viewing a public auction.",
+    });
   } catch (error) {
-    reply.status(500).send({ error: "Error fetching auction" });
+    console.error("Error fetching auction:", error);
+    reply.status(500).send({
+      error: "Internal server error",
+      message:
+        "An unexpected error occurred while fetching the auction details. Please try again later.",
+    });
   }
 };
+
 interface SearchQuery {
   q?: string;
   category?: string;
@@ -406,36 +496,166 @@ export const searchAuctions = async (
     }
   }
 };
-// export const watchAuction = async (
-//   request: FastifyRequest,
-//   reply: FastifyReply
-// ) => {
-//   const { id } = request.params as { id: string };
-//   const userId = request.user!._id;
 
-//   try {
-//     const auction = await Auction.findById(id);
-//     if (!auction) {
-//       return reply.status(404).send({ error: "Auction not found" });
-//     }
+export const updateOwnerControls = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const { auctionId } = request.params as { auctionId: string };
+  const { isChatOpen, canEndEarly } = request.body as {
+    isChatOpen?: boolean;
+    canEndEarly?: boolean;
+  };
+  const userId = request.user!._id;
 
-//     const userIdString = userId.toString();
-//     const index = auction.watchedBy.findIndex(
-//       (id) => id.toString() === userIdString
-//     );
+  try {
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+      return reply.status(404).send({ error: "Auction not found" });
+    }
 
-//     if (index !== -1) {
-//       auction.watchedBy.splice(index, 1);
-//     } else {
-//       auction.watchedBy.push(userId);
-//     }
+    if (auction.seller.toString() !== userId.toString()) {
+      return reply
+        .status(403)
+        .send({ error: "Not authorized to update this auction" });
+    }
 
-//     await auction.save();
-//     reply.send({ message: "Watch status updated successfully" });
-//   } catch (error) {
-//     reply.status(500).send({ error: "Error updating watch status" });
-//   }
-// };
-// };
+    if (isChatOpen !== undefined) {
+      auction.ownerControls.isChatOpen = isChatOpen;
+    }
+    if (canEndEarly !== undefined) {
+      auction.ownerControls.canEndEarly = canEndEarly;
+    }
 
-// };
+    await auction.save();
+
+    // Emit real-time update
+    socketHandler.emitOwnerControlsUpdate(auctionId, {
+      isChatOpen: auction.ownerControls.isChatOpen,
+      canEndEarly: auction.ownerControls.canEndEarly,
+    });
+
+    reply.send({ message: "Owner controls updated successfully", auction });
+  } catch (error) {
+    reply.status(500).send({ error: "Error updating owner controls" });
+  }
+};
+
+export const endAuctionEarly = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const { id: auctionId } = request.params as { id: string };
+  const userId = request.user!._id;
+
+  try {
+    const auction = await Auction.findById(auctionId);
+    if (!auction) {
+      return reply.status(404).send({ error: "Auction not found" });
+    }
+
+    if (auction.seller.toString() !== userId.toString()) {
+      return reply
+        .status(403)
+        .send({ error: "Not authorized to end this auction" });
+    }
+
+    if (!auction.ownerControls.canEndEarly) {
+      return reply
+        .status(400)
+        .send({ error: "Early ending is not allowed for this auction" });
+    }
+
+    auction.status = "ended";
+    auction.endTime = new Date();
+    await auction.save();
+    // Emit real-time update
+    socketHandler.emitAuctionEnded(auction._id.toString());
+
+    reply.send({ message: "Auction ended successfully", auction });
+  } catch (error) {
+    reply.status(500).send({ error: "Error ending auction early" });
+  }
+};
+export const inviteUsers = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const { id } = request.params as { id: string };
+  const { emails } = request.body as { emails: string[] };
+  const userId = request.user?._id;
+
+  if (!userId) {
+    return reply.status(401).send({ error: "Unauthorized" });
+  }
+
+  try {
+    const auction = await Auction.findById(id);
+    if (!auction) {
+      return reply.status(404).send({ error: "Auction not found" });
+    }
+
+    if (auction.seller.toString() !== userId.toString()) {
+      return reply
+        .status(403)
+        .send({ error: "Not authorized to invite users to this auction" });
+    }
+
+    const users = await User.find({ email: { $in: emails } });
+    const newInvitedUsers = users.map((user) => user._id);
+
+    auction.invitedUsers = auction.invitedUsers || [];
+    auction.invitedUsers = [
+      ...new Set([...auction.invitedUsers, ...newInvitedUsers]),
+    ] as ObjectId[];
+    await auction.save();
+
+    reply.send({
+      message: "Users invited successfully",
+      invitedUsers: auction.invitedUsers,
+    });
+  } catch (error) {
+    reply.status(500).send({ error: "Error inviting users" });
+  }
+};
+
+export const removeInvitedUser = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const { id, userId: userIdToRemove } = request.params as {
+    id: string;
+    userId: string;
+  };
+  const userId = request.user?._id;
+
+  if (!userId) {
+    return reply.status(401).send({ error: "Unauthorized" });
+  }
+
+  try {
+    const auction = await Auction.findById(id);
+    if (!auction) {
+      return reply.status(404).send({ error: "Auction not found" });
+    }
+
+    if (auction.seller.toString() !== userId.toString()) {
+      return reply
+        .status(403)
+        .send({ error: "Not authorized to remove users from this auction" });
+    }
+
+    auction.invitedUsers = auction.invitedUsers || [];
+    auction.invitedUsers = auction.invitedUsers.filter(
+      (invitedUser) => invitedUser.toString() !== userIdToRemove
+    );
+    await auction.save();
+
+    reply.send({
+      message: "User removed successfully",
+      invitedUsers: auction.invitedUsers,
+    });
+  } catch (error) {
+    reply.status(500).send({ error: "Error removing user" });
+  }
+};

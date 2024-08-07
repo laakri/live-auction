@@ -1,17 +1,28 @@
-// src/components/RecentBids.tsx
-import React from "react";
+import React, { useState } from "react";
 import {
   Card,
   CardContent,
   CardHeader,
   CardTitle,
 } from "../../../components/ui/card";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../../components/ui/avatar";
+import { Button } from "../../../components/ui/button";
 
 interface Bid {
-  id: string;
-  bidder: string;
+  _id: string;
+  bidder: {
+    _id: string;
+    username: string;
+    customizations?: {
+      avatar?: string;
+    };
+  };
   amount: number;
-  time: string;
+  timestamp: string;
 }
 
 interface RecentBidsProps {
@@ -19,23 +30,54 @@ interface RecentBidsProps {
 }
 
 const RecentBids: React.FC<RecentBidsProps> = ({ bids }) => {
+  const [visibleBids, setVisibleBids] = useState(5);
+
+  const showMoreBids = () => {
+    setVisibleBids((prevVisible) => prevVisible + 5);
+  };
+
+  // Generate a key based on the latest bid's timestamp
+  const latestBidKey = bids.length > 0 ? bids[0].timestamp : "no-bids";
+
   return (
-    <Card>
+    <Card className="mb-4" key={latestBidKey}>
       <CardHeader>
         <CardTitle>Recent Bids</CardTitle>
       </CardHeader>
       <CardContent>
-        <ul className="space-y-2">
-          {bids.map((bid) => (
-            <li key={bid.id} className="flex justify-between items-center">
-              <span>{bid.bidder}</span>
-              <span className="font-semibold">${bid.amount.toFixed(2)}</span>
-              <span className="text-sm text-gray-600 dark:text-gray-400">
-                {bid.time}
+        {bids.slice(0, visibleBids).map((bid) => (
+          <div key={bid._id} className="flex items-center justify-between mb-2">
+            <div className="flex items-center">
+              <Avatar className="h-8 w-8 mr-2">
+                {bid.bidder.customizations?.avatar && (
+                  <AvatarImage
+                    src={bid.bidder.customizations.avatar}
+                    alt={bid.bidder.username}
+                  />
+                )}
+                <AvatarFallback>
+                  {bid.bidder.username.charAt(0).toUpperCase()}
+                </AvatarFallback>
+              </Avatar>
+              <span>{bid.bidder.username}</span>
+            </div>
+            <div className="flex items-center">
+              <span className="font-bold mr-2">${bid.amount.toFixed(2)}</span>
+              <span className="text-sm text-gray-500">
+                {new Date(bid.timestamp).toLocaleString()}
               </span>
-            </li>
-          ))}
-        </ul>
+            </div>
+          </div>
+        ))}
+        {visibleBids < bids.length && (
+          <Button
+            onClick={showMoreBids}
+            variant="ghost"
+            className="mt-4 w-full"
+          >
+            Show More
+          </Button>
+        )}
       </CardContent>
     </Card>
   );

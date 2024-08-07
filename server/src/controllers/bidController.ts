@@ -19,8 +19,11 @@ export const placeBid = async (
       return reply.status(404).send({ error: "Auction not found" });
     }
 
-    if (auction.status !== "active") {
-      return reply.status(400).send({ error: "Auction is not active" });
+    const now = new Date();
+    if (now < auction.startTime || now > auction.endTime) {
+      return reply.status(400).send({
+        error: "Auction is not active or not within the valid time range",
+      });
     }
 
     if (amount <= auction.currentPrice) {

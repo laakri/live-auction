@@ -1,4 +1,4 @@
-import mongoose, { Document, ObjectId, Schema } from "mongoose";
+import mongoose, { Document, ObjectId, Schema, Types } from "mongoose";
 
 export interface IAuction extends Document {
   _id: ObjectId;
@@ -9,7 +9,10 @@ export interface IAuction extends Document {
   incrementAmount: number;
   startTime: Date;
   endTime: Date;
-  seller: Schema.Types.ObjectId;
+  seller: {
+    _id: Types.ObjectId | string;
+    username: string;
+  };
   winner?: Schema.Types.ObjectId;
   category: string;
   tags: string[];
@@ -18,11 +21,16 @@ export interface IAuction extends Document {
   invitedUsers?: Schema.Types.ObjectId[];
   status: "upcoming" | "active" | "ended";
   bids: Schema.Types.ObjectId[];
-  watchedBy: Schema.Types.ObjectId[];
   charity?: {
     organization: string;
     percentage: number;
   };
+  ownerControls: {
+    isChatOpen: boolean;
+    canEndEarly: boolean;
+  };
+  currentViewers: number;
+  totalUniqueViewers: number;
 }
 
 const AuctionSchema: Schema = new Schema(
@@ -41,17 +49,18 @@ const AuctionSchema: Schema = new Schema(
     images: [String],
     isPrivate: { type: Boolean, default: false },
     invitedUsers: [{ type: Schema.Types.ObjectId, ref: "User" }],
-    status: {
-      type: String,
-      enum: ["upcoming", "active", "ended"],
-      default: "upcoming",
-    },
     bids: [{ type: Schema.Types.ObjectId, ref: "Bid" }],
     watchedBy: [{ type: Schema.Types.ObjectId, ref: "User" }],
     charity: {
       organization: String,
       percentage: Number,
     },
+    ownerControls: {
+      isChatOpen: { type: Boolean, default: true },
+      canEndEarly: { type: Boolean, default: false },
+    },
+    currentViewers: { type: Number, default: 0 },
+    totalUniqueViewers: { type: Number, default: 0 },
   },
   {
     timestamps: true,

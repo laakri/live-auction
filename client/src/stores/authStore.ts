@@ -3,7 +3,7 @@ import { persist, createJSONStorage } from "zustand/middleware";
 import axios from "axios";
 
 export interface User {
-  id: string;
+  _id: string;
   username: string;
   phoneNumber: string;
   idNumber: string;
