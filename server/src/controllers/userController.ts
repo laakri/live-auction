@@ -253,6 +253,57 @@ export const getReferralInfo = async (
     reply.status(500).send({ error: "Error fetching referral information" });
   }
 };
+export const followUser = async (
+  req: FastifyRequest,
+  res: FastifyReply
+) => {
+  const { action, follower, following } = req.body as {
+    action: 'follow' | 'unfollow';
+    follower: string;
+    following: string;
+  };
+
+  try {
+    const followerUser = await User.findById(follower);
+    const followingUser = await User.findById(following);
+
+    if (!followerUser || !followingUser) {
+      return res.status(404).send({ error: "User not found" });
+    }
+
+    const isAlreadyFollowing = followerUser.following.some(id => id.toString() === following);
+
+    switch (action) {
+      case 'follow':
+        if (isAlreadyFollowing) {
+          return res.status(400).send({ error: "User is already followed" });
+        }
+        await Promise.all([
+          User.findByIdAndUpdate(follower, { $push: { following: following } }),
+          User.findByIdAndUpdate(following, { $push: { followers: follower } })
+        ]);
+        break;
+
+      case 'unfollow':
+        if (!isAlreadyFollowing) {
+          return res.status(400).send({ error: "User is not being followed" });
+        }
+        await Promise.all([
+          User.findByIdAndUpdate(follower, { $pull: { following: following } }),
+          User.findByIdAndUpdate(following, { $pull: { followers: follower } })
+        ]);
+        break;
+
+      default:
+        return res.status(400).send({ error: "Invalid action" });
+    }
+
+    res.send({ done: true });
+  } catch (err) {
+    res.status(500).send({ error: "An error occurred" });
+  }
+};
+
 
 // Add more functions as needed for other user-related operations
 
@@ -264,4 +315,5 @@ export default {
   updateCustomization,
   getAchievements,
   getReferralInfo,
+  followUser
 };
