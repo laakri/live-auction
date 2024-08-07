@@ -32,6 +32,8 @@ export interface IUser extends Document {
   loyaltyTier: "bronze" | "silver" | "gold" | "platinum";
   referralCode: string;
   referredBy?: Schema.Types.ObjectId;
+  followers: Schema.Types.ObjectId[];
+  following: Schema.Types.ObjectId[];
 }
 
 const UserSchema: Schema = new Schema(
@@ -70,6 +72,8 @@ const UserSchema: Schema = new Schema(
     },
     referralCode: { type: String, unique: true },
     referredBy: { type: Schema.Types.ObjectId, ref: "User" },
+    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
   },
   {
     timestamps: true,
