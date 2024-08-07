@@ -79,4 +79,7 @@ export const socketHandler = {
   updateViewerCount: (auctionId: string) => {
     updateViewerCount(auctionId);
   },
+  emitInvitedUsersUpdate: (auctionId: string, invitedUsers: any[]) => {
+    io?.to(auctionId).emit("invited users update", invitedUsers);
+  },
 };

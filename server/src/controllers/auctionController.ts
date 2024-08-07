@@ -120,9 +120,6 @@ export const getDiscoveryAuctions = async (
         .populate("seller", "username customizations.avatar")
         .lean();
 
-      console.log(
-        `Query: ${JSON.stringify(query)}, Results: ${results.length}`
-      );
       return results;
     };
 
@@ -294,6 +291,7 @@ export const getAuction = async (
   try {
     const auction = await Auction.findById(id)
       .populate("seller", "username customizations")
+      .populate("invitedUsers", "username email customizations")
       .lean();
 
     if (!auction) {
@@ -303,60 +301,27 @@ export const getAuction = async (
       });
     }
 
+    const isOwner =
+      userId && auction.seller._id.toString() === userId.toString();
+
     // Fetch bids separately
     const bids = await Bid.find({ auction: id })
       .populate("bidder", "username customizations")
       .sort({ timestamp: -1 })
       .lean();
 
-    // Check if the user is the owner of the auction
-    const isOwner =
-      userId && auction.seller._id.toString() === userId.toString();
-
-    // If the user is the owner, allow access regardless of privacy settings
-    if (isOwner) {
-      return reply.send({
-        auction: { ...auction, bids },
-        message: "You are viewing your own auction.",
-      });
+    let invitedUsers: any[] = [];
+    if (isOwner && auction.isPrivate) {
+      invitedUsers = auction.invitedUsers || [];
     }
 
-    // Handle private auction access for non-owners
-    if (auction.isPrivate) {
-      if (!userId) {
-        return reply.status(401).send({
-          error: "Authentication required",
-          message: "This is a private auction. Please log in to view it.",
-        });
-      }
-
-      const user = await User.findById(userId);
-      if (!user) {
-        return reply.status(401).send({
-          error: "User not found",
-          message:
-            "Your user account could not be verified. Please log in again.",
-        });
-      }
-
-      const isInvited =
-        auction.invitedUsers?.some(
-          (invitedUser) => invitedUser.toString() === userId.toString()
-        ) || false;
-
-      if (!isInvited) {
-        return reply.status(403).send({
-          error: "Access denied",
-          message:
-            "This is a private auction, and you have not been invited to participate.",
-        });
-      }
-    }
-
-    // If we've reached this point, the user has access to the auction
     reply.send({
       auction: { ...auction, bids },
-      message: auction.isPrivate
+      isOwner,
+      invitedUsers: isOwner ? invitedUsers : undefined,
+      message: isOwner
+        ? "You are viewing your own auction."
+        : auction.isPrivate
         ? "You are viewing a private auction."
         : "You are viewing a public auction.",
     });
@@ -595,6 +560,10 @@ export const inviteUsers = async (
       return reply.status(404).send({ error: "Auction not found" });
     }
 
+    if (!auction.isPrivate) {
+      return reply.status(400).send({ error: "This auction is not private" });
+    }
+
     if (auction.seller.toString() !== userId.toString()) {
       return reply
         .status(403)
@@ -602,6 +571,10 @@ export const inviteUsers = async (
     }
 
     const users = await User.find({ email: { $in: emails } });
+    if (users.length === 0) {
+      return reply.status(404).send({ error: "No matching users found" });
+    }
+
     const newInvitedUsers = users.map((user) => user._id);
 
     auction.invitedUsers = auction.invitedUsers || [];
@@ -610,11 +583,22 @@ export const inviteUsers = async (
     ] as ObjectId[];
     await auction.save();
 
+    const invitedUsersData = await User.find({
+      _id: { $in: auction.invitedUsers },
+    }).select("email username");
+
+    // Emit socket event for invited users update
+    socketHandler.emitInvitedUsersUpdate(
+      auction._id.toString(),
+      invitedUsersData
+    );
+
     reply.send({
       message: "Users invited successfully",
-      invitedUsers: auction.invitedUsers,
+      invitedUsers: invitedUsersData,
     });
   } catch (error) {
+    console.error("Error inviting users:", error);
     reply.status(500).send({ error: "Error inviting users" });
   }
 };
@@ -623,15 +607,9 @@ export const removeInvitedUser = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
-  const { id, userId: userIdToRemove } = request.params as {
-    id: string;
-    userId: string;
-  };
-  const userId = request.user?._id;
-
-  if (!userId) {
-    return reply.status(401).send({ error: "Unauthorized" });
-  }
+  const { id } = request.params as { id: string };
+  const { userId } = request.body as { userId: string };
+  const ownerId = request.user!._id;
 
   try {
     const auction = await Auction.findById(id);
@@ -639,23 +617,35 @@ export const removeInvitedUser = async (
       return reply.status(404).send({ error: "Auction not found" });
     }
 
-    if (auction.seller.toString() !== userId.toString()) {
+    if (auction.seller.toString() !== ownerId.toString()) {
       return reply
         .status(403)
         .send({ error: "Not authorized to remove users from this auction" });
     }
 
-    auction.invitedUsers = auction.invitedUsers || [];
-    auction.invitedUsers = auction.invitedUsers.filter(
-      (invitedUser) => invitedUser.toString() !== userIdToRemove
-    );
+    if (auction.invitedUsers) {
+      auction.invitedUsers = auction.invitedUsers.filter(
+        (invitedUser) => invitedUser.toString() !== userId
+      );
+    }
     await auction.save();
+
+    const updatedInvitedUsers = await User.find({
+      _id: { $in: auction.invitedUsers },
+    }).select("email username");
+
+    // Emit socket event for invited users update
+    socketHandler.emitInvitedUsersUpdate(
+      auction._id.toString(),
+      updatedInvitedUsers
+    );
 
     reply.send({
       message: "User removed successfully",
-      invitedUsers: auction.invitedUsers,
+      invitedUsers: updatedInvitedUsers,
     });
   } catch (error) {
-    reply.status(500).send({ error: "Error removing user" });
+    console.error("Error removing invited user:", error);
+    reply.status(500).send({ error: "Error removing invited user" });
   }
 };

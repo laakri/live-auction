@@ -83,7 +83,7 @@ const AuctionPage: React.FC = () => {
           );
         }
         const data = await response.json();
-        console.log("Auction data:", data);
+
         setAuction(data.auction);
       } catch (error) {
         console.error("Error fetching auction:", error);
@@ -98,7 +98,7 @@ const AuctionPage: React.FC = () => {
     };
     fetchAuction();
 
-    socketService.connect("http://localhost:3000");
+    socketService.connect(`${import.meta.env.VITE_API_URL}`);
     if (id) socketService.joinAuction(id);
 
     socketService.on("price update", (newPrice: number) => {
@@ -168,6 +168,7 @@ const AuctionPage: React.FC = () => {
   };
 
   const handleInviteUsers = async (emails: string[]) => {
+    console.log("Attempting to invite users:", emails);
     try {
       const response = await fetch(
         `${import.meta.env.VITE_API_URL}/api/auctions/${id}/invite`,
@@ -175,22 +176,29 @@ const AuctionPage: React.FC = () => {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
+            Authorization: `Bearer ${token}`,
           },
           body: JSON.stringify({ emails }),
         }
       );
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Failed to invite users");
+        throw new Error(data.error || "Failed to invite users");
       }
 
-      toast({
-        title: "Users Invited",
-        description:
-          "The selected users have been invited to this private auction.",
-      });
+      // Check if the response indicates success
+      if (data.success) {
+        toast({
+          title: "Users Invited",
+          description:
+            "The selected users have been invited to this private auction.",
+        });
+      } else {
+        // If the server response doesn't indicate success, show an error
+        throw new Error(data.message || "Failed to invite users");
+      }
     } catch (error) {
       console.error("Error inviting users:", error);
       toast({
@@ -199,6 +207,42 @@ const AuctionPage: React.FC = () => {
           error instanceof Error
             ? error.message
             : "Failed to invite users. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleRemoveInvitedUser = async (userId: string) => {
+    try {
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL}/api/auctions/${id}/invite/${userId}`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to remove invited user");
+      }
+
+      toast({
+        title: "User Removed",
+        description: "The user has been removed from the invited list.",
+      });
+    } catch (error) {
+      console.error("Error removing invited user:", error);
+      toast({
+        title: "Error",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Failed to remove invited user. Please try again.",
         variant: "destructive",
       });
     }
@@ -340,14 +384,14 @@ const AuctionPage: React.FC = () => {
             </div>
             <div className="flex flex-col gap-6 mb-6">
               <div className="col-span-2">
-                <div className="flex justify-between items-center">
+                <div className="flex flex-col md:flex-row justify-between items-center space-y-4 md:space-y-0">
                   <div className="flex items-center gap-2">
                     <h1 className="text-2xl font-bold">{auction.title}</h1>
                     <Badge variant="secondary">
                       {auction.totalUniqueViewers} total views
                     </Badge>
                   </div>
-                  <div className="flex items-center space-x-4">
+                  <div className="flex flex-wrap items-center space-x-4 mt-4 md:mt-0 space-y-4 md:space-y-0">
                     <Button variant="outline" size="sm">
                       <Share2 className="mr-2 h-4 w-4" /> Share
                     </Button>
@@ -467,7 +511,11 @@ const AuctionPage: React.FC = () => {
         isOpen={isInviteUsersOpen}
         onClose={() => setIsInviteUsersOpen(false)}
         onInvite={handleInviteUsers}
+        onRemove={handleRemoveInvitedUser}
         auctionId={id!}
+        invitedUsers={auction.invitedUsers.map(
+          (user) => ({ email: user } as any)
+        )}
       />
     </div>
   );
