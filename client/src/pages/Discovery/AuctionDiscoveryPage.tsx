@@ -88,17 +88,11 @@ const AuctionDiscoveryPage: React.FC = () => {
             />
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
           </div>
-          <Button
-            onClick={handleSearch}
-            className="bg-purple-600 hover:bg-purple-700"
-          >
-            Search
-          </Button>
-          <Link
-            to="/3dAuction"
-            className="bg-blue-600 hover:bg-blue-700 inline-block px-4 py-2 rounded text-white"
-          >
-            3D View
+          <Button onClick={handleSearch}>Search</Button>
+          <Link to="/3dAuction">
+            <Button className="bg-purple-600 hover:bg-purple-700 text-white">
+              3D View
+            </Button>
           </Link>
         </div>
       </div>

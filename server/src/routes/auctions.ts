@@ -25,6 +25,7 @@ export default async function auctionRoutes(fastify: FastifyInstance) {
     auctionController.getAuction
   );
   fastify.get("/discovery", auctionController.getDiscoveryAuctions);
+  fastify.get("/3d", auctionController.get3DAuctions);
 
   fastify.put(
     "/:auctionId/owner-controls",
@@ -46,5 +47,4 @@ export default async function auctionRoutes(fastify: FastifyInstance) {
     { preHandler: authenticate },
     auctionController.removeInvitedUser
   );
-  fastify.get("/auctions/3d", auctionController.get3DAuctions);
 }

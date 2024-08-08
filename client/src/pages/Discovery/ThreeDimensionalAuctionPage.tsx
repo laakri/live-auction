@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import * as THREE from "three";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import {
-  CSS3DObject,
   CSS3DRenderer,
+  CSS3DObject,
 } from "three/examples/jsm/renderers/CSS3DRenderer.js";
 import { motion } from "framer-motion";
 import { Search, Filter } from "lucide-react";
@@ -17,23 +17,26 @@ const ThreeDimensionalAuctionPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
-  const sceneRef = useRef<THREE.Scene | null>(null);
-  const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
-  const rendererRef = useRef<CSS3DRenderer | null>(null);
-  const controlsRef = useRef<OrbitControls | null>(null);
 
   useEffect(() => {
     const fetchAuctions = async () => {
       try {
         setLoading(true);
         setError(null);
-        const response = await fetch(
-          `${import.meta.env.VITE_API_URL}/api/auctions/3d`
-        );
+        const url = `${import.meta.env.VITE_API_URL}/api/auctions/3d`;
+        console.log("Fetching auctions from:", url);
+
+        const response = await fetch(url);
+        console.log("Response status:", response.status);
+        console.log("Response headers:", response.headers);
+
         if (!response.ok) {
-          throw new Error("Failed to fetch auctions");
+          const errorText = await response.text();
+          console.error("Error response:", errorText);
+          throw new Error(`Failed to fetch auctions: ${response.statusText}`);
         }
         const data = await response.json();
+        console.log("Fetched auctions:", data);
         setAuctions(data.auctions);
       } catch (error) {
         console.error("Error fetching 3D auctions:", error);
@@ -47,7 +50,9 @@ const ThreeDimensionalAuctionPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    if (!containerRef.current) return;
+    if (!containerRef.current || auctions.length === 0) return;
+
+    console.log("Initializing 3D scene");
 
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(
@@ -57,59 +62,13 @@ const ThreeDimensionalAuctionPage: React.FC = () => {
       1000
     );
     const renderer = new CSS3DRenderer();
-    const controls = new OrbitControls(camera, renderer.domElement);
 
     renderer.setSize(window.innerWidth, window.innerHeight);
     containerRef.current.appendChild(renderer.domElement);
 
+    const controls = new OrbitControls(camera, renderer.domElement);
     camera.position.z = 500;
-    controls.enableDamping = true;
-    controls.dampingFactor = 0.05;
-    controls.rotateSpeed = 0.5;
 
-    sceneRef.current = scene;
-    cameraRef.current = camera;
-    rendererRef.current = renderer;
-    controlsRef.current = controls;
-
-    const handleResize = () => {
-      if (camera && renderer) {
-        camera.aspect = window.innerWidth / window.innerHeight;
-        camera.updateProjectionMatrix();
-        renderer.setSize(window.innerWidth, window.innerHeight);
-      }
-    };
-
-    window.addEventListener("resize", handleResize);
-
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      if (containerRef.current && renderer.domElement) {
-        containerRef.current.removeChild(renderer.domElement);
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (
-      !sceneRef.current ||
-      !cameraRef.current ||
-      !rendererRef.current ||
-      !controlsRef.current
-    )
-      return;
-
-    const scene = sceneRef.current;
-    const camera = cameraRef.current;
-    const renderer = rendererRef.current;
-    const controls = controlsRef.current;
-
-    // Clear existing objects
-    while (scene.children.length > 0) {
-      scene.remove(scene.children[0]);
-    }
-
-    // Add auction cards to the 3D scene
     auctions.forEach((auction, index) => {
       const element = document.createElement("div");
       element.className = "auction-card";
@@ -138,12 +97,14 @@ const ThreeDimensionalAuctionPage: React.FC = () => {
       const object = new CSS3DObject(element);
       const phi = Math.acos(-1 + (2 * index) / auctions.length);
       const theta = Math.sqrt(auctions.length * Math.PI) * phi;
-      const radius = 800;
+      const radius = 500;
 
       object.position.setFromSphericalCoords(radius, phi, theta);
       object.lookAt(scene.position);
       scene.add(object);
     });
+
+    console.log("Number of objects in scene:", scene.children.length);
 
     const animate = () => {
       requestAnimationFrame(animate);
@@ -152,13 +113,25 @@ const ThreeDimensionalAuctionPage: React.FC = () => {
     };
 
     animate();
+
+    const handleResize = () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      if (containerRef.current && renderer.domElement) {
+        containerRef.current.removeChild(renderer.domElement);
+      }
+    };
   }, [auctions]);
 
   const handleSearch = () => {
-    // Implement search functionality
     console.log("Search term:", searchTerm);
-    // You might want to filter the auctions based on the search term
-    // and update the 3D view accordingly
   };
 
   if (loading) {
@@ -178,7 +151,7 @@ const ThreeDimensionalAuctionPage: React.FC = () => {
   }
 
   return (
-    <div className="w-full h-screen bg-gray-950 text-gray-100 overflow-hidden relative">
+    <div className="lg:w-[calc(100vw-15rem)] w-full lg:ml-[15rem]  h-screen bg-gray-950 text-gray-100 overflow-hidden relative">
       <div ref={containerRef} className="w-full h-full" />
       <div className="absolute top-0 left-0 right-0 p-4 z-10">
         <motion.div
