@@ -14,9 +14,11 @@ export default function userRoutes(
   fastify.post("/unfollowUser", userController.unfollow);
   fastify.post("/checkFollowUser", userController.checkFollow);
 
-
-
-
+  
+  fastify.get(
+    "/userProfile/:id",
+     userController.getUserProfile
+    );
   fastify.get(
     "/profile",
     { preHandler: [authenticate] },

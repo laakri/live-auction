@@ -2,7 +2,9 @@ import { FastifyRequest, FastifyReply } from "fastify";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import User, { IUser } from "../models/users.model";
+import Auction from "../models/auctions.model";
 import { v4 as uuidv4 } from "uuid";
+import { title } from "process";
 
 // Helper function to generate a unique referral code
 const generateReferralCode = async (): Promise<string> => {
@@ -378,6 +380,19 @@ export const unfollow = async (
   }
 };
 
+export const getUserProfile = async (
+  req: FastifyRequest,
+  res: FastifyReply
+) => {
+  const { id } = req.params as { id: string };
+  const user = await User.findById(id);
+  if (!user) {
+    return res.status(404).send({ error: "User not found" });
+  }
+  const auctions = await Auction.find({ seller: id });
+  res.send({ user, auctions });
+};
+
 
 
 // Add more functions as needed for other user-related operations
@@ -392,6 +407,7 @@ export default {
   getReferralInfo,
   follow,
   unfollow,
-  checkFollow
+  checkFollow,
+  getUserProfile,
 };
   
