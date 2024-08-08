@@ -9,6 +9,7 @@ import fs from "fs/promises";
 import path from "path";
 import { socketHandler } from "../websocket/socketHandler";
 import { ObjectId } from "mongoose";
+import { notificationService } from "../services/notificationService";
 
 const UPLOAD_DIR = path.join(__dirname, "../uploads");
 
@@ -29,7 +30,6 @@ async function deleteImage(filename: string): Promise<void> {
   const filepath = path.join(UPLOAD_DIR, filename);
   await fs.unlink(filepath);
 }
-
 export const createAuction = async (
   request: FastifyRequest,
   reply: FastifyReply
@@ -80,7 +80,16 @@ export const createAuction = async (
     await auction.save();
     user.createdAuctions.push(auction._id);
     await user.save();
-
+    // Check if this is the user's first auction
+    if (user.createdAuctions.length === 1) {
+      const message = `Congratulations on creating your first auction! You have ${user.freeAuctionsRemaining} free auctions remaining. Remember, you can always boost your auction visibility with credits.`;
+      await notificationService.createNotification(
+        userId.toString(),
+        "first_auction",
+        message,
+        auction._id.toString()
+      );
+    }
     reply.status(201).send(auction);
   } catch (error) {
     console.error("Error creating auction:", error);
