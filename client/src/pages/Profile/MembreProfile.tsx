@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import {
@@ -13,34 +13,65 @@ import {
   AlertCircle,
   Award,
   BarChart2,
-  Blend,
   Edit2Icon,
   Gavel,
-  Mic,
   Plus,
   Settings,
-  Triangle,
   User,
   Wallet,
   Shield,
   Search,
   Coins,
 } from "lucide-react";
-import useAuthStore from "../../stores/authStore";
-import { Link } from "react-router-dom";
+import { Link, useParams } from "react-router-dom";
 import { useToast } from "../../components/ui/use-toast";
 import FollowButton from "../../components/FollowButton";
-const UserProfile = () => {
+
+interface User {
+  username: string;
+  email: string;
+  bio: string;
+  level: number;
+  xp: number;
+  balance: number;
+  virtualCurrencyBalance: number;
+  loyaltyTier: string;
+  achievements: string[];
+  rank: string;
+  referralCode: string;
+  customizations: {
+    theme: string;
+    avatar: string;
+  };
+}
+const MembreProfile = () => {
+  const { id } = useParams(); // Extracting user ID from URL params
+  const [user, setUser] = useState<User | null>(null);
+  const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("overview");
-  const { user, error } = useAuthStore();
   const { toast } = useToast();
 
-  if (!user) return <div>User Not Found Login again</div>;
+  useEffect(() => {
+    // Fetch user data based on the ID
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(`/api/users/${id}`);
+        if (!response.ok) throw new Error("Failed to fetch user data");
+        const userData = await response.json();
+        setUser(userData);
+      } catch (error:any) {
+        setError(error.message);
+      }
+    };
+
+    fetchUserData();
+  }, [id]);
+
+  if (!user) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
   const {
     username,
-    _id,
     email,
     bio,
     level,
@@ -116,7 +147,8 @@ const UserProfile = () => {
                 </h1>
                 <p className="text-gray-300 text-sm">{email}</p>
                 <p className="text-gray-300 text-sm">{bio}</p>
-               {/**<FollowButton userId="668bcd9b094cf69a24d29977" loggedInUserId="668f9dd6beb6ca13b3c07ff5"/>*/}
+                <FollowButton userId="668bcd9b094cf69a24d29977" loggedInUserId="668f9dd6beb6ca13b3c07ff5"/>
+
               </div>
             </div>
             <Card className="bg-gray-900/30 p-4 border-none rounded-xl w-full sm:w-auto mt-4 sm:mt-0">
@@ -343,4 +375,4 @@ const UserProfile = () => {
   );
 };
 
-export default UserProfile;
+export default MembreProfile;
