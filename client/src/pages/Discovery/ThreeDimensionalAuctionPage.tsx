@@ -165,7 +165,7 @@ const ThreeDimensionalAuctionPage: React.FC = () => {
               3D Auction Space
             </h1>
           </div>
-          <div className="flex items-center gap-2">
+          {/* <div className="flex items-center gap-2">
             <Input
               type="text"
               placeholder="Search auctions..."
@@ -180,7 +180,7 @@ const ThreeDimensionalAuctionPage: React.FC = () => {
             <Button variant="secondary">
               <Filter className="h-4 w-4" />
             </Button>
-          </div>
+          </div> */}
         </motion.div>
       </div>
       <div className="absolute bottom-4 left-4 right-4 z-10">

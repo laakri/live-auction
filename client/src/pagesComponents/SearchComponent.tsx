@@ -38,7 +38,7 @@ const SearchComponent: React.FC = () => {
 
   const handleSearch = (term: string) => {
     if (term.trim()) {
-      navigate(`/search?term=${term}`);
+      navigate(`/search?q=${term}`);
       addToRecentSearches(term);
       setOpen(false);
     }

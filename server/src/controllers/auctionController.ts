@@ -394,32 +394,35 @@ export const searchAuctions = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
+  const { q, category, sort, page, limit, minPrice, maxPrice, status } =
+    request.query as {
+      q?: string;
+      category?: string;
+      sort?: string;
+      page?: string;
+      limit?: string;
+      minPrice?: string;
+      maxPrice?: string;
+      status?: string;
+    };
+
   try {
-    const {
-      q,
-      category,
-      minPrice,
-      maxPrice,
-      status,
-      sort,
-      page = "1",
-      limit = "10",
-    } = request.query as SearchQuery;
-
-    // Build the query
     const query: any = {};
-
+    console.log("Category:", category);
     // Text search
     if (q) {
-      query.$text = { $search: q };
+      query.$or = [
+        { title: { $regex: q, $options: "i" } },
+        { description: { $regex: q, $options: "i" } },
+      ];
     }
 
     // Category filter
-    if (category) {
+    if (category && category !== "all") {
       query.category = category;
     }
 
-    // Price range
+    // Price range filter
     if (minPrice || maxPrice) {
       query.currentPrice = {};
       if (minPrice) query.currentPrice.$gte = parseFloat(minPrice);
@@ -427,7 +430,7 @@ export const searchAuctions = async (
     }
 
     // Status filter
-    if (status) {
+    if (status && status !== "all") {
       const now = new Date();
       switch (status) {
         case "upcoming":
@@ -461,13 +464,8 @@ export const searchAuctions = async (
     }
 
     // Pagination
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-
-    if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
-      return reply.status(400).send({ error: "Invalid pagination parameters" });
-    }
-
+    const pageNum = parseInt(page || "1", 10);
+    const limitNum = parseInt(limit || "12", 10);
     const skip = (pageNum - 1) * limitNum;
 
     // Execute query
@@ -478,11 +476,10 @@ export const searchAuctions = async (
       .sort(sortOption)
       .skip(skip)
       .limit(limitNum)
-      .populate("seller", "username avatar rating")
+      .populate("seller", "username customizations")
       .lean();
 
-    // Prepare response
-    const response = {
+    reply.send({
       auctions,
       pagination: {
         currentPage: pageNum,
@@ -491,18 +488,12 @@ export const searchAuctions = async (
         hasNextPage: pageNum < totalPages,
         hasPrevPage: pageNum > 1,
       },
-    };
-
-    reply.send(response);
+    });
   } catch (error) {
     console.error("Error in searchAuctions:", error);
-    if (error instanceof Error) {
-      reply
-        .status(500)
-        .send({ error: `Internal Server Error: ${error.message}` });
-    } else {
-      reply.status(500).send({ error: "An unexpected error occurred" });
-    }
+    reply
+      .status(500)
+      .send({ error: "An unexpected error occurred while searching auctions" });
   }
 };
 

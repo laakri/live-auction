@@ -13,7 +13,7 @@ import {
   SelectValue,
 } from "../../components/ui/select";
 import CountdownTimer from "../../components/CountdownTimer";
-import { Search, Filter, X } from "lucide-react";
+import { Search, Filter } from "lucide-react";
 import Footer from "../../pagesComponents/Footer";
 import {
   Pagination,
@@ -33,10 +33,12 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "../../components/ui/sheet";
+import { useToast } from "../../components/ui/use-toast";
 
 const SearchResults: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { toast } = useToast();
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [searchTerm, setSearchTerm] = useState("");
   const [category, setCategory] = useState("");
@@ -47,11 +49,12 @@ const SearchResults: React.FC = () => {
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(10000);
   const [status, setStatus] = useState("");
+  const [totalAuctions, setTotalAuctions] = useState(0);
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);
     const term = searchParams.get("q") || "";
-    const cat = searchParams.get("category") || "";
+    const cat = searchParams.get("category") || "all";
     const sortBy = searchParams.get("sort") || "";
     const page = parseInt(searchParams.get("page") || "1", 10);
     const min = parseInt(searchParams.get("minPrice") || "0", 10);
@@ -81,39 +84,64 @@ const SearchResults: React.FC = () => {
     setIsLoading(true);
     try {
       const response = await axios.get(
-        `http://localhost:3000/api/auctions/search?q=${term}&category=${category}&sort=${sort}&page=${page}&limit=12&minPrice=${minPrice}&maxPrice=${maxPrice}&status=${status}`
+        `${import.meta.env.VITE_API_URL}/api/auctions/search`,
+        {
+          params: {
+            q: term,
+            category,
+            sort,
+            page,
+            limit: 12,
+            minPrice,
+            maxPrice,
+            status,
+          },
+        }
       );
       setSearchResults(response.data.auctions);
       setTotalPages(response.data.pagination.totalPages);
+      setTotalAuctions(response.data.pagination.totalAuctions);
     } catch (error) {
       console.error("Error fetching search results:", error);
+      toast({
+        title: "Error",
+        description: "Failed to fetch search results. Please try again.",
+        variant: "destructive",
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleSearch = () => {
-    navigate(
-      `/search?q=${searchTerm}&category=${category}&sort=${sort}&page=1&minPrice=${minPrice}&maxPrice=${maxPrice}&status=${status}`
-    );
+    const searchParams = new URLSearchParams({
+      q: searchTerm,
+      category: category === "all" ? "" : category, // This will now use the correct capitalization
+      sort,
+      page: "1",
+      minPrice: minPrice.toString(),
+      maxPrice: maxPrice.toString(),
+      status,
+    });
+    navigate(`/search?${searchParams.toString()}`);
   };
 
   const handlePageChange = (page: number) => {
-    navigate(
-      `/search?q=${searchTerm}&category=${category}&sort=${sort}&page=${page}&minPrice=${minPrice}&maxPrice=${maxPrice}&status=${status}`
-    );
+    const searchParams = new URLSearchParams(location.search);
+    searchParams.set("page", page.toString());
+    navigate(`/search?${searchParams.toString()}`);
   };
 
   const categories = [
-    { name: "All", icon: "🔍" },
-    { name: "Art", icon: "🎨" },
-    { name: "Collectibles", icon: "🏺" },
-    { name: "Electronics", icon: "📱" },
-    { name: "Fashion", icon: "👗" },
-    { name: "Home & Garden", icon: "🏡" },
-    { name: "Jewelry", icon: "💍" },
-    { name: "Sports", icon: "⚽" },
-    { name: "Vehicles", icon: "🚗" },
+    { name: "All", value: "all", icon: "🔍" },
+    { name: "Art", value: "art", icon: "🎨" },
+    { name: "Collectibles", value: "collectibles", icon: "🏺" },
+    { name: "Electronics", value: "electronics", icon: "📱" },
+    { name: "Fashion", value: "fashion", icon: "👗" },
+    { name: "Home & Garden", value: "home_and_garden", icon: "🏡" },
+    { name: "Jewelry", value: "jewelry", icon: "💍" },
+    { name: "Sports", value: "sports", icon: "⚽" },
+    { name: "Vehicles", value: "vehicles", icon: "🚗" },
   ];
 
   const renderPaginationItems = (): React.ReactNode[] => {
@@ -281,6 +309,9 @@ const SearchResults: React.FC = () => {
           </div>
         ) : (
           <>
+            <div className="text-center mb-4">
+              Found {totalAuctions} auctions
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 min-h-[14rem]">
               {searchResults.map((auction) => (
                 <Card
@@ -293,7 +324,9 @@ const SearchResults: React.FC = () => {
                   >
                     <CardContent className="p-0">
                       <img
-                        src={`http://localhost:3000/uploads/${auction.images[0]}`}
+                        src={`${import.meta.env.VITE_API_URL}/uploads/${
+                          auction.images[0]
+                        }`}
                         alt={auction.title}
                         className="w-full h-48 object-cover"
                       />
@@ -316,7 +349,7 @@ const SearchResults: React.FC = () => {
                         </div>
                         <Button
                           size="sm"
-                          className="w-full bg-purple-600 hover:bg-purple-700"
+                          className="w-full bg-purple-600 hover:bg-purple-700 text-white"
                           onClick={() => navigate(`/auction/${auction._id}`)}
                         >
                           View Auction
