@@ -1,65 +1,90 @@
-import React, { useState } from "react";
-import { motion } from "framer-motion";
+import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 
 interface FollowButtonProps {
-  onClick?: () => void; // Optional onClick prop if you still want to pass it from parent
-  userId: string; // The ID of the user to be followed
-  loggedInUserId: string; // The ID of the logged-in user
+  userId: string;          // The ID of the user to be followed/unfollowed
+  loggedInUserId: string;  // The ID of the logged-in user
 }
 
-const FollowButton: React.FC<FollowButtonProps> = ({ onClick, userId, loggedInUserId }) => {
-  const [isHovered, setIsHovered] = useState(false);
-  const [isFollowing, setIsFollowing] = useState(false);
+const FollowButton: React.FC<FollowButtonProps> = ({ userId, loggedInUserId }) => {
+  const [isFollowing, setIsFollowing] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleFollowUser = async () => {
+  useEffect(() => {
+    // Check if the logged-in user is following the user
+    const checkFollowStatus = async () => {
+      try {
+        const response = await fetch('http://localhost:3000/api/users/checkFollowUser', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ follower: loggedInUserId, following: userId }),
+        });
+
+        const data = await response.json();
+        setIsFollowing(data.isFollowing);
+      } catch (err) {
+        setError("Failed to check follow status");
+        console.error("Error checking follow status:", err);
+      }
+    };
+
+    checkFollowStatus();
+  }, [userId, loggedInUserId]);
+
+  const handleFollowUnfollow = async () => {
     setLoading(true);
+    setError(null);
+
     try {
-      const action = isFollowing ? 'unfollow' : 'follow';
-      const response = await fetch('http://localhost:3000/api/users/followUser', {
-        method: "POST",
+      const action = isFollowing ? 'unfollowUser' : 'followUser';
+      const response = await fetch(`http://localhost:3000/api/users/${action}`, {
+        method: 'POST',
         headers: {
-          "Content-Type": "application/json",
+          'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          action: action,
-          follower: loggedInUserId,
-          following: userId,
-        }),
+        body: JSON.stringify({ follower: loggedInUserId, following: userId }),
       });
 
-      // Parsing the JSON response
       const data = await response.json();
-
       if (data.done) {
-        setIsFollowing(!isFollowing); // Toggle follow state
+        setIsFollowing(!isFollowing);  // Toggle the follow state
       } else {
-        console.error("Error:", data.error);
+        setError("Action failed");
       }
-    } catch (error) {
-      console.error("An error occurred:", error);
+    } catch (err) {
+      setError("Failed to perform action");
+      console.error("Error following/unfollowing user:", err);
     } finally {
       setLoading(false);
     }
-
-    // Optionally, you can call the onClick function passed from the parent component
-    if (onClick) onClick();
   };
 
+  if (error) {
+    return <div>Error: {error}</div>;
+  }
+
+  if (isFollowing === null) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <motion.button
-      onClick={handleFollowUser}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      className={`relative overflow-hidden px-3 py-1 rounded-full bg-gradient-to-r ${
-        isFollowing ? 'from-red-600 to-pink-600' : 'from-purple-600 to-indigo-600'
-      } text-white font-semibold shadow-lg`}
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      disabled={loading} // Disable the button while loading
-    >
-      {loading ? 'Loading...' : isFollowing ? 'Unfollow' : 'Follow'}
-    </motion.button>
+    
+     <motion.button
+     onClick={handleFollowUnfollow} 
+     disabled={loading}
+    
+     className={`relative overflow-hidden px-3 py-1 rounded-full bg-gradient-to-r ${
+       isFollowing ? 'from-red-600 to-pink-600' : 'from-purple-600 to-indigo-600'
+     } text-white font-semibold shadow-lg`}
+     whileHover={{ scale: 1.05 }}
+     whileTap={{ scale: 0.95 }}
+   >
+           {loading ? 'Processing...' : isFollowing ? 'Unfollow' : 'Follow'}
+
+   </motion.button>
   );
 };
 

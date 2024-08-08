@@ -253,56 +253,131 @@ export const getReferralInfo = async (
     reply.status(500).send({ error: "Error fetching referral information" });
   }
 };
-export const followUser = async (
+
+// Function to check if the follower is already following the following user
+export const checkFollowStatus = async (follower: string, following: string) => {
+  const followerUser = await User.findById(follower);
+  if (!followerUser) {
+    throw new Error("Follower not found");
+  }
+  return followerUser.following.some(id => id.toString() === following);
+};
+
+// Route handler to check follow status
+export const checkFollow = async (
   req: FastifyRequest,
   res: FastifyReply
 ) => {
-  const { action, follower, following } = req.body as {
-    action: 'follow' | 'unfollow';
+  const { follower, following } = req.body as {
     follower: string;
     following: string;
   };
 
   try {
-    const followerUser = await User.findById(follower);
-    const followingUser = await User.findById(following);
-
-    if (!followerUser || !followingUser) {
-      return res.status(404).send({ error: "User not found" });
-    }
-
-    const isAlreadyFollowing = followerUser.following.some(id => id.toString() === following);
-
-    switch (action) {
-      case 'follow':
-        if (isAlreadyFollowing) {
-          return res.status(400).send({ error: "User is already followed" });
-        }
-        await Promise.all([
-          User.findByIdAndUpdate(follower, { $push: { following: following } }),
-          User.findByIdAndUpdate(following, { $push: { followers: follower } })
-        ]);
-        break;
-
-      case 'unfollow':
-        if (!isAlreadyFollowing) {
-          return res.status(400).send({ error: "User is not being followed" });
-        }
-        await Promise.all([
-          User.findByIdAndUpdate(follower, { $pull: { following: following } }),
-          User.findByIdAndUpdate(following, { $pull: { followers: follower } })
-        ]);
-        break;
-
-      default:
-        return res.status(400).send({ error: "Invalid action" });
-    }
-
-    res.send({ done: true });
+    const isFollowing = await checkFollowStatus(follower, following);
+    res.send({ isFollowing });
   } catch (err) {
-    res.status(500).send({ error: "An error occurred" });
+    if (err instanceof Error) {
+      res.status(500).send({ error: err.message });
+    } else {
+      res.status(500).send({ error: 'An unknown error occurred' });
+    }
   }
 };
+
+export const followUser = async (follower: string, following: string) => {
+  const [followerUser, followingUser] = await Promise.all([
+    User.findById(follower),
+    User.findById(following),
+  ]);
+
+  if (!followerUser || !followingUser) {
+    throw new Error("User not found");
+  }
+
+  const isAlreadyFollowing = await checkFollowStatus(follower, following);
+
+  if (isAlreadyFollowing) {
+    throw new Error("User is already followed");
+  }
+
+  await Promise.all([
+    User.findByIdAndUpdate(follower, { $push: { following: following } }),
+    User.findByIdAndUpdate(following, { $push: { followers: follower } }),
+  ]);
+
+  return true;
+};
+
+// Route handler to follow a user
+export const follow = async (
+  req: FastifyRequest,
+  res: FastifyReply
+) => {
+  const { follower, following } = req.body as {
+    follower: string;
+    following: string;
+  };
+
+  try {
+    await followUser(follower, following);
+    res.send({ done: true });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(500).send({ error: err.message });
+    } else {
+      res.status(500).send({ error: 'An unknown error occurred' });
+    }
+  }
+};
+
+// Function to handle unfollow action
+export const unfollowUser = async (follower: string, following: string) => {
+  const [followerUser, followingUser] = await Promise.all([
+    User.findById(follower),
+    User.findById(following),
+  ]);
+
+  if (!followerUser || !followingUser) {
+    throw new Error("User not found");
+  }
+
+  const isAlreadyFollowing = await checkFollowStatus(follower, following);
+
+  if (!isAlreadyFollowing) {
+    throw new Error("User is not being followed");
+  }
+
+  await Promise.all([
+    User.findByIdAndUpdate(follower, { $pull: { following: following } }),
+    User.findByIdAndUpdate(following, { $pull: { followers: follower } }),
+  ]);
+
+  return true;
+};
+
+// Route handler to unfollow a user
+export const unfollow = async (
+  req: FastifyRequest,
+  res: FastifyReply
+) => {
+  const { follower, following } = req.body as {
+    follower: string;
+    following: string;
+  };
+
+  try {
+    await unfollowUser(follower, following);
+    res.send({ done: true });
+  } catch (err) {
+    if (err instanceof Error) {
+      res.status(500).send({ error: err.message });
+    } else {
+      res.status(500).send({ error: 'An unknown error occurred' });
+    }
+  }
+};
+
 
 
 // Add more functions as needed for other user-related operations
@@ -315,5 +390,8 @@ export default {
   updateCustomization,
   getAchievements,
   getReferralInfo,
-  followUser
+  follow,
+  unfollow,
+  checkFollow
 };
+  

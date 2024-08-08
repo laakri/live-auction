@@ -116,8 +116,7 @@ const UserProfile = () => {
                 </h1>
                 <p className="text-gray-300 text-sm">{email}</p>
                 <p className="text-gray-300 text-sm">{bio}</p>
-                <FollowButton userId="668bcd9b094cf69a24d29977" loggedInUserId="668f9dd6beb6ca13b3c07ff5"/>
-
+               {/**<FollowButton userId="668bcd9b094cf69a24d29977" loggedInUserId="668f9dd6beb6ca13b3c07ff5"/>*/}
               </div>
             </div>
             <Card className="bg-gray-900/30 p-4 border-none rounded-xl w-full sm:w-auto mt-4 sm:mt-0">

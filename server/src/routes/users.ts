@@ -10,7 +10,12 @@ export default function userRoutes(
 ) {
   fastify.post("/register", userController.register);
   fastify.post("/login", userController.login);
-  fastify.post("/followUser", userController.followUser);
+  fastify.post("/followUser", userController.follow);
+  fastify.post("/unfollowUser", userController.unfollow);
+  fastify.post("/checkFollowUser", userController.checkFollow);
+
+
+
 
   fastify.get(
     "/profile",
