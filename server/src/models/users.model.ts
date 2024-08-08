@@ -72,8 +72,8 @@ const UserSchema: Schema = new Schema(
     },
     referralCode: { type: String, unique: true },
     referredBy: { type: Schema.Types.ObjectId, ref: "User" },
-    followers: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
-    following: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
+    following: { type: [mongoose.Schema.Types.ObjectId], ref: 'User', default: [] },
+  followers: { type: [mongoose.Schema.Types.ObjectId], ref: 'User', default: [] }
   },
   {
     timestamps: true,
