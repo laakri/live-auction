@@ -9,22 +9,22 @@ const MONGODB_URI =
   process.env.MONGODB_URI ||
   "mongodb+srv://glassisaif:icwxys1oyAenGq6q@cluster0.v8zmnny.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0";
 
-const categories = ["Art", "Electronics", "Fashion", "Jewelry"];
+const categories = ["art", "electronics", "fashion", "jewelry"];
 const titles = {
-  Art: [
+  art: [
     "Modern Painting",
     "Antique Vase",
     "Handcrafted Sculpture",
     "Limited Edition Print",
   ],
-  Electronics: ["Gaming Console", "Smartphone", "Laptop", "Smart Watch"],
-  Fashion: [
+  electronics: ["Gaming Console", "Smartphone", "Laptop", "Smart Watch"],
+  fashion: [
     "Designer Handbag",
     "Limited Edition Sneakers",
     "Vintage Dress",
     "Luxury Sunglasses",
   ],
-  Jewelry: [
+  jewelry: [
     "Diamond Necklace",
     "Vintage Watch",
     "Gold Bracelet",

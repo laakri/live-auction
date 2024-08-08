@@ -19,14 +19,14 @@ const SearchComponent: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [recentSearches, setRecentSearches] = useState<string[]>([]);
   const [trendingSearches] = useState([
-    { name: "Art", icon: "🎨" },
-    { name: "Collectibles", icon: "🏺" },
-    { name: "Electronics", icon: "📱" },
-    { name: "Fashion", icon: "👗" },
-    { name: "Home & Garden", icon: "🏡" },
-    { name: "Jewelry", icon: "💍" },
-    { name: "Sports", icon: "⚽" },
-    { name: "Vehicles", icon: "🚗" },
+    { name: "Art", icon: "🎨", value: "art" },
+    { name: "Collectibles", icon: "🏺", value: "collectibles" },
+    { name: "Electronics", icon: "📱", value: "electronics" },
+    { name: "Fashion", icon: "👗", value: "fashion" },
+    { name: "Home & Garden", icon: "🏡", value: "home-and-garden" },
+    { name: "Jewelry", icon: "💍", value: "jewelry" },
+    { name: "Sports", icon: "⚽", value: "sports" },
+    { name: "Vehicles", icon: "🚗", value: "vehicles" },
   ]);
 
   useEffect(() => {
@@ -36,9 +36,13 @@ const SearchComponent: React.FC = () => {
     }
   }, []);
 
-  const handleSearch = (term: string) => {
+  const handleSearch = (term: string, isCategory: boolean = false) => {
     if (term.trim()) {
-      navigate(`/search?term=${term}`);
+      if (isCategory) {
+        navigate(`/search?category=${encodeURIComponent(term.toLowerCase())}`);
+      } else {
+        navigate(`/search?q=${encodeURIComponent(term)}`);
+      }
       addToRecentSearches(term);
       setOpen(false);
     }
@@ -99,10 +103,12 @@ const SearchComponent: React.FC = () => {
           </div>
           <ScrollArea className="h-[300px]">
             <CommandList>
-              <CommandItem onSelect={() => handleSearch(searchTerm)}>
-                <Search className="mr-2 h-4 w-4" />
-                <span>Search for "{searchTerm}"</span>
-              </CommandItem>
+              {searchTerm && (
+                <CommandItem onSelect={() => handleSearch(searchTerm)}>
+                  <Search className="mr-2 h-4 w-4" />
+                  <span>Search for "{searchTerm}"</span>
+                </CommandItem>
+              )}
               {recentSearches.length > 0 && (
                 <CommandGroup heading="Recent Searches">
                   {recentSearches.map((term, index) => (
@@ -122,11 +128,11 @@ const SearchComponent: React.FC = () => {
                   </CommandItem>
                 </CommandGroup>
               )}
-              <CommandGroup heading="Trending Searches">
+              <CommandGroup heading="Categories">
                 {trendingSearches.map((term, index) => (
                   <CommandItem
                     key={index}
-                    onSelect={() => handleSearch(term.name)}
+                    onSelect={() => handleSearch(term.value, true)}
                   >
                     <span className="mr-2">{term.icon}</span>
                     <span>{term.name}</span>

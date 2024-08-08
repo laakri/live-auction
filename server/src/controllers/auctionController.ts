@@ -113,6 +113,7 @@ export const getDiscoveryAuctions = async (
         ...query,
         startTime: { $lte: now },
         endTime: { $gt: now },
+        isPrivate: false, // Add this line to exclude private auctions
       })
         .select(auctionProjection)
         .sort(sort)
@@ -180,6 +181,51 @@ export const getDiscoveryAuctions = async (
     reply.status(500).send({ error: "Error fetching auctions" });
   }
 };
+export const get3DAuctions = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  try {
+    const now = new Date();
+
+    const auctions = await Auction.find({
+      startTime: { $lte: now },
+      endTime: { $gt: now },
+      isPrivate: false,
+    })
+      .select(
+        "title images currentPrice startTime endTime watchedBy seller category"
+      )
+      .populate("seller", "username customizations.avatar")
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+
+    const processedAuctions = auctions.map((auction) => ({
+      _id: auction._id,
+      title: auction.title,
+      image: auction.images[0],
+      currentPrice: auction.currentPrice,
+      timeLeft: { type: "ends", value: auction.endTime },
+      watchersCount: auction.currentViewers || 0,
+      seller: {
+        username: auction.seller.username,
+      },
+      category: auction.category,
+    }));
+
+    reply.send({
+      auctions: processedAuctions,
+    });
+  } catch (error) {
+    console.error("Error fetching 3D auctions:", error);
+    reply.status(500).send({
+      error: "Internal server error",
+      message:
+        "An unexpected error occurred while fetching the 3D auctions. Please try again later.",
+    });
+  }
+};
 
 export const updateAuction = async (
   request: FastifyRequest,
@@ -239,8 +285,6 @@ export const updateAuction = async (
     reply.status(500).send({ error: "Error updating auction" });
   }
 };
-
-// ... (keep other existing functions)
 
 export const deleteAuction = async (
   request: FastifyRequest,
@@ -350,32 +394,35 @@ export const searchAuctions = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
+  const { q, category, sort, page, limit, minPrice, maxPrice, status } =
+    request.query as {
+      q?: string;
+      category?: string;
+      sort?: string;
+      page?: string;
+      limit?: string;
+      minPrice?: string;
+      maxPrice?: string;
+      status?: string;
+    };
+
   try {
-    const {
-      q,
-      category,
-      minPrice,
-      maxPrice,
-      status,
-      sort,
-      page = "1",
-      limit = "10",
-    } = request.query as SearchQuery;
-
-    // Build the query
     const query: any = {};
-
+    console.log("Category:", category);
     // Text search
     if (q) {
-      query.$text = { $search: q };
+      query.$or = [
+        { title: { $regex: q, $options: "i" } },
+        { description: { $regex: q, $options: "i" } },
+      ];
     }
 
     // Category filter
-    if (category) {
+    if (category && category !== "all") {
       query.category = category;
     }
 
-    // Price range
+    // Price range filter
     if (minPrice || maxPrice) {
       query.currentPrice = {};
       if (minPrice) query.currentPrice.$gte = parseFloat(minPrice);
@@ -383,7 +430,7 @@ export const searchAuctions = async (
     }
 
     // Status filter
-    if (status) {
+    if (status && status !== "all") {
       const now = new Date();
       switch (status) {
         case "upcoming":
@@ -417,13 +464,8 @@ export const searchAuctions = async (
     }
 
     // Pagination
-    const pageNum = parseInt(page, 10);
-    const limitNum = parseInt(limit, 10);
-
-    if (isNaN(pageNum) || isNaN(limitNum) || pageNum < 1 || limitNum < 1) {
-      return reply.status(400).send({ error: "Invalid pagination parameters" });
-    }
-
+    const pageNum = parseInt(page || "1", 10);
+    const limitNum = parseInt(limit || "12", 10);
     const skip = (pageNum - 1) * limitNum;
 
     // Execute query
@@ -434,11 +476,10 @@ export const searchAuctions = async (
       .sort(sortOption)
       .skip(skip)
       .limit(limitNum)
-      .populate("seller", "username avatar rating")
+      .populate("seller", "username customizations")
       .lean();
 
-    // Prepare response
-    const response = {
+    reply.send({
       auctions,
       pagination: {
         currentPage: pageNum,
@@ -447,18 +488,12 @@ export const searchAuctions = async (
         hasNextPage: pageNum < totalPages,
         hasPrevPage: pageNum > 1,
       },
-    };
-
-    reply.send(response);
+    });
   } catch (error) {
     console.error("Error in searchAuctions:", error);
-    if (error instanceof Error) {
-      reply
-        .status(500)
-        .send({ error: `Internal Server Error: ${error.message}` });
-    } else {
-      reply.status(500).send({ error: "An unexpected error occurred" });
-    }
+    reply
+      .status(500)
+      .send({ error: "An unexpected error occurred while searching auctions" });
   }
 };
 
@@ -542,6 +577,7 @@ export const endAuctionEarly = async (
     reply.status(500).send({ error: "Error ending auction early" });
   }
 };
+
 export const inviteUsers = async (
   request: FastifyRequest,
   reply: FastifyReply
@@ -571,20 +607,32 @@ export const inviteUsers = async (
     }
 
     const users = await User.find({ email: { $in: emails } });
+
+    // Handle case when no users are found
     if (users.length === 0) {
-      return reply.status(404).send({ error: "No matching users found" });
+      return reply.status(200).send({
+        success: false,
+        message: "No matching users found",
+        invitedUsers: [],
+        notFoundEmails: emails,
+      });
     }
 
     const newInvitedUsers = users.map((user) => user._id);
+    const invitedEmails = users.map((user) => user.email);
+    const notFoundEmails = emails.filter(
+      (email) => !invitedEmails.includes(email)
+    );
 
     auction.invitedUsers = auction.invitedUsers || [];
-    auction.invitedUsers = [
+    const uniqueInvitedUsers = [
       ...new Set([...auction.invitedUsers, ...newInvitedUsers]),
-    ] as ObjectId[];
+    ];
+    auction.invitedUsers = uniqueInvitedUsers as ObjectId[];
     await auction.save();
 
     const invitedUsersData = await User.find({
-      _id: { $in: auction.invitedUsers },
+      _id: { $in: uniqueInvitedUsers },
     }).select("email username");
 
     // Emit socket event for invited users update
@@ -594,8 +642,13 @@ export const inviteUsers = async (
     );
 
     reply.send({
-      message: "Users invited successfully",
+      success: true,
+      message:
+        notFoundEmails.length > 0
+          ? "Some users invited successfully, some emails not found"
+          : "All users invited successfully",
       invitedUsers: invitedUsersData,
+      notFoundEmails,
     });
   } catch (error) {
     console.error("Error inviting users:", error);
@@ -607,8 +660,7 @@ export const removeInvitedUser = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
-  const { id } = request.params as { id: string };
-  const { userId } = request.body as { userId: string };
+  const { id, userId } = request.params as { id: string; userId: string };
   const ownerId = request.user!._id;
 
   try {
