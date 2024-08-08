@@ -6,6 +6,7 @@ import auctionRoutes from "./src/routes/auctions";
 import bidRoutes from "./src/routes/bids";
 import chatRoutes from "./src/routes/chats";
 import userRoutes from "./src/routes/users";
+import notificationRoutes from "./src/routes/notifcation";
 import fastifyEnv from "@fastify/env";
 import { TypeBoxTypeProvider } from "@fastify/type-provider-typebox";
 import { setupWebSocket } from "./src/websocket/socketHandler";
@@ -94,6 +95,7 @@ async function buildServer() {
     server.register(bidRoutes, { prefix: "/api/bids" });
     server.register(chatRoutes, { prefix: "/api/chat" });
     server.register(userRoutes, { prefix: "/api/users" });
+    server.register(notificationRoutes, { prefix: "/api/notifications" });
 
     server.setErrorHandler((error, request, reply) => {
       server.log.error(error);
