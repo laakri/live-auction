@@ -181,6 +181,51 @@ export const getDiscoveryAuctions = async (
     reply.status(500).send({ error: "Error fetching auctions" });
   }
 };
+export const get3DAuctions = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  try {
+    const now = new Date();
+
+    const auctions = await Auction.find({
+      startTime: { $lte: now },
+      endTime: { $gt: now },
+      isPrivate: false,
+    })
+      .select(
+        "title images currentPrice startTime endTime watchedBy seller category"
+      )
+      .populate("seller", "username customizations.avatar")
+      .sort({ createdAt: -1 })
+      .limit(100)
+      .lean();
+
+    const processedAuctions = auctions.map((auction) => ({
+      _id: auction._id,
+      title: auction.title,
+      image: auction.images[0],
+      currentPrice: auction.currentPrice,
+      timeLeft: { type: "ends", value: auction.endTime },
+      watchersCount: auction.currentViewers || 0,
+      seller: {
+        username: auction.seller.username,
+      },
+      category: auction.category,
+    }));
+
+    reply.send({
+      auctions: processedAuctions,
+    });
+  } catch (error) {
+    console.error("Error fetching 3D auctions:", error);
+    reply.status(500).send({
+      error: "Internal server error",
+      message:
+        "An unexpected error occurred while fetching the 3D auctions. Please try again later.",
+    });
+  }
+};
 
 export const updateAuction = async (
   request: FastifyRequest,

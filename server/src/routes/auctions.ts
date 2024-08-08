@@ -46,4 +46,5 @@ export default async function auctionRoutes(fastify: FastifyInstance) {
     { preHandler: authenticate },
     auctionController.removeInvitedUser
   );
+  fastify.get("/auctions/3d", auctionController.get3DAuctions);
 }

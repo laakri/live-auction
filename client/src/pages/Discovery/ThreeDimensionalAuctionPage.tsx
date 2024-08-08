@@ -1,30 +1,50 @@
 import React, { useState, useEffect, useRef } from "react";
 import * as THREE from "three";
-import { motion } from "framer-motion";
-import { Search, Filter, X } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Input } from "../../components/ui/input";
 import { OrbitControls } from "three/examples/jsm/controls/OrbitControls.js";
 import {
   CSS3DObject,
   CSS3DRenderer,
 } from "three/examples/jsm/renderers/CSS3DRenderer.js";
+import { motion } from "framer-motion";
+import { Search, Filter } from "lucide-react";
+import { Button } from "../../components/ui/button";
+import { Input } from "../../components/ui/input";
+import { Auction } from "../../services/auctionService";
 
-interface ThreeDAuctionViewProps {
-  auctions: any[];
-  onClose: () => void;
-}
-
-const ThreeDAuctionView: React.FC<ThreeDAuctionViewProps> = ({
-  auctions,
-  onClose,
-}) => {
+const ThreeDimensionalAuctionPage: React.FC = () => {
+  const [auctions, setAuctions] = useState<Auction[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const containerRef = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<THREE.Scene | null>(null);
   const cameraRef = useRef<THREE.PerspectiveCamera | null>(null);
   const rendererRef = useRef<CSS3DRenderer | null>(null);
   const controlsRef = useRef<OrbitControls | null>(null);
+
+  useEffect(() => {
+    const fetchAuctions = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch(
+          `${import.meta.env.VITE_API_URL}/api/auctions/3d`
+        );
+        if (!response.ok) {
+          throw new Error("Failed to fetch auctions");
+        }
+        const data = await response.json();
+        setAuctions(data.auctions);
+      } catch (error) {
+        console.error("Error fetching 3D auctions:", error);
+        setError("Failed to load auctions. Please try again later.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAuctions();
+  }, []);
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -91,17 +111,15 @@ const ThreeDAuctionView: React.FC<ThreeDAuctionViewProps> = ({
 
     // Add auction cards to the 3D scene
     auctions.forEach((auction, index) => {
-      if (!auction) return; // Skip if auction is undefined
-
       const element = document.createElement("div");
       element.className = "auction-card";
       element.style.width = "200px";
       element.style.height = "300px";
       element.innerHTML = `
         <div class="bg-gray-900 rounded-lg overflow-hidden shadow-lg">
-          <img src="https://picsum.photos/seed/${auction._id}/200/150" alt="${
-        auction.title
-      }" class="w-full h-32 object-cover" />
+          <img src="${import.meta.env.VITE_API_URL}/uploads/${
+        auction.image
+      }" alt="${auction.title}" class="w-full h-32 object-cover" />
           <div class="p-4">
             <h3 class="text-lg font-bold text-white mb-2 truncate">${
               auction.title
@@ -109,8 +127,8 @@ const ThreeDAuctionView: React.FC<ThreeDAuctionViewProps> = ({
             <p class="text-sm text-gray-300 mb-2">$${auction.currentPrice.toLocaleString()}</p>
             <div class="flex justify-between items-center">
               <span class="text-xs text-gray-400">${
-                auction.watchedBy.length
-              } watchers</span>
+                auction.watchersCount
+              } viewers</span>
               <button class="bg-purple-600 text-white text-xs px-2 py-1 rounded">Bid Now</button>
             </div>
           </div>
@@ -138,10 +156,29 @@ const ThreeDAuctionView: React.FC<ThreeDAuctionViewProps> = ({
 
   const handleSearch = () => {
     // Implement search functionality
+    console.log("Search term:", searchTerm);
+    // You might want to filter the auctions based on the search term
+    // and update the 3D view accordingly
   };
 
+  if (loading) {
+    return (
+      <div className="flex justify-center items-center h-screen">
+        Loading...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="flex justify-center items-center h-screen text-red-500">
+        {error}
+      </div>
+    );
+  }
+
   return (
-    <div className="w-[calc(100vw-15rem)] ml-[15rem] h-screen bg-gray-950 text-gray-100 overflow-hidden relative">
+    <div className="w-full h-screen bg-gray-950 text-gray-100 overflow-hidden relative">
       <div ref={containerRef} className="w-full h-full" />
       <div className="absolute top-0 left-0 right-0 p-4 z-10">
         <motion.div
@@ -154,9 +191,6 @@ const ThreeDAuctionView: React.FC<ThreeDAuctionViewProps> = ({
             <h1 className="text-3xl font-bold text-purple-300">
               3D Auction Space
             </h1>
-            <Button onClick={onClose} variant="ghost" size="icon">
-              <X className="h-6 w-6" />
-            </Button>
           </div>
           <div className="flex items-center gap-2">
             <Input
@@ -167,10 +201,10 @@ const ThreeDAuctionView: React.FC<ThreeDAuctionViewProps> = ({
               className="flex-grow bg-gray-800 text-white border-gray-700 focus:border-purple-500"
             />
             <Button onClick={handleSearch}>
-              <Search className="mr-2 h-4 w-4 " />
+              <Search className="mr-2 h-4 w-4" />
               Search
             </Button>
-            <Button variant={"secondary"}>
+            <Button variant="secondary">
               <Filter className="h-4 w-4" />
             </Button>
           </div>
@@ -193,4 +227,4 @@ const ThreeDAuctionView: React.FC<ThreeDAuctionViewProps> = ({
   );
 };
 
-export default ThreeDAuctionView;
+export default ThreeDimensionalAuctionPage;

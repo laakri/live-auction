@@ -21,7 +21,6 @@ import {
 } from "../../components/ui/carousel";
 import CountdownTimer from "../../components/CountdownTimer";
 import { Search, Flame, Clock, Zap, Eye } from "lucide-react";
-import ThreeDAuctionView from "./ThreeDAuctionViewProps";
 import { Auction, getDiscoveryAuctions } from "../../services/auctionService";
 import { Link } from "react-router-dom";
 import { Skeleton } from "../../components/ui/skeleton";
@@ -35,7 +34,6 @@ const AuctionDiscoveryPage: React.FC = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [showThreeDView, setShowThreeDView] = useState(false);
 
   useEffect(() => {
     const fetchAuctions = async () => {
@@ -96,79 +94,70 @@ const AuctionDiscoveryPage: React.FC = () => {
           >
             Search
           </Button>
-          <Button
-            onClick={() => {
-              console.log("3D View button clicked");
-              setShowThreeDView(!showThreeDView);
-            }}
-            className="bg-blue-600 hover:bg-blue-700"
+          <Link
+            to="/3dAuction"
+            className="bg-blue-600 hover:bg-blue-700 inline-block px-4 py-2 rounded text-white"
           >
-            {showThreeDView ? "2D View" : "3D View"}
-          </Button>
+            3D View
+          </Link>
         </div>
       </div>
-      {showThreeDView ? (
-        <ThreeDAuctionView
-          auctions={featuredAuctions}
-          onClose={() => setShowThreeDView(false)}
+
+      <>
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4 text-white">
+            Featured Auctions
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {featuredAuctions.length > 0 ? (
+              featuredAuctions.map((auction) => (
+                <FeaturedAuctionCard key={auction._id} auction={auction} />
+              ))
+            ) : (
+              <div className="text-white">No featured auctions available</div>
+            )}
+          </div>
+        </section>
+
+        <AuctionCarousel
+          auctions={trendingAuctions}
+          title="Trending Auctions"
+          icon={Flame}
         />
-      ) : (
-        <>
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold mb-4 text-white">
-              Featured Auctions
-            </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-              {featuredAuctions.length > 0 ? (
-                featuredAuctions.map((auction) => (
-                  <FeaturedAuctionCard key={auction._id} auction={auction} />
-                ))
-              ) : (
-                <div className="text-white">No featured auctions available</div>
-              )}
-            </div>
-          </section>
+        <AuctionCarousel
+          auctions={endingSoonAuctions}
+          title="Ending Soon"
+          icon={Clock}
+        />
+        <AuctionCarousel
+          auctions={newAuctions}
+          title="New Auctions"
+          icon={Zap}
+        />
 
-          <AuctionCarousel
-            auctions={trendingAuctions}
-            title="Trending Auctions"
-            icon={Flame}
-          />
-          <AuctionCarousel
-            auctions={endingSoonAuctions}
-            title="Ending Soon"
-            icon={Clock}
-          />
-          <AuctionCarousel
-            auctions={newAuctions}
-            title="New Auctions"
-            icon={Zap}
-          />
-
-          <section className="mb-12">
-            <h2 className="text-2xl font-bold mb-4 text-white">
-              Browse by Category
-            </h2>
-            <Tabs defaultValue="all" className="w-full mb-4">
-              <TabsList className="mb-2">
-                <TabsTrigger value="all">All</TabsTrigger>
-                <TabsTrigger value="art">Art</TabsTrigger>
-                <TabsTrigger value="electronics">Electronics</TabsTrigger>
-                <TabsTrigger value="fashion">Fashion</TabsTrigger>
-                <TabsTrigger value="collectibles">Collectibles</TabsTrigger>
-              </TabsList>
-              <TabsContent value="all">
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {featuredAuctions.map((auction) => (
-                    <AuctionCard key={auction._id} auction={auction} />
-                  ))}
-                </div>
-              </TabsContent>
-              {/* Add content for other categories */}
-            </Tabs>
-          </section>
-        </>
-      )}
+        <section className="mb-12">
+          <h2 className="text-2xl font-bold mb-4 text-white">
+            Browse by Category
+          </h2>
+          <Tabs defaultValue="all" className="w-full mb-4">
+            <TabsList className="mb-2">
+              <TabsTrigger value="all">All</TabsTrigger>
+              <TabsTrigger value="art">Art</TabsTrigger>
+              <TabsTrigger value="electronics">Electronics</TabsTrigger>
+              <TabsTrigger value="fashion">Fashion</TabsTrigger>
+              <TabsTrigger value="collectibles">Collectibles</TabsTrigger>
+            </TabsList>
+            <TabsContent value="all">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {featuredAuctions.map((auction) => (
+                  <AuctionCard key={auction._id} auction={auction} />
+                ))}
+              </div>
+            </TabsContent>
+            {/* Add content for other categories */}
+          </Tabs>
+        </section>
+      </>
     </div>
   );
 };
