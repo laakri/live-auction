@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -11,12 +11,8 @@ import { Input } from "../../../components/ui/input";
 import { Label } from "../../../components/ui/label";
 import { X, UserPlus } from "lucide-react";
 import { useToast } from "../../../components/ui/use-toast";
-
-interface InvitedUser {
-  _id: string;
-  email: string;
-  username: string;
-}
+import { socketService } from "../socketService";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface InviteUsersDialogProps {
   isOpen: boolean;
@@ -24,7 +20,7 @@ interface InviteUsersDialogProps {
   onInvite: (emails: string[]) => Promise<void>;
   onRemove: (userId: string) => Promise<void>;
   auctionId: string;
-  invitedUsers: InvitedUser[];
+  invitedUsers: any[];
 }
 
 const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
@@ -33,19 +29,32 @@ const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
   onInvite,
   onRemove,
   auctionId,
-  invitedUsers,
+  invitedUsers: initialInvitedUsers,
 }) => {
   const [emails, setEmails] = useState<string[]>([]);
   const [currentEmail, setCurrentEmail] = useState("");
+  const [invitedUsers, setInvitedUsers] = useState(initialInvitedUsers);
   const { toast } = useToast();
 
+  useEffect(() => {
+    socketService.on("user invited", (newUser: any) => {
+      setInvitedUsers((prevUsers) => [...prevUsers, newUser]);
+    });
+
+    socketService.on("user removed", (removedUserId: string) => {
+      setInvitedUsers((prevUsers) =>
+        prevUsers.filter((user) => user._id !== removedUserId)
+      );
+    });
+
+    return () => {
+      socketService.off("user invited");
+      socketService.off("user removed");
+    };
+  }, []);
+
   const renderUserInfo = (user: any) => {
-    if (typeof user === "object" && user !== null) {
-      const email = user.email?.email || user.email || "N/A";
-      const username = user.username || "N/A";
-      return `${email} (${username})`;
-    }
-    return "Invalid user data";
+    return `${user.email} (${user.username})`;
   };
 
   const handleAddEmail = () => {
@@ -79,10 +88,6 @@ const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
   const handleRemoveInvitedUser = async (userId: string) => {
     try {
       await onRemove(userId);
-      toast({
-        title: "User Removed",
-        description: "The user has been removed from the invited list.",
-      });
     } catch (error) {
       toast({
         title: "Error",
@@ -130,28 +135,33 @@ const InviteUsersDialog: React.FC<InviteUsersDialogProps> = ({
           </div>
           <div className="space-y-2">
             <Label>Already Invited Users:</Label>
-            {Array.isArray(invitedUsers) ? (
-              invitedUsers.map((user, index) => (
-                <div
-                  key={user._id || index}
-                  className="flex items-center justify-between bg-gray-800 p-2 rounded"
-                >
-                  <span>{renderUserInfo(user)}</span>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => {
-                      console.log("User ID: ", user._id);
-                      handleRemoveInvitedUser(user._id);
-                    }}
+            <AnimatePresence>
+              {invitedUsers.length > 0 ? (
+                invitedUsers.map((user) => (
+                  <motion.div
+                    key={user._id || user.email}
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -10 }}
+                    transition={{ duration: 0.2 }}
+                    className="flex items-center justify-between bg-gray-800 p-2 rounded"
                   >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-              ))
-            ) : (
-              <p>No invited users or invalid data</p>
-            )}
+                    <span>{renderUserInfo(user)}</span>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() =>
+                        handleRemoveInvitedUser(user._id || user.email)
+                      }
+                    >
+                      <X className="h-4 w-4" />
+                    </Button>
+                  </motion.div>
+                ))
+              ) : (
+                <p>No invited users</p>
+              )}
+            </AnimatePresence>
           </div>
         </div>
         <DialogFooter>

@@ -107,6 +107,10 @@ const useAuthStore = create<AuthState>()(
             title: "Uh oh! Something went wrong.",
             description: "Login failed",
           });
+          console.error(
+            "Error in login function:",
+            error instanceof Error ? error.message : error
+          );
           set({ error: "Invalid credentials" });
         } finally {
           set({ isLoading: false });

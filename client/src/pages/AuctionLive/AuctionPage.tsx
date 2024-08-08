@@ -168,36 +168,42 @@ const AuctionPage: React.FC = () => {
   };
 
   const handleInviteUsers = async (emails: string[]) => {
-    console.log("Attempting to invite users:", emails);
     try {
-      const response = await fetch(
-        `${import.meta.env.VITE_API_URL}/api/auctions/${id}/invite`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ emails }),
-        }
-      );
+      const url = `${import.meta.env.VITE_API_URL}/api/auctions/${id}/invite`;
+      console.log("Sending request to:", url);
+
+      const response = await fetch(url, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ emails }),
+      });
 
       const data = await response.json();
 
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to invite users");
-      }
-
-      // Check if the response indicates success
       if (data.success) {
         toast({
           title: "Users Invited",
-          description:
-            "The selected users have been invited to this private auction.",
+          description: data.message,
         });
       } else {
-        // If the server response doesn't indicate success, show an error
-        throw new Error(data.message || "Failed to invite users");
+        toast({
+          title: "Invitation Partial Success",
+          description: data.message,
+          variant: "destructive",
+        });
+      }
+
+      if (data.notFoundEmails && data.notFoundEmails.length > 0) {
+        toast({
+          title: "Some emails not found",
+          description: `The following emails were not found: ${data.notFoundEmails.join(
+            ", "
+          )}`,
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error("Error inviting users:", error);
@@ -513,9 +519,7 @@ const AuctionPage: React.FC = () => {
         onInvite={handleInviteUsers}
         onRemove={handleRemoveInvitedUser}
         auctionId={id!}
-        invitedUsers={auction.invitedUsers.map(
-          (user) => ({ email: user } as any)
-        )}
+        invitedUsers={auction.invitedUsers}
       />
     </div>
   );

@@ -113,6 +113,7 @@ export const getDiscoveryAuctions = async (
         ...query,
         startTime: { $lte: now },
         endTime: { $gt: now },
+        isPrivate: false, // Add this line to exclude private auctions
       })
         .select(auctionProjection)
         .sort(sort)
@@ -239,8 +240,6 @@ export const updateAuction = async (
     reply.status(500).send({ error: "Error updating auction" });
   }
 };
-
-// ... (keep other existing functions)
 
 export const deleteAuction = async (
   request: FastifyRequest,
@@ -542,6 +541,7 @@ export const endAuctionEarly = async (
     reply.status(500).send({ error: "Error ending auction early" });
   }
 };
+
 export const inviteUsers = async (
   request: FastifyRequest,
   reply: FastifyReply
@@ -571,20 +571,32 @@ export const inviteUsers = async (
     }
 
     const users = await User.find({ email: { $in: emails } });
+
+    // Handle case when no users are found
     if (users.length === 0) {
-      return reply.status(404).send({ error: "No matching users found" });
+      return reply.status(200).send({
+        success: false,
+        message: "No matching users found",
+        invitedUsers: [],
+        notFoundEmails: emails,
+      });
     }
 
     const newInvitedUsers = users.map((user) => user._id);
+    const invitedEmails = users.map((user) => user.email);
+    const notFoundEmails = emails.filter(
+      (email) => !invitedEmails.includes(email)
+    );
 
     auction.invitedUsers = auction.invitedUsers || [];
-    auction.invitedUsers = [
+    const uniqueInvitedUsers = [
       ...new Set([...auction.invitedUsers, ...newInvitedUsers]),
-    ] as ObjectId[];
+    ];
+    auction.invitedUsers = uniqueInvitedUsers as ObjectId[];
     await auction.save();
 
     const invitedUsersData = await User.find({
-      _id: { $in: auction.invitedUsers },
+      _id: { $in: uniqueInvitedUsers },
     }).select("email username");
 
     // Emit socket event for invited users update
@@ -594,8 +606,13 @@ export const inviteUsers = async (
     );
 
     reply.send({
-      message: "Users invited successfully",
+      success: true,
+      message:
+        notFoundEmails.length > 0
+          ? "Some users invited successfully, some emails not found"
+          : "All users invited successfully",
       invitedUsers: invitedUsersData,
+      notFoundEmails,
     });
   } catch (error) {
     console.error("Error inviting users:", error);
@@ -607,8 +624,7 @@ export const removeInvitedUser = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
-  const { id } = request.params as { id: string };
-  const { userId } = request.body as { userId: string };
+  const { id, userId } = request.params as { id: string; userId: string };
   const ownerId = request.user!._id;
 
   try {
