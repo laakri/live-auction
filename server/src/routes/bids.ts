@@ -4,6 +4,5 @@ import * as bidController from "../controllers/bidController";
 
 export default async function bidRoutes(fastify: FastifyInstance) {
   fastify.post("/", { preHandler: authenticate }, bidController.placeBid);
-  // fastify.post("/", bidController.placeBid);
   fastify.get("/:auctionId", bidController.getBidsByAuctionId);
 }

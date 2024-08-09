@@ -9,6 +9,7 @@ import fs from "fs/promises";
 import path from "path";
 import { socketHandler } from "../websocket/socketHandler";
 import { ObjectId } from "mongoose";
+import { notificationService } from "../services/notificationService";
 
 const UPLOAD_DIR = path.join(__dirname, "../uploads");
 
@@ -29,7 +30,6 @@ async function deleteImage(filename: string): Promise<void> {
   const filepath = path.join(UPLOAD_DIR, filename);
   await fs.unlink(filepath);
 }
-
 export const createAuction = async (
   request: FastifyRequest,
   reply: FastifyReply
@@ -80,7 +80,16 @@ export const createAuction = async (
     await auction.save();
     user.createdAuctions.push(auction._id);
     await user.save();
-
+    // Check if this is the user's first auction
+    if (user.createdAuctions.length === 1) {
+      const message = `Congratulations on creating your first auction! You have ${user.freeAuctionsRemaining} free auctions remaining. Remember, you can always boost your auction visibility with credits.`;
+      await notificationService.createNotification(
+        userId.toString(),
+        "first_auction",
+        message,
+        auction._id.toString()
+      );
+    }
     reply.status(201).send(auction);
   } catch (error) {
     console.error("Error creating auction:", error);
@@ -545,22 +554,26 @@ export const endAuctionEarly = async (
   request: FastifyRequest,
   reply: FastifyReply
 ) => {
-  const { id: auctionId } = request.params as { id: string };
+  const { auctionId } = request.params as { auctionId: string };
   const userId = request.user!._id;
 
+  console.log("Received request to end auction early:", auctionId);
   try {
-    const auction = await Auction.findById(auctionId);
+    const auction = await Auction.findById(auctionId).populate("bids");
     if (!auction) {
+      console.log("Auction not found:", auctionId);
       return reply.status(404).send({ error: "Auction not found" });
     }
 
     if (auction.seller.toString() !== userId.toString()) {
+      console.log("User not authorized to end auction:", userId);
       return reply
         .status(403)
         .send({ error: "Not authorized to end this auction" });
     }
 
     if (!auction.ownerControls.canEndEarly) {
+      console.log("Early ending not allowed for auction:", auctionId);
       return reply
         .status(400)
         .send({ error: "Early ending is not allowed for this auction" });
@@ -569,15 +582,42 @@ export const endAuctionEarly = async (
     auction.status = "ended";
     auction.endTime = new Date();
     await auction.save();
+
+    // Notify winner and losers
+    const highestBid = auction.bids.sort(
+      (a, b) => (b as any).amount - (a as any).amount
+    )[0];
+    if (highestBid) {
+      await notificationService.createNotification(
+        highestBid.toString(), // Ensure this is the bidder's ID
+        "auction_won",
+        `Congratulations! You have won the auction "${auction.title}".`,
+        auction._id.toString()
+      );
+      const losingBidders = auction.bids
+        .filter((bid) => bid.toString() !== highestBid.toString())
+        .map((bid) => bid.toString());
+
+      for (const loserId of losingBidders) {
+        await notificationService.createNotification(
+          loserId,
+          "auction_lost",
+          `You have lost the auction "${auction.title}". Better luck next time!`,
+          auction._id.toString()
+        );
+      }
+    }
+
     // Emit real-time update
     socketHandler.emitAuctionEnded(auction._id.toString());
 
+    console.log("Auction ended successfully:", auctionId);
     reply.send({ message: "Auction ended successfully", auction });
   } catch (error) {
-    reply.status(500).send({ error: "Error ending auction early" });
+    console.error("Error ending auction:", error);
+    reply.status(500).send({ error: "Error ending auction" });
   }
 };
-
 export const inviteUsers = async (
   request: FastifyRequest,
   reply: FastifyReply

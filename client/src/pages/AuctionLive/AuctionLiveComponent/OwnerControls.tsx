@@ -146,7 +146,7 @@ const OwnerControls: React.FC<OwnerControlsProps> = ({ auction }) => {
             <Button
               variant="destructive"
               className="w-full"
-              disabled={!canEndEarly || auction.status !== "active"}
+              disabled={!canEndEarly}
             >
               End Auction Early
             </Button>

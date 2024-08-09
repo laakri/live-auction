@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { persist, createJSONStorage } from "zustand/middleware";
 import axios from "axios";
+import { NavigateFunction } from "react-router-dom";
 
 export interface User {
   _id: string;
@@ -45,12 +46,18 @@ interface AuthState {
   isLoading: boolean;
   error: string | null;
   showVerificationPrompt: boolean;
-  login: (email: string, password: string, toast: any) => Promise<void>;
+  login: (
+    email: string,
+    password: string,
+    toast: any,
+    navigate: NavigateFunction
+  ) => Promise<void>;
   signup: (
     username: string,
     email: string,
     password: string,
-    toast: any
+    toast: any,
+    navigate: NavigateFunction
   ) => Promise<void>;
   logout: () => void;
   clearError: () => void;
@@ -68,7 +75,12 @@ const useAuthStore = create<AuthState>()(
       showVerificationPrompt: false,
       error: null,
 
-      login: async (email: string, password: string, toast: any) => {
+      login: async (
+        email: string,
+        password: string,
+        toast: any,
+        navigate: NavigateFunction
+      ) => {
         set({ isLoading: true, error: null });
         try {
           const response = await axios.post(
@@ -101,6 +113,7 @@ const useAuthStore = create<AuthState>()(
             title: "Success",
             description: "Logged in successfully",
           });
+          navigate("/user-profile"); // Redirect to UserProfile
         } catch (error) {
           toast({
             variant: "destructive",
@@ -121,7 +134,8 @@ const useAuthStore = create<AuthState>()(
         username: string,
         email: string,
         password: string,
-        toast: any
+        toast: any,
+        navigate: NavigateFunction
       ) => {
         set({ isLoading: true, error: null });
         try {
@@ -147,6 +161,7 @@ const useAuthStore = create<AuthState>()(
             title: "SignUp Succeed",
             description: "Signup completed successfully",
           });
+          navigate("/user-profile"); // Redirect to UserProfile
         } catch (error) {
           toast({
             variant: "destructive",
