@@ -55,10 +55,10 @@ const MembreProfile = () => {
     // Fetch user data based on the ID
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`/api/users/${id}`);
+        const response = await fetch(`http://localhost:3000/api/users/userProfile/${id}`);
         if (!response.ok) throw new Error("Failed to fetch user data");
         const userData = await response.json();
-        setUser(userData);
+        setUser(userData.user);
       } catch (error:any) {
         setError(error.message);
       }
@@ -66,7 +66,7 @@ const MembreProfile = () => {
 
     fetchUserData();
   }, [id]);
-
+console.log(user);
   if (!user) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -147,8 +147,9 @@ const MembreProfile = () => {
                 </h1>
                 <p className="text-gray-300 text-sm">{email}</p>
                 <p className="text-gray-300 text-sm">{bio}</p>
+                <div className="flex justify-left mt-3">
                 <FollowButton userId="668bcd9b094cf69a24d29977" loggedInUserId="668f9dd6beb6ca13b3c07ff5"/>
-
+                </div>
               </div>
             </div>
             <Card className="bg-gray-900/30 p-4 border-none rounded-xl w-full sm:w-auto mt-4 sm:mt-0">
@@ -281,7 +282,7 @@ const MembreProfile = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">XP</p>
-                    <p className="text-2xl font-bold">{xp.toLocaleString()}</p>
+                    <p className="text-2xl font-bold">{xp}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Rank</p>
@@ -295,13 +296,13 @@ const MembreProfile = () => {
                   <div>
                     <p className="text-sm text-gray-400">Balance</p>
                     <p className="text-2xl font-bold">
-                      ${balance.toLocaleString()}
+                      ${balance}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Virtual Currency</p>
                     <p className="text-2xl font-bold flex items-center gap-2">
-                      {virtualCurrencyBalance.toLocaleString()}{" "}
+                      {virtualCurrencyBalance}{" "}
                       <Coins className="text-yellow-500 h-5 w-5" />
                     </p>
                   </div>
