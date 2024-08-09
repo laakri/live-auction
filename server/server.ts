@@ -14,6 +14,7 @@ import { Server } from "socket.io";
 import multipart from "@fastify/multipart";
 import fastifyStatic from "@fastify/static";
 import path from "path";
+import { scheduleAuctionEndingNotifications } from "./src/scripts/scheduleCron";
 
 interface EnvConfig {
   PORT: number;
@@ -108,6 +109,8 @@ async function buildServer() {
     process.exit(1);
   }
 }
+
+scheduleAuctionEndingNotifications();
 
 async function startServer() {
   try {

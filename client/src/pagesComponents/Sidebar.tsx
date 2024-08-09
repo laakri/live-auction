@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Button } from "../components/ui/button";
 import {
@@ -12,12 +12,14 @@ import {
   Award,
   Clock,
   DollarSign,
+  Bell,
 } from "lucide-react";
 import useAuthStore from "../stores/authStore";
 import logo from "../assets/logoWhite.png";
 import { Progress } from "../components/ui/progress";
 import { ScrollArea } from "../components/ui/scroll-area";
 import SearchComponent from "./SearchComponent";
+import { notificationService } from "../services/notificationService";
 
 interface IUser {
   username: string;
@@ -36,9 +38,22 @@ interface IUser {
 const Sidebar: React.FC = () => {
   const { isAuthenticated, logout, user } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
+  const [notificationCount, setNotificationCount] = useState(0);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
+  useEffect(() => {
+    const fetchNotificationCount = async () => {
+      try {
+        const notifications =
+          await notificationService.getUnreadNotifications();
+        setNotificationCount(notifications.length);
+      } catch (error) {
+        console.error("Error fetching notification count:", error);
+      }
+    };
 
+    fetchNotificationCount();
+  }, []);
   return (
     <>
       <div className="xl:hidden fixed top-0 left-0 right-0 z-50 bg-background flex items-center justify-between p-4 shadow-md border-b ">
@@ -116,6 +131,12 @@ const Sidebar: React.FC = () => {
                   label="Profile"
                 />
                 <NavLink
+                  to="/notifications"
+                  icon={<Bell className="h-4 w-4" />}
+                  label="Notifications"
+                  badge={notificationCount > 0 ? notificationCount : 0}
+                />
+                <NavLink
                   to="/create-auction"
                   icon={<PlusCircle className="h-4 w-4" />}
                   label="Create Auction"
@@ -186,13 +207,19 @@ const NavLink: React.FC<{
   to: string;
   icon: React.ReactNode;
   label: string;
-}> = ({ to, icon, label }) => (
+  badge?: number;
+}> = ({ to, icon, label, badge }) => (
   <Link
     to={to}
     className="flex items-center px-2 py-2 rounded-md hover:bg-secondary transition-colors"
   >
     <span className="mr-3 text-primary">{icon}</span>
     <span>{label}</span>
+    {badge !== undefined && (
+      <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full">
+        {badge}
+      </span>
+    )}
   </Link>
 );
 

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   motion,
   AnimatePresence,
-  useViewportScroll,
+  useScroll,
   useTransform,
 } from "framer-motion";
 import { ArrowRight, Diamond, Clock, Shield, ChevronDown } from "lucide-react";
@@ -167,7 +167,7 @@ const HomePage = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const { scrollYProgress } = useViewportScroll();
+  const { scrollYProgress } = useScroll();
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "50%"]);
   const opacity = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
   const scale = useTransform(scrollYProgress, [0, 0.5], [1, 1.2]);
