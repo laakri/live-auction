@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import {
@@ -25,15 +25,37 @@ import {
   Shield,
   Search,
   Coins,
+  Clock,
+  Eye,
 } from "lucide-react";
 import useAuthStore from "../../stores/authStore";
 import { Link } from "react-router-dom";
 import { useToast } from "../../components/ui/use-toast";
-import FollowButton from "../../components/FollowButton";
+import CountdownTimer from "../../components/CountdownTimer";
+import { motion } from "framer-motion";
+
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { user, error } = useAuthStore();
   const { toast } = useToast();
+const [auctions, setAuctions] = useState([]);
+const [error1, setError] = useState(null);
+
+  useEffect(() => {
+    // Fetch user data based on the ID
+    const fetchUserData = async () => {
+      try {
+        const response = await fetch(`http://localhost:3000/api/users/userProfile/${_id}`);
+        if (!response.ok) throw new Error("Failed to fetch user data");
+        const userData = await response.json();
+        setAuctions(userData.auctions);
+      } catch (error:any) {
+        setError(error.message);
+      }
+    };
+
+    fetchUserData();
+  }, []);
 
   if (!user) return <div>User Not Found Login again</div>;
   if (error) return <div>Error: {error}</div>;
@@ -300,7 +322,72 @@ const UserProfile = () => {
           <TabsContent value="auctions">
             <Card className="bg-gray-900/40 p-6 rounded-xl">
               <h3 className="font-semibold mb-4">Your Auctions</h3>
-              <p className="text-gray-400">You have no active auctions.</p>
+              {auctions && auctions.length > 0 ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {auctions.map((auction, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="bg-gray-900 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+          >
+            <div className="relative">
+              <img
+                 src={`http://localhost:3000/uploads/${(auction as any).image}`}
+                 alt={(auction as any).title}
+                 className="w-full h-40 object-cover"
+              />
+              <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full px-2 py-1">
+                <span className="text-xs text-white font-medium">
+                  {(auction as any).watchersCount}
+                </span>
+              </div>
+            </div>
+            <div className="p-3">
+              <h3 className="text-sm font-medium text-gray-100 truncate mb-1">
+                {(auction as any).title}
+              </h3>
+              <div className="flex items-center space-x-2 mb-2">
+               
+                <span className="text-xs text-gray-400">
+                  {(auction as any).seller?.username}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs text-gray-400">
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-3 h-3" />
+                  {(auction as any).timeLeft && (
+                    <CountdownTimer
+                      endTime={(auction as any).timeLeft.value || ""}
+                      size="sm"
+                      shortLabels={true}
+                    />
+                  )}
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Eye className="w-3 h-3" />
+                  <span>${(auction as any).currentPrice?.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+            <div className="px-3 pb-3">
+              <Link to={`/auction/${(auction as any)._id}`}>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full bg-purple-600 bg-opacity-50 backdrop-blur-lg text-white text-xs font-medium py-2 rounded-md hover:bg-purple-700 transition-colors duration-200"
+                >
+                  Show
+                </motion.button>
+              </Link>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-gray-400">You have no active auctions.</p>
+    )}
             </Card>
           </TabsContent>
           <TabsContent value="settings">
