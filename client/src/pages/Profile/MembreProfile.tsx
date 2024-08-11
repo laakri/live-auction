@@ -2,6 +2,11 @@ import { useEffect, useState } from "react";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../components/ui/avatar";
+import {
   Tabs,
   TabsContent,
   TabsList,
@@ -22,10 +27,14 @@ import {
   Shield,
   Search,
   Coins,
+  Eye,
+  Clock,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useToast } from "../../components/ui/use-toast";
 import FollowButton from "../../components/FollowButton";
+import { motion } from "framer-motion";
+import CountdownTimer from "../../components/CountdownTimer";
 
 interface User {
   username: string;
@@ -47,18 +56,20 @@ interface User {
 const MembreProfile = () => {
   const { id } = useParams(); // Extracting user ID from URL params
   const [user, setUser] = useState<User | null>(null);
+  const [auctions, setAuctions] = useState([]);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("auctions");
   const { toast } = useToast();
 
   useEffect(() => {
     // Fetch user data based on the ID
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`/api/users/${id}`);
+        const response = await fetch(`http://localhost:3000/api/users/userProfile/${id}`);
         if (!response.ok) throw new Error("Failed to fetch user data");
         const userData = await response.json();
-        setUser(userData);
+        setUser(userData.user);
+        setAuctions(userData.auctions);
       } catch (error:any) {
         setError(error.message);
       }
@@ -66,7 +77,7 @@ const MembreProfile = () => {
 
     fetchUserData();
   }, [id]);
-
+console.log(auctions);
   if (!user) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -147,8 +158,9 @@ const MembreProfile = () => {
                 </h1>
                 <p className="text-gray-300 text-sm">{email}</p>
                 <p className="text-gray-300 text-sm">{bio}</p>
+                <div className="flex justify-left mt-3">
                 <FollowButton userId="668bcd9b094cf69a24d29977" loggedInUserId="668f9dd6beb6ca13b3c07ff5"/>
-
+                </div>
               </div>
             </div>
             <Card className="bg-gray-900/30 p-4 border-none rounded-xl w-full sm:w-auto mt-4 sm:mt-0">
@@ -174,15 +186,7 @@ const MembreProfile = () => {
       <main className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col sm:flex-row justify-between gap-2 mt-4">
           <div className="flex flex-wrap gap-2">
-            <Link to="/create-auction">
-              <Button
-                variant="outline"
-                className="border-dashed w-full sm:w-auto"
-              >
-                <Plus className="h-4 mr-2" />
-                Create Auction
-              </Button>
-            </Link>
+           
           </div>
           <div className="flex gap-2 mt-2 sm:mt-0">
             <Link to="/UserVerification">
@@ -248,7 +252,7 @@ const MembreProfile = () => {
         </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4">
+          <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3">
             <TabsTrigger value="overview">
               <BarChart2 className="w-4 h-4 mr-2 text-blue-500" />
               Overview
@@ -260,10 +264,6 @@ const MembreProfile = () => {
             <TabsTrigger value="auctions">
               <Gavel className="w-4 h-4 mr-2 text-green-500" />
               Auctions
-            </TabsTrigger>
-            <TabsTrigger value="settings">
-              <Settings className="w-4 h-4 mr-2 text-red-500" />
-              Settings
             </TabsTrigger>
           </TabsList>
           <TabsContent value="overview">
@@ -281,7 +281,7 @@ const MembreProfile = () => {
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">XP</p>
-                    <p className="text-2xl font-bold">{xp.toLocaleString()}</p>
+                    <p className="text-2xl font-bold">{xp}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Rank</p>
@@ -295,13 +295,13 @@ const MembreProfile = () => {
                   <div>
                     <p className="text-sm text-gray-400">Balance</p>
                     <p className="text-2xl font-bold">
-                      ${balance.toLocaleString()}
+                      ${balance}
                     </p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-400">Virtual Currency</p>
                     <p className="text-2xl font-bold flex items-center gap-2">
-                      {virtualCurrencyBalance.toLocaleString()}{" "}
+                      {virtualCurrencyBalance}{" "}
                       <Coins className="text-yellow-500 h-5 w-5" />
                     </p>
                   </div>
@@ -332,43 +332,77 @@ const MembreProfile = () => {
           <TabsContent value="auctions">
             <Card className="bg-gray-900/40 p-6 rounded-xl">
               <h3 className="font-semibold mb-4">Your Auctions</h3>
-              <p className="text-gray-400">You have no active auctions.</p>
-            </Card>
-          </TabsContent>
-          <TabsContent value="settings">
-            <Card className="bg-gray-900/40 p-6 rounded-xl">
-              <h3 className="font-semibold mb-4">Account Settings</h3>
-              <div className="  flex flex-col gap-3">
-                <Link to="/UserSettings" state={{ activeTab: "profile" }}>
-                  <Button
-                    variant="outline"
-                    className="w-full flex justify-between items-center"
-                  >
-                    Edit Profile
-                    <Edit2Icon className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/UserSettings" state={{ activeTab: "privacy" }}>
-                  <Button
-                    variant="outline"
-                    className="w-full flex justify-between items-center"
-                  >
-                    <span>Privacy Settings</span>
-                    <User className="h-4 w-4" />
-                  </Button>
-                </Link>
-                <Link to="/UserSettings" state={{ activeTab: "notifications" }}>
-                  <Button
-                    variant="outline"
-                    className="w-full flex justify-between items-center"
-                  >
-                    <span>Notification Preferences</span>
-                    <Settings className="h-4 w-4" />
-                  </Button>
-                </Link>
+              
+              
+    {auctions && auctions.length > 0 ? (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {auctions.map((auction, index) => (
+          <motion.div
+            key={index}
+            initial={{ opacity: 0, y: 10 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2 }}
+            className="bg-gray-900 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+          >
+            <div className="relative">
+              <img
+                 src={`http://localhost:3000/uploads/${(auction as any).image}`}
+                 alt={(auction as any).title}
+                 className="w-full h-40 object-cover"
+              />
+              <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full px-2 py-1">
+                <span className="text-xs text-white font-medium">
+                  {(auction as any).watchersCount}
+                </span>
               </div>
-            </Card>
-          </TabsContent>
+            </div>
+            <div className="p-3">
+              <h3 className="text-sm font-medium text-gray-100 truncate mb-1">
+                {(auction as any).title}
+              </h3>
+              <div className="flex items-center space-x-2 mb-2">
+               
+                <span className="text-xs text-gray-400">
+                  {(auction as any).seller?.username}
+                </span>
+              </div>
+              <div className="flex justify-between items-center text-xs text-gray-400">
+                <div className="flex items-center space-x-1">
+                  <Clock className="w-3 h-3" />
+                  {(auction as any).timeLeft && (
+                    <CountdownTimer
+                      endTime={(auction as any).timeLeft.value || ""}
+                      size="sm"
+                      shortLabels={true}
+                    />
+                  )}
+                </div>
+                <div className="flex items-center space-x-1">
+                  <Eye className="w-3 h-3" />
+                  <span>${(auction as any).currentPrice?.toLocaleString()}</span>
+                </div>
+              </div>
+            </div>
+            <div className="px-3 pb-3">
+              <Link to={`/auction/${(auction as any)._id}`}>
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  className="w-full bg-purple-600 bg-opacity-50 backdrop-blur-lg text-white text-xs font-medium py-2 rounded-md hover:bg-purple-700 transition-colors duration-200"
+                >
+                  Bid Now
+                </motion.button>
+              </Link>
+            </div>
+          </motion.div>
+        ))}
+      </div>
+    ) : (
+      <p className="text-gray-400">You have no active auctions.</p>
+    )}
+  </Card>
+</TabsContent>
+         
         </Tabs>
       </main>
     </div>
