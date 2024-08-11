@@ -1,4 +1,5 @@
 import { FastifyRequest, FastifyReply } from "fastify";
+import { getUnreadNotificationsCount } from "../services/notificationService"; // Import the service
 
 const clients = new Map<string, FastifyReply>();
 
@@ -22,10 +23,17 @@ export const sseController = {
         "Content-Type": "text/event-stream",
         "Cache-Control": "no-cache",
         Connection: "keep-alive",
+        "Access-Control-Allow-Origin": "http://localhost:5173",
+        "Access-Control-Allow-Methods": "GET, POST, PUT, DELETE",
+        "Access-Control-Allow-Credentials": "true",
       });
 
       console.log(`User ${userId} connected to SSE`);
       clients.set(userId, reply);
+
+      // Fetch and send the initial count of unread notifications
+      const initialCount = await getUnreadNotificationsCount(userId);
+      reply.raw.write(`data: ${JSON.stringify({ count: initialCount })}\n\n`);
 
       reply.raw.write(
         `data: ${JSON.stringify({ message: "Connected to SSE" })}\n\n`
@@ -43,6 +51,7 @@ export const sseController = {
 
   sendNotificationCount(userId: string, count: number) {
     const client = clients.get(userId);
+    console.log("count", count);
     if (client) {
       client.raw.write(`data: ${JSON.stringify({ count })}\n\n`);
     }

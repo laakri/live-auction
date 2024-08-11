@@ -51,16 +51,16 @@ const Sidebar: React.FC = () => {
 
       eventSource.onmessage = (event) => {
         const data = JSON.parse(event.data);
-        console.log(data);
-        console.log("something");
-        setNotificationCount(data.count);
+        if (data.count !== undefined) {
+          setNotificationCount(data.count);
+        }
       };
 
       return () => {
         eventSource.close();
       };
     }
-  }, [isAuthenticated, user]);
+  }, [isAuthenticated, user, notificationCount]);
   return (
     <>
       <div className="xl:hidden fixed top-0 left-0 right-0 z-50 bg-background flex items-center justify-between p-4 shadow-md border-b ">

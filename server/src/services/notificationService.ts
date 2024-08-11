@@ -20,16 +20,14 @@ export const notificationService = {
     const savedNotification = await notification.save();
 
     // Send real-time notification count via SSE
-    const unreadCount = (await this.getUnreadNotifications(userId)).length;
+    const unreadCount = await this.getUnreadNotifications(userId);
     sseController.sendNotificationCount(userId, unreadCount);
 
     return savedNotification;
   },
 
-  async getUnreadNotifications(userId: string): Promise<INotification[]> {
-    return await Notification.find({ user: userId, isRead: false }).sort({
-      createdAt: -1,
-    });
+  async getUnreadNotifications(userId: string): Promise<number> {
+    return await Notification.countDocuments({ user: userId, isRead: false });
   },
 
   async markNotificationAsRead(
@@ -54,3 +52,9 @@ export const notificationService = {
     return result.deletedCount > 0;
   },
 };
+
+export async function getUnreadNotificationsCount(
+  userId: string
+): Promise<number> {
+  return await Notification.countDocuments({ user: userId, isRead: false });
+}
