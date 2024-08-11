@@ -31,7 +31,7 @@ const Notifications: React.FC = () => {
   const fetchNotifications = async () => {
     try {
       const data = await notificationService.getUnreadNotifications();
-      setNotifications(data);
+      setNotifications(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error("Error fetching notifications:", error);
     }

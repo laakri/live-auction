@@ -24,9 +24,5 @@ export default async function (fastify: FastifyInstance) {
     { preHandler: authenticate },
     notificationController.deleteNotification
   );
-  fastify.get(
-    "/sse",
-    { preHandler: authenticate },
-    sseController.subscribeToNotifications
-  );
+  fastify.get("/sse", sseController.subscribeToNotifications);
 }

@@ -6,7 +6,6 @@ export const notificationController = {
   async getUnreadNotifications(request: FastifyRequest, reply: FastifyReply) {
     try {
       const userId = request.user!._id;
-      console.log("Fetching notifications for user:", userId);
 
       if (!userId) {
         console.error("User ID is undefined");
@@ -23,16 +22,9 @@ export const notificationController = {
 
       const notifications = await Notification.find({
         user: new Types.ObjectId(userId),
-        isRead: false,
       })
         .sort({ createdAt: -1 })
         .limit(20);
-
-      console.log("Found notifications:", notifications);
-
-      if (notifications.length === 0) {
-        console.log("No unread notifications found for user:", userId);
-      }
 
       reply.send(notifications);
     } catch (error) {

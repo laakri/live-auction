@@ -19,7 +19,6 @@ import logo from "../assets/logoWhite.png";
 import { Progress } from "../components/ui/progress";
 import { ScrollArea } from "../components/ui/scroll-area";
 import SearchComponent from "./SearchComponent";
-import { notificationService } from "../services/notificationService";
 
 interface IUser {
   username: string;
@@ -36,24 +35,32 @@ interface IUser {
 }
 
 const Sidebar: React.FC = () => {
-  const { isAuthenticated, logout, user } = useAuthStore();
+  const { isAuthenticated, logout, user, token } = useAuthStore();
   const [isOpen, setIsOpen] = useState(false);
   const [notificationCount, setNotificationCount] = useState(0);
 
   const toggleSidebar = () => setIsOpen(!isOpen);
-  useEffect(() => {
-    const fetchNotificationCount = async () => {
-      try {
-        const notifications =
-          await notificationService.getUnreadNotifications();
-        setNotificationCount(notifications.length);
-      } catch (error) {
-        console.error("Error fetching notification count:", error);
-      }
-    };
 
-    fetchNotificationCount();
-  }, []);
+  useEffect(() => {
+    if (isAuthenticated && user) {
+      const eventSource = new EventSource(
+        `${import.meta.env.VITE_API_URL}/api/notifications/sse?userId=${
+          user._id
+        }`
+      );
+
+      eventSource.onmessage = (event) => {
+        const data = JSON.parse(event.data);
+        if (data.count !== undefined) {
+          setNotificationCount(data.count);
+        }
+      };
+
+      return () => {
+        eventSource.close();
+      };
+    }
+  }, [isAuthenticated, user, notificationCount]);
   return (
     <>
       <div className="xl:hidden fixed top-0 left-0 right-0 z-50 bg-background flex items-center justify-between p-4 shadow-md border-b ">
