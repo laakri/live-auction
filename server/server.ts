@@ -58,6 +58,7 @@ async function buildServer() {
       dotenv: true,
     });
 
+    // Register CORS plugin globally
     server.register(cors, {
       origin: ["http://localhost:5173", "http://localhost:3000"],
       methods: ["GET", "POST", "PUT", "DELETE"],
@@ -67,8 +68,7 @@ async function buildServer() {
     await server.register(fastifyIO, {
       cors: {
         origin: "http://localhost:5173",
-        methods: ["GET", "POST"],
-        credentials: true,
+        methods: ["GET", "PUT", "POST", "DELETE"],
       },
     });
     await server.register(multipart, {

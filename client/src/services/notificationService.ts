@@ -43,25 +43,4 @@ export const notificationService = {
     );
     return response.data;
   },
-
-  subscribeToNotifications(
-    _id: string,
-    onMessage: (notification: any) => void
-  ) {
-    const { token } = useAuthStore.getState();
-    const eventSource = new EventSource(`${API_URL}/sse`, {
-      withCredentials: true,
-    });
-
-    eventSource.addEventListener("open", () => {
-      eventSource.dispatchEvent(new CustomEvent("auth", { detail: token }));
-    });
-
-    eventSource.onmessage = (event) => {
-      const notification = JSON.parse(event.data);
-      onMessage(notification);
-    };
-
-    return eventSource;
-  },
 };

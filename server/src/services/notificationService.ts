@@ -19,8 +19,9 @@ export const notificationService = {
     });
     const savedNotification = await notification.save();
 
-    // Send real-time notification via SSE
-    sseController.sendNotification(userId, savedNotification);
+    // Send real-time notification count via SSE
+    const unreadCount = (await this.getUnreadNotifications(userId)).length;
+    sseController.sendNotificationCount(userId, unreadCount);
 
     return savedNotification;
   },

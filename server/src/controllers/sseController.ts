@@ -6,12 +6,16 @@ export const sseController = {
   async subscribeToNotifications(request: FastifyRequest, reply: FastifyReply) {
     console.log("SSE connection attempt");
 
-    const userId = request.user?._id;
+    // Type assertion for request.query
+    const query = request.query as { userId?: string };
+    const userId = query.userId;
 
     if (!userId) {
-      reply.code(401).send("Unauthorized: User not authenticated");
+      reply.code(400).send("Bad Request: userId is required");
       return;
     }
+
+    console.log(userId);
 
     try {
       reply.raw.writeHead(200, {
@@ -21,7 +25,7 @@ export const sseController = {
       });
 
       console.log(`User ${userId} connected to SSE`);
-      clients.set(userId.toString(), reply);
+      clients.set(userId, reply);
 
       reply.raw.write(
         `data: ${JSON.stringify({ message: "Connected to SSE" })}\n\n`
@@ -29,7 +33,7 @@ export const sseController = {
 
       request.raw.on("close", () => {
         console.log(`User ${userId} disconnected from SSE`);
-        clients.delete(userId.toString());
+        clients.delete(userId);
       });
     } catch (error) {
       console.error("SSE connection error:", error);
@@ -37,10 +41,10 @@ export const sseController = {
     }
   },
 
-  sendNotification(userId: string, notification: any) {
+  sendNotificationCount(userId: string, count: number) {
     const client = clients.get(userId);
     if (client) {
-      client.raw.write(`data: ${JSON.stringify(notification)}\n\n`);
+      client.raw.write(`data: ${JSON.stringify({ count })}\n\n`);
     }
   },
 };

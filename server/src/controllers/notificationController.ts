@@ -23,7 +23,6 @@ export const notificationController = {
 
       const notifications = await Notification.find({
         user: new Types.ObjectId(userId),
-        isRead: false,
       })
         .sort({ createdAt: -1 })
         .limit(20);
@@ -31,7 +30,7 @@ export const notificationController = {
       console.log("Found notifications:", notifications);
 
       if (notifications.length === 0) {
-        console.log("No unread notifications found for user:", userId);
+        console.log("No notifications found for user:", userId);
       }
 
       reply.send(notifications);
