@@ -4,7 +4,7 @@ import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/use-toast";
-import { NavigateFunction } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 import VerificationPrompt from "../../pagesComponents/VerificationPrompt";
 import useAuthStore from "../../stores/authStore";
@@ -15,12 +15,9 @@ const LuxuryAuthPage: React.FC = () => {
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
   const { login, signup, isLoading } = useAuth();
-  const { toast } = useToast();
-  const {
-    shouldShowVerificationPrompt,
-    user,
-    clearError: clearAuthError,
-  } = useAuthStore();
+  const navigate = useNavigate();
+  const toast = useToast();
+  const { user, clearError: clearAuthError } = useAuthStore();
   const [showPrompt, setShowPrompt] = useState(false);
   const shouldShowPrompt = useAuthStore((state) =>
     state.shouldShowVerificationPrompt()
@@ -38,11 +35,10 @@ const LuxuryAuthPage: React.FC = () => {
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    //clearError();
     if (isLogin) {
-      await login(email, password, toast);
+      await login(email, password, toast, navigate);
     } else {
-      await signup(username, email, password, toast);
+      await signup(username, email, password, toast, navigate);
     }
   };
 
@@ -104,7 +100,7 @@ const LuxuryAuthPage: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full"
               />
-           {/**  {error && <p className="text-red-500 text-center">{error}</p>}*/}  
+              {/**  {error && <p className="text-red-500 text-center">{error}</p>}*/}
               {isLogin && (
                 <Button
                   type="submit"
