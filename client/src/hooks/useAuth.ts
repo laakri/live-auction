@@ -9,11 +9,9 @@ export const useAuth = () => {
     token,
     isAuthenticated,
     isLoading,
-    error,
     login,
     signup,
     logout,
-    clearError,
   } = useAuthStore();
 
   useEffect(() => {
@@ -27,10 +25,10 @@ export const useAuth = () => {
     token,
     isAuthenticated,
     isLoading,
-    error,
+   // error,
     login,
     signup,
     logout,
-    clearError,
+    //clearError,
   };
 };

@@ -7,12 +7,13 @@ import { Switch } from "../../components/ui/switch";
 import { Edit2, Bell, Shield, User } from "lucide-react";
 import useAuthStore from "../../stores/authStore";
 import { Label } from "../../components/ui/label";
+import axios from "axios";
 
 const UserSettings = () => {
   const { user, updateUser } = useAuthStore();
+  const { token } = useAuthStore();
   const [editMode, setEditMode] = useState(false);
   const [activeTab, setActiveTab] = useState("profile");
-
   const [formData, setFormData] = useState({
     username: user?.username || "",
     email: user?.email || "",
@@ -27,16 +28,39 @@ const UserSettings = () => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleToggleChange = (name: string) => {
+  const handleToggleChange = async (name: string) => {
+    const updatedValue = !formData[name as keyof typeof formData];
     setFormData({
       ...formData,
-      [name]: !formData[name as keyof typeof formData],
+      [name]: updatedValue,
     });
-  };
 
+    if (name === "privacyMode") {
+      try {
+        const response = await axios.post(
+          "http://localhost:3000/api/users/privacyProfile",
+          {
+            privateProfile: updatedValue,
+          },
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json", // Utilisez JSON pour les données
+            },
+          }
+        );
+
+        if (response.status === 200) {
+          console.log("Privacy mode updated successfully");
+        }
+      } catch (error) {
+        console.error("Error updating privacy mode:", error);
+      }
+    }
+  };
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    updateUser(formData, user?.id);
+    updateUser(formData, user?._id);
     setEditMode(false);
   };
 

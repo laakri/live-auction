@@ -103,12 +103,12 @@ export const login = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = await User.findOne({ email });
     if (!user) {
-      return reply.status(401).send({ error: "Invalid credentials" });
+      return reply.status(401).send({ error: "email Invalid credentials" });
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      return reply.status(401).send({ error: "Invalid credentials" });
+      return reply.status(401).send({ error: "password Invalid credentials" });
     }
 
     user.xp += 5; // XP for logging in
@@ -257,19 +257,19 @@ export const getReferralInfo = async (
 };
 
 // Function to check if the follower is already following the following user
-export const checkFollowStatus = async (follower: string, following: string) => {
+export const checkFollowStatus = async (
+  follower: string,
+  following: string
+) => {
   const followerUser = await User.findById(follower);
   if (!followerUser) {
     throw new Error("Follower not found");
   }
-  return followerUser.following.some(id => id.toString() === following);
+  return followerUser.following.some((id) => id.toString() === following);
 };
 
 // Route handler to check follow status
-export const checkFollow = async (
-  req: FastifyRequest,
-  res: FastifyReply
-) => {
+export const checkFollow = async (req: FastifyRequest, res: FastifyReply) => {
   const { follower, following } = req.body as {
     follower: string;
     following: string;
@@ -282,7 +282,7 @@ export const checkFollow = async (
     if (err instanceof Error) {
       res.status(500).send({ error: err.message });
     } else {
-      res.status(500).send({ error: 'An unknown error occurred' });
+      res.status(500).send({ error: "An unknown error occurred" });
     }
   }
 };
@@ -312,10 +312,7 @@ export const followUser = async (follower: string, following: string) => {
 };
 
 // Route handler to follow a user
-export const follow = async (
-  req: FastifyRequest,
-  res: FastifyReply
-) => {
+export const follow = async (req: FastifyRequest, res: FastifyReply) => {
   const { follower, following } = req.body as {
     follower: string;
     following: string;
@@ -328,7 +325,7 @@ export const follow = async (
     if (err instanceof Error) {
       res.status(500).send({ error: err.message });
     } else {
-      res.status(500).send({ error: 'An unknown error occurred' });
+      res.status(500).send({ error: "An unknown error occurred" });
     }
   }
 };
@@ -359,10 +356,7 @@ export const unfollowUser = async (follower: string, following: string) => {
 };
 
 // Route handler to unfollow a user
-export const unfollow = async (
-  req: FastifyRequest,
-  res: FastifyReply
-) => {
+export const unfollow = async (req: FastifyRequest, res: FastifyReply) => {
   const { follower, following } = req.body as {
     follower: string;
     following: string;
@@ -375,7 +369,7 @@ export const unfollow = async (
     if (err instanceof Error) {
       res.status(500).send({ error: err.message });
     } else {
-      res.status(500).send({ error: 'An unknown error occurred' });
+      res.status(500).send({ error: "An unknown error occurred" });
     }
   }
 };
@@ -393,6 +387,35 @@ export const getUserProfile = async (
   res.send({ user, auctions });
 };
 
+export const privacyProfile = async (
+  request: FastifyRequest,
+  reply: FastifyReply
+) => {
+  const userId = request.user?._id;
+  const { privateProfile } = request.body as { privateProfile?: boolean };
+
+  if (typeof privateProfile !== 'boolean') {
+    return reply.status(400).send({ error: "Invalid or missing privateProfile value" });
+  }
+
+  try {
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: { "preferences.privateProfile": privateProfile } },
+      { new: true } 
+    ).select("-password");
+
+    if (!user) {
+      return reply.status(404).send({ error: "User not found" });
+    }
+
+    
+    reply.send(user);
+  } catch (error) {
+    console.error("Error updating user profile:", error);
+    reply.status(500).send({ error: "Error updating user profile" });
+  }
+};
 
 
 // Add more functions as needed for other user-related operations
@@ -409,5 +432,5 @@ export default {
   unfollow,
   checkFollow,
   getUserProfile,
+  privacyProfile,
 };
-  

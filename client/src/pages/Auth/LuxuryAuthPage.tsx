@@ -4,6 +4,8 @@ import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 import { useAuth } from "../../hooks/useAuth";
 import { useToast } from "../../components/ui/use-toast";
+import { NavigateFunction } from "react-router-dom";
+
 import VerificationPrompt from "../../pagesComponents/VerificationPrompt";
 import useAuthStore from "../../stores/authStore";
 
@@ -12,7 +14,7 @@ const LuxuryAuthPage: React.FC = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [username, setUsername] = useState("");
-  const { login, signup, error, isLoading, clearError } = useAuth();
+  const { login, signup, isLoading } = useAuth();
   const { toast } = useToast();
   const {
     shouldShowVerificationPrompt,
@@ -36,7 +38,7 @@ const LuxuryAuthPage: React.FC = () => {
   };
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    clearError();
+    //clearError();
     if (isLogin) {
       await login(email, password, toast);
     } else {
@@ -102,7 +104,7 @@ const LuxuryAuthPage: React.FC = () => {
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full"
               />
-              {error && <p className="text-red-500 text-center">{error}</p>}
+           {/**  {error && <p className="text-red-500 text-center">{error}</p>}*/}  
               {isLogin && (
                 <Button
                   type="submit"

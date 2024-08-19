@@ -124,7 +124,7 @@ const useAuthStore = create<AuthState>()(
             "Error in login function:",
             error instanceof Error ? error.message : error
           );
-          set({ error: "Invalid credentials" });
+          //set({ error: "Invalid credentials" });
         } finally {
           set({ isLoading: false });
         }
