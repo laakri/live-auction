@@ -33,12 +33,13 @@ import { Link } from "react-router-dom";
 import { useToast } from "../../components/ui/use-toast";
 import CountdownTimer from "../../components/CountdownTimer";
 import { motion } from "framer-motion";
+import { Auction } from "../../services/auctionService";
 
 const UserProfile = () => {
   const [activeTab, setActiveTab] = useState("overview");
   const { user, error } = useAuthStore();
   const { toast } = useToast();
-const [auctions, setAuctions] = useState([]);
+const [auctions, setAuctions] = useState<Auction[]>([]);
 const [error1, setError] = useState(null);
 
   useEffect(() => {
@@ -80,7 +81,64 @@ const [error1, setError] = useState(null);
     const xpForNextLevel = level * 100;
     return ((xp % 100) / xpForNextLevel) * 100;
   };
+  const AuctionCard = ({ auction }: { auction: Auction }) => {
+    if (!auction) return null;
 
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="bg-gray-900 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+      >
+        <div className="relative">
+          <img
+            src={`http://localhost:3000/uploads/${auction.images}`}
+            alt={auction.title}
+            className="w-full h-40 object-cover"
+          />
+          <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full px-2 py-1">
+            <span className="text-xs text-white font-medium">
+              {auction.watchersCount}
+            </span>
+          </div>
+        </div>
+        <div className="p-3">
+          <h3 className="text-sm font-medium text-gray-100 truncate mb-1">
+            {auction.title}
+          </h3>
+         
+          <div className="flex justify-between items-center text-xs text-gray-400">
+            <div className="flex items-center space-x-1">
+              <Clock className="w-3 h-3" />
+              {auction.timeLeft && (
+                <CountdownTimer
+                  endTime={auction.timeLeft.value|| ""}
+                  size="sm"
+                  shortLabels={true}
+                />
+              )}
+            </div>
+            <div className="flex items-center space-x-1">
+              <Eye className="w-3 h-3" />
+              <span>${auction.currentPrice?.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+        <div className="px-3 pb-3">
+          <Link to={`/auction/${auction._id}`}>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full bg-purple-600 bg-opacity-50 backdrop-blur-lg text-white text-xs font-medium py-2 rounded-md hover:bg-purple-700 transition-colors duration-200"
+            >
+              Show
+            </motion.button>
+          </Link>
+        </div>
+      </motion.div>
+    );
+  };
   const FeatureCard = ({
     icon,
     title,
@@ -324,65 +382,8 @@ const [error1, setError] = useState(null);
               <h3 className="font-semibold mb-4">Your Auctions</h3>
               {auctions && auctions.length > 0 ? (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {auctions.map((auction, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="bg-gray-900 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
-          >
-            <div className="relative">
-              <img
-                 src={`http://localhost:3000/uploads/${(auction as any).image}`}
-                 alt={(auction as any).title}
-                 className="w-full h-40 object-cover"
-              />
-              <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full px-2 py-1">
-                <span className="text-xs text-white font-medium">
-                  {(auction as any).watchersCount}
-                </span>
-              </div>
-            </div>
-            <div className="p-3">
-              <h3 className="text-sm font-medium text-gray-100 truncate mb-1">
-                {(auction as any).title}
-              </h3>
-              <div className="flex items-center space-x-2 mb-2">
-               
-                <span className="text-xs text-gray-400">
-                  {(auction as any).seller?.username}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-xs text-gray-400">
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3" />
-                  {(auction as any).timeLeft && (
-                    <CountdownTimer
-                      endTime={(auction as any).timeLeft.value || ""}
-                      size="sm"
-                      shortLabels={true}
-                    />
-                  )}
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Eye className="w-3 h-3" />
-                  <span>${(auction as any).currentPrice?.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-            <div className="px-3 pb-3">
-              <Link to={`/auction/${(auction as any)._id}`}>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full bg-purple-600 bg-opacity-50 backdrop-blur-lg text-white text-xs font-medium py-2 rounded-md hover:bg-purple-700 transition-colors duration-200"
-                >
-                  Show
-                </motion.button>
-              </Link>
-            </div>
-          </motion.div>
+        {auctions.map((auction) => (
+          <AuctionCard key={auction._id} auction={auction} />
         ))}
       </div>
     ) : (

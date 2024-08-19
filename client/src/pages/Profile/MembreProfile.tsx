@@ -2,10 +2,15 @@ import { useEffect, useState } from "react";
 import { Card } from "../../components/ui/card";
 import { Button } from "../../components/ui/button";
 import {
-  Avatar,
-  AvatarFallback,
-  AvatarImage,
-} from "../../components/ui/avatar";
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "../../components/ui/pagination";
+
 import {
   Tabs,
   TabsContent,
@@ -14,27 +19,18 @@ import {
 } from "../../components/ui/tabs";
 import { Progress } from "../../components/ui/progress";
 import { Badge } from "../../components/ui/badge";
-import {
-  AlertCircle,
-  Award,
-  BarChart2,
-  Edit2Icon,
-  Gavel,
-  Plus,
-  Settings,
-  User,
-  Wallet,
-  Shield,
-  Search,
-  Coins,
-  Eye,
-  Clock,
-} from "lucide-react";
+import { Award, BarChart2, Gavel, User, Eye, Clock } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useToast } from "../../components/ui/use-toast";
 import FollowButton from "../../components/FollowButton";
 import { motion } from "framer-motion";
 import CountdownTimer from "../../components/CountdownTimer";
+import { Auction } from "../../services/auctionService";
+import {
+  Avatar,
+  AvatarFallback,
+  AvatarImage,
+} from "../../components/ui/avatar";
 
 interface User {
   username: string;
@@ -56,28 +52,46 @@ interface User {
 const MembreProfile = () => {
   const { id } = useParams(); // Extracting user ID from URL params
   const [user, setUser] = useState<User | null>(null);
-  const [auctions, setAuctions] = useState([]);
+  const [auctions, setAuctions] = useState<Auction[]>([]);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState("auctions");
   const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [auctionsPerPage] = useState(6);
 
   useEffect(() => {
     // Fetch user data based on the ID
     const fetchUserData = async () => {
       try {
-        const response = await fetch(`http://localhost:3000/api/users/userProfile/${id}`);
+        const response = await fetch(
+          `http://localhost:3000/api/users/userProfile/${id}`
+        );
         if (!response.ok) throw new Error("Failed to fetch user data");
         const userData = await response.json();
         setUser(userData.user);
         setAuctions(userData.auctions);
-      } catch (error:any) {
+      } catch (error: any) {
         setError(error.message);
       }
     };
 
     fetchUserData();
   }, [id]);
-console.log(auctions);
+
+  // Get current posts
+  const indexOfLastAuction = currentPage * auctionsPerPage;
+  const indexOfFirstAuction = indexOfLastAuction - auctionsPerPage;
+  const currentAuctions = auctions.slice(
+    indexOfFirstAuction,
+    indexOfLastAuction
+  );
+
+  // Change page
+  const paginateFront = () => setCurrentPage(currentPage + 1);
+  const paginateBack = () => setCurrentPage(currentPage - 1);
+
+  console.log(auctions);
   if (!user) return <div>Loading...</div>;
   if (error) return <div>Error: {error}</div>;
 
@@ -99,6 +113,72 @@ console.log(auctions);
   const calculateLevelProgress = (xp: number, level: number) => {
     const xpForNextLevel = level * 100;
     return ((xp % 100) / xpForNextLevel) * 100;
+  };
+  const AuctionCard = ({ auction }: { auction: Auction }) => {
+    if (!auction) return null;
+
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.2 }}
+        className="bg-gray-900 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
+      >
+        <div className="relative">
+          <img
+            src={`http://localhost:3000/uploads/${auction.images}`}
+            alt={auction.title}
+            className="w-full h-40 object-cover"
+          />
+          <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full px-2 py-1">
+            <span className="text-xs text-white font-medium">
+              {auction.watchersCount}
+            </span>
+          </div>
+        </div>
+        <div className="p-3">
+          <h3 className="text-sm font-medium text-gray-100 truncate mb-1">
+            {auction.title}
+          </h3>
+          <div className="flex items-center space-x-2 mb-2">
+            <Avatar className="w-4 h-4">
+              <AvatarImage src={auction.seller?.avatar} />
+              <AvatarFallback>{auction.seller?.username}</AvatarFallback>
+            </Avatar>
+            <span className="text-xs text-gray-400">
+              {auction.seller?.username}
+            </span>
+          </div>
+          <div className="flex justify-between items-center text-xs text-gray-400">
+            <div className="flex items-center space-x-1">
+              <Clock className="w-3 h-3" />
+              {auction.timeLeft && (
+                <CountdownTimer
+                  endTime={auction.timeLeft.value || ""}
+                  size="sm"
+                  shortLabels={true}
+                />
+              )}
+            </div>
+            <div className="flex items-center space-x-1">
+              <Eye className="w-3 h-3" />
+              <span>${auction.currentPrice?.toLocaleString()}</span>
+            </div>
+          </div>
+        </div>
+        <div className="px-3 pb-3">
+          <Link to={`/auction/${auction._id}`}>
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="w-full bg-purple-600 bg-opacity-50 backdrop-blur-lg text-white text-xs font-medium py-2 rounded-md hover:bg-purple-700 transition-colors duration-200"
+            >
+              Bid Now
+            </motion.button>
+          </Link>
+        </div>
+      </motion.div>
+    );
   };
 
   const FeatureCard = ({
@@ -159,7 +239,10 @@ console.log(auctions);
                 <p className="text-gray-300 text-sm">{email}</p>
                 <p className="text-gray-300 text-sm">{bio}</p>
                 <div className="flex justify-left mt-3">
-                <FollowButton userId="668bcd9b094cf69a24d29977" loggedInUserId="668f9dd6beb6ca13b3c07ff5"/>
+                  <FollowButton
+                    userId="668bcd9b094cf69a24d29977"
+                    loggedInUserId="668f9dd6beb6ca13b3c07ff5"
+                  />
                 </div>
               </div>
             </div>
@@ -185,74 +268,15 @@ console.log(auctions);
 
       <main className="max-w-6xl mx-auto px-4">
         <div className="flex flex-col sm:flex-row justify-between gap-2 mt-4">
-          <div className="flex flex-wrap gap-2">
-           
-          </div>
-          <div className="flex gap-2 mt-2 sm:mt-0">
-            <Link to="/UserVerification">
-              <Button variant={"outline"} className="w-full sm:w-auto">
-                Get verified
-              </Button>
-            </Link>
-          </div>
+          <div className="flex flex-wrap gap-2"></div>
         </div>
-        <div className="mt-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            <Link to="/create-auction">
-              <FeatureCard
-                icon={<Gavel className="w-6 h-6 text-blue-400" />}
-                title="Create Auction"
-                description="List your items for auction. Set starting prices and auction duration."
-              />
-            </Link>
-            <Link to="/AuctionGuides/SafeBidding">
-              <FeatureCard
-                icon={<Shield className="w-6 h-6 text-green-400" />}
-                title="Safe Bidding"
-                description="Learn how to bid safely and avoid common auction scams."
-                beta={true}
-              />
-            </Link>
-            <Link to="/AuctionGuides/VerifySellers">
-              <FeatureCard
-                icon={<Search className="w-6 h-6 text-purple-400" />}
-                title="Verify Sellers"
-                description="Tips on how to verify seller authenticity and item legitimacy."
-              />
-            </Link>
-          </div>
-        </div>
-        {/* Referral section */}
-        <Card className="bg-purple-950/30 py-2 px-4 rounded-xl my-4">
-          <div className="flex flex-col sm:flex-row justify-between items-center gap-2">
-            <div className="flex items-center space-x-2">
-              <AlertCircle className="h-5 w-5 text-purple-400" />
-              <p className="text-sm">
-                Share your referral code and earn rewards when friends join!
-              </p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs bg-transparent text-purple-200 w-full sm:w-auto"
-              onClick={() => {
-                navigator.clipboard.writeText(referralCode);
-
-                toast({
-                  title: "Referral Code Copied!",
-                  description:
-                    "The referral code has been copied to your clipboard.",
-                  duration: 3000,
-                });
-              }}
-            >
-              <span className="mr-2">COPY CODE : </span> {referralCode}
-            </Button>
-          </div>
-        </Card>
 
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3">
+            <TabsTrigger value="auctions">
+              <Gavel className="w-4 h-4 mr-2 text-green-500" />
+              Auctions
+            </TabsTrigger>
             <TabsTrigger value="overview">
               <BarChart2 className="w-4 h-4 mr-2 text-blue-500" />
               Overview
@@ -261,13 +285,9 @@ console.log(auctions);
               <Award className="w-4 h-4 mr-2 text-yellow-500" />
               Achievements
             </TabsTrigger>
-            <TabsTrigger value="auctions">
-              <Gavel className="w-4 h-4 mr-2 text-green-500" />
-              Auctions
-            </TabsTrigger>
           </TabsList>
           <TabsContent value="overview">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
               <Card className="bg-gray-900/40 p-6 rounded-xl">
                 <h3 className="font-semibold mb-4">Profile Stats</h3>
                 <div className="space-y-4">
@@ -289,33 +309,11 @@ console.log(auctions);
                   </div>
                 </div>
               </Card>
-              <Card className="bg-gray-900/40 p-6 rounded-xl flex flex-col justify-between">
-                <h3 className="font-semibold mb-4">Wallet</h3>
-                <div className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-400">Balance</p>
-                    <p className="text-2xl font-bold">
-                      ${balance}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Virtual Currency</p>
-                    <p className="text-2xl font-bold flex items-center gap-2">
-                      {virtualCurrencyBalance}{" "}
-                      <Coins className="text-yellow-500 h-5 w-5" />
-                    </p>
-                  </div>
-                  <Button variant="outline" className="w-full">
-                    <Wallet className="w-4 h-4 mr-2 text-green-500" />
-                    Add Funds
-                  </Button>
-                </div>
-              </Card>
             </div>
           </TabsContent>
           <TabsContent value="achievements">
             <Card className="bg-gray-900/40 p-6 rounded-xl">
-              <h3 className="font-semibold mb-4">Your Achievements</h3>
+              <h3 className="font-semibold mb-4">{username} 's Achievements</h3>
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                 {achievements && achievements.length > 0 ? (
                   achievements.map((achievement, index) => (
@@ -330,79 +328,71 @@ console.log(auctions);
             </Card>
           </TabsContent>
           <TabsContent value="auctions">
-            <Card className="bg-gray-900/40 p-6 rounded-xl">
-              <h3 className="font-semibold mb-4">Your Auctions</h3>
-              
-              
-    {auctions && auctions.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {auctions.map((auction, index) => (
-          <motion.div
-            key={index}
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.2 }}
-            className="bg-gray-900 rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-all duration-300"
-          >
-            <div className="relative">
-              <img
-                 src={`http://localhost:3000/uploads/${(auction as any).image}`}
-                 alt={(auction as any).title}
-                 className="w-full h-40 object-cover"
-              />
-              <div className="absolute top-2 right-2 bg-black bg-opacity-50 rounded-full px-2 py-1">
-                <span className="text-xs text-white font-medium">
-                  {(auction as any).watchersCount}
-                </span>
-              </div>
+            <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
+              <Card className="bg-gray-900/40 p-6 rounded-xl">
+                <h3 className="font-semibold mb-4">{username} 's  Auctions</h3>
+
+                {auctions && auctions.length > 0 ? (
+                  <div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                      {currentAuctions.map((auction) => (
+                        <AuctionCard key={auction._id} auction={auction} />
+                      ))}
+                    </div>
+
+                    {/* Pagination */}
+                    
+                    <Pagination className="mt-5 ">
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (currentPage > 1) paginateBack();
+                            }}
+                          />
+                        </PaginationItem>
+                        {[
+                          ...Array(
+                            Math.ceil(auctions.length / auctionsPerPage)
+                          ).keys(),
+                        ].map((pageNum) => (
+                          <PaginationItem key={pageNum + 1}>
+                            <PaginationLink
+                              href="#"
+                              isActive={currentPage === pageNum + 1}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                setCurrentPage(pageNum + 1);
+                              }}
+                            >
+                              {pageNum + 1}
+                            </PaginationLink>
+                          </PaginationItem>
+                        ))}
+                        <PaginationItem>
+                          <PaginationNext
+                            href="#"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              if (
+                                currentPage <
+                                Math.ceil(auctions.length / auctionsPerPage)
+                              )
+                                paginateFront();
+                            }}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                ) : (
+                  <p className="text-gray-400">You have no active auctions.</p>
+                )}
+              </Card>
             </div>
-            <div className="p-3">
-              <h3 className="text-sm font-medium text-gray-100 truncate mb-1">
-                {(auction as any).title}
-              </h3>
-              <div className="flex items-center space-x-2 mb-2">
-               
-                <span className="text-xs text-gray-400">
-                  {(auction as any).seller?.username}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-xs text-gray-400">
-                <div className="flex items-center space-x-1">
-                  <Clock className="w-3 h-3" />
-                  {(auction as any).timeLeft && (
-                    <CountdownTimer
-                      endTime={(auction as any).timeLeft.value || ""}
-                      size="sm"
-                      shortLabels={true}
-                    />
-                  )}
-                </div>
-                <div className="flex items-center space-x-1">
-                  <Eye className="w-3 h-3" />
-                  <span>${(auction as any).currentPrice?.toLocaleString()}</span>
-                </div>
-              </div>
-            </div>
-            <div className="px-3 pb-3">
-              <Link to={`/auction/${(auction as any)._id}`}>
-                <motion.button
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className="w-full bg-purple-600 bg-opacity-50 backdrop-blur-lg text-white text-xs font-medium py-2 rounded-md hover:bg-purple-700 transition-colors duration-200"
-                >
-                  Bid Now
-                </motion.button>
-              </Link>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-    ) : (
-      <p className="text-gray-400">You have no active auctions.</p>
-    )}
-  </Card>
-</TabsContent>
-         
+          </TabsContent>
         </Tabs>
       </main>
     </div>
