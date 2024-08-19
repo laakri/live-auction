@@ -161,10 +161,12 @@ export const VerifyProfile = async (
     "level",
     "achievements",
     "referralCode",
+   // "preferences"
   ];
 
   restrictedFields.forEach((field) => delete updates[field]);
-
+// Debugging: Log the updates object
+console.log("Updates to be applied:", updates);
   // Set isVerified to true
   updates.isVerified = true;
 
@@ -387,37 +389,6 @@ export const getUserProfile = async (
   res.send({ user, auctions });
 };
 
-export const privacyProfile = async (
-  request: FastifyRequest,
-  reply: FastifyReply
-) => {
-  const userId = request.user?._id;
-  const { privateProfile } = request.body as { privateProfile?: boolean };
-
-  if (typeof privateProfile !== 'boolean') {
-    return reply.status(400).send({ error: "Invalid or missing privateProfile value" });
-  }
-
-  try {
-    const user = await User.findByIdAndUpdate(
-      userId,
-      { $set: { "preferences.privateProfile": privateProfile } },
-      { new: true } 
-    ).select("-password");
-
-    if (!user) {
-      return reply.status(404).send({ error: "User not found" });
-    }
-
-    
-    reply.send(user);
-  } catch (error) {
-    console.error("Error updating user profile:", error);
-    reply.status(500).send({ error: "Error updating user profile" });
-  }
-};
-
-
 // Add more functions as needed for other user-related operations
 
 export default {
@@ -432,5 +403,4 @@ export default {
   unfollow,
   checkFollow,
   getUserProfile,
-  privacyProfile,
 };

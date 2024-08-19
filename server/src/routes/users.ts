@@ -13,7 +13,6 @@ export default function userRoutes(
   fastify.post("/followUser", userController.follow);
   fastify.post("/unfollowUser", userController.unfollow);
   fastify.post("/checkFollowUser", userController.checkFollow);
-  fastify.post("/privacyProfile", userController.privacyProfile);
 
   
   fastify.get(
