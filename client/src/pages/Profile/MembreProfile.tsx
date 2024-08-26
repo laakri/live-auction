@@ -19,7 +19,7 @@ import {
 } from "../../components/ui/tabs";
 import { Progress } from "../../components/ui/progress";
 import { Badge } from "../../components/ui/badge";
-import { Award, BarChart2, Gavel, User, Eye, Clock } from "lucide-react";
+import { Award, BarChart2, Gavel, User, Eye, Clock, CameraOff } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 import { useToast } from "../../components/ui/use-toast";
 import FollowButton from "../../components/FollowButton";
@@ -44,6 +44,10 @@ interface User {
   achievements: string[];
   rank: string;
   referralCode: string;
+  preferences: {
+    notifications: boolean;
+    privateProfile: boolean;
+  };
   customizations: {
     theme: string;
     avatar: string;
@@ -107,8 +111,10 @@ const MembreProfile = () => {
     achievements,
     rank,
     referralCode,
+
     customizations,
   } = user;
+  const isPrivate = user.preferences.privateProfile;
 
   const calculateLevelProgress = (xp: number, level: number) => {
     const xpForNextLevel = level * 100;
@@ -240,8 +246,8 @@ const MembreProfile = () => {
                 <p className="text-gray-300 text-sm">{bio}</p>
                 <div className="flex justify-left mt-3">
                   <FollowButton
-                    userId="668bcd9b094cf69a24d29977"
-                    loggedInUserId="668f9dd6beb6ca13b3c07ff5"
+                    userId="66bc845d32ca5ffa1e1dff66"
+                    loggedInUserId="66c48eebd706f5dea79cf470"
                   />
                 </div>
               </div>
@@ -330,18 +336,25 @@ const MembreProfile = () => {
           <TabsContent value="auctions">
             <div className="grid grid-cols-1 sm:grid-cols-1 gap-4">
               <Card className="bg-gray-900/40 p-6 rounded-xl">
-                <h3 className="font-semibold mb-4">{username} 's  Auctions</h3>
+                <h3 className="font-semibold mb-4">{username} 's Auctions</h3>
 
                 {auctions && auctions.length > 0 ? (
                   <div>
+                      {isPrivate ? (
+                        <div className="flex flex-col items-center justify-center h-full pt-20 pb-20">
+                        <CameraOff className="w-12 h-12 mb-2 text-white" stroke="currentColor" strokeWidth={1} />
+                        <h2 className="text-white">Private</h2>
+                      </div>
+                      ) : (
                     <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {currentAuctions.map((auction) => (
-                        <AuctionCard key={auction._id} auction={auction} />
-                      ))}
+                        {currentAuctions.map((auction) => (
+                          <AuctionCard key={auction._id} auction={auction} />
+                        ))}
                     </div>
 
+                      )}
                     {/* Pagination */}
-                    
+
                     <Pagination className="mt-5 ">
                       <PaginationContent>
                         <PaginationItem>

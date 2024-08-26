@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { notificationService } from "../services/notificationService";
 import { format } from "date-fns";
-import { Bell, Check, Trash2 } from "lucide-react";
+import { Bell, Check, Trash2, User } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -11,9 +11,11 @@ import {
 } from "../components/ui/card";
 import { Button } from "../components/ui/button";
 import { Link } from "react-router-dom";
+import FollowButton from "../components/FollowButton";
 
 interface Notification {
   _id: string;
+  user: string;
   type: string;
   message: string;
   createdAt: string;
@@ -36,7 +38,6 @@ const Notifications: React.FC = () => {
       console.error("Error fetching notifications:", error);
     }
   };
-
   const handleMarkAsRead = async (id: string) => {
     try {
       await notificationService.markAsRead(id);
@@ -56,6 +57,15 @@ const Notifications: React.FC = () => {
       console.error("Error deleting notification:", error);
     }
   };
+
+  /*const handleFollowRequest = async (id: string, action: string) => {
+    try {
+      await notificationService.handleFollowRequest(id, action);
+      setNotifications(notifications.filter((n) => n._id !== id));
+    } catch (error) {
+      console.error(`Error ${action} follow request:`, error);
+    }
+  };*/
 
   return (
     <div className="min-h-screen py-4 px-4">
@@ -78,8 +88,17 @@ const Notifications: React.FC = () => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   <span className="flex items-center">
-                    <Bell className="h-5 w-5 mr-2 text-blue-400" />
-                    Notification
+                    {notification.type === "follow" ? (
+                      <>
+                        <User className="h-5 w-5 mr-2 text-purple-400" />
+                        Follow Request
+                      </>
+                    ) : (
+                      <>
+                        <Bell className="h-5 w-5 mr-2 text-blue-400" />
+                        Notification
+                      </>
+                    )}
                   </span>
                   <span className="text-sm text-gray-400">
                     {format(new Date(notification.createdAt), "PPpp")}
@@ -90,18 +109,27 @@ const Notifications: React.FC = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="mb-4">{notification.message}</p>
+                {notification.type === "follow" ? (
+                  <div className="flex items-center gap-2 mb-4">
+                    <p className="">{notification.message}</p>
+                  </div>
+                ) : (
+                  <>
+                    <p className="mb-4">{notification.message}</p>
+                  </>
+                )}
                 <div className="flex justify-between items-center">
-                  {notification.relatedAuction && (
-                    <Link
-                      to={`/auction/${notification.relatedAuction}`}
-                      className="text-blue-400 hover:text-blue-300 text-sm"
-                    >
-                      View related auction
-                    </Link>
-                  )}
+                  {notification.type !== "follow" &&
+                    notification.relatedAuction && (
+                      <Link
+                        to={`/auction/${notification.relatedAuction}`}
+                        className="text-blue-400 hover:text-blue-300 text-sm"
+                      >
+                        View related auction
+                      </Link>
+                    )}
                   <div className="space-x-2">
-                    {!notification.isRead && (
+                    {!notification.isRead && notification.type !== "follow" && (
                       <Button
                         onClick={() => handleMarkAsRead(notification._id)}
                         variant="outline"
@@ -112,15 +140,38 @@ const Notifications: React.FC = () => {
                         Mark as Read
                       </Button>
                     )}
-                    <Button
-                      onClick={() => handleDelete(notification._id)}
-                      variant="outline"
-                      size="sm"
-                      className="text-red-400 hover:text-red-300"
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" />
-                      Delete
-                    </Button>
+                    {notification.type === "follow" ? (
+                      <>
+                        <Button
+                          // onClick={() => handleFollowRequest(notification._id, "accept")}
+                          variant="outline"
+                          size="sm"
+                          className="text-green-400 hover:text-green-300"
+                        >
+                          <Check className="h-4 w-4 mr-2" />
+                          Accept
+                        </Button>
+                        <Button
+                          //onClick={() => handleFollowRequest(notification._id, "reject")}
+                          variant="outline"
+                          size="sm"
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          <Trash2 className="h-4 w-4 mr-2" />
+                          Reject
+                        </Button>
+                      </>
+                    ) : (
+                      <Button
+                        onClick={() => handleDelete(notification._id)}
+                        variant="outline"
+                        size="sm"
+                        className="text-red-400 hover:text-red-300"
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" />
+                        Delete
+                      </Button>
+                    )}
                   </div>
                 </div>
               </CardContent>

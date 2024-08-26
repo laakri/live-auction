@@ -5,6 +5,7 @@ import User, { IUser } from "../models/users.model";
 import Auction from "../models/auctions.model";
 import { v4 as uuidv4 } from "uuid";
 import { title } from "process";
+import { notificationService } from "../services/notificationService";
 
 // Helper function to generate a unique referral code
 const generateReferralCode = async (): Promise<string> => {
@@ -289,6 +290,7 @@ export const checkFollow = async (req: FastifyRequest, res: FastifyReply) => {
   }
 };
 
+// Function to follow a user and send a notification
 export const followUser = async (follower: string, following: string) => {
   const [followerUser, followingUser] = await Promise.all([
     User.findById(follower),
@@ -309,6 +311,15 @@ export const followUser = async (follower: string, following: string) => {
     User.findByIdAndUpdate(follower, { $push: { following: following } }),
     User.findByIdAndUpdate(following, { $push: { followers: follower } }),
   ]);
+
+  // Create a follow notification for the followed user
+  const notificationMessage = `${followerUser.username} started following you.`;
+  await notificationService.createNotification(
+    followingUser.id.toString(),
+    "follow",
+    notificationMessage,
+    followerUser.id.toString(),
+  );
 
   return true;
 };
